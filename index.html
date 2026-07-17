@@ -198,7 +198,19 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
      font-family:var(--mono);font-size:10.5px;color:var(--faint)}
 .gsn{color:var(--primary-ink);font-weight:700}
 .gsx2{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
-.gsmore,.gsnone{padding:12px 14px;font-size:12px;color:var(--faint);text-align:center}
+.gsnone{padding:12px 14px;font-size:12px;color:var(--faint);text-align:center}
+.gsall{display:block;width:100%;padding:11px 14px;font-size:12.5px;font-weight:700;
+       color:var(--primary-ink);background:var(--surface-2);border:none;border-top:1px solid var(--line);text-align:center}
+.gsall:hover{background:var(--primary-tint)}
+/* 페이지 나누기 */
+.pgw{display:flex;gap:5px;align-items:center;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.pgw button{min-width:32px;height:32px;padding:0 9px;border:1px solid var(--line-2);background:#fff;
+            border-radius:var(--r-field);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.pgw button:hover:not(:disabled){border-color:var(--primary);color:var(--primary-ink)}
+.pgw button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:700}
+.pgw button:disabled{opacity:.4;cursor:not-allowed}
+.pgd{color:var(--faint);padding:0 2px}
+.pgn{margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--faint)}
 
 /* 햄버거 */
 .ham{
@@ -966,24 +978,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   <!-- MINE -->
   <section class="screen" id="s-mine"></section>
 
-  <!-- FIND -->
-  <!-- MINE -->
-  <section class="screen" id="s-mine"></section>
-
-  <!-- FIND -->
-  <section class="screen" id="s-find">
-    <div class="head">
-      <div><h1>요청 찾기</h1></div>
-    </div>
-    <div class="sbig"><span class="sch">dw://</span><input type="text" id="sq" placeholder="요청번호, 제목, 내용" autocomplete="off"></div>
-    <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
-    <div id="hit"></div>
-    <div id="findIdle"></div>
-    <div class="card" id="findCard">
-      <div class="ch2"><h3 id="rcount">결과</h3></div>
-      <div id="rl"></div>
-    </div>
-  </section>
+  <!-- 검색 결과 — 탭에 없다. 헤더 검색에서만 들어온다. -->
+  <section class="screen" id="s-search"></section>
 
   <!-- TICKET · 데이터로 렌더 -->
   <section class="screen" id="s-ticket"></section>
@@ -1516,6 +1512,70 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
 
 
+  // ── 페이지 나누기 ──
+  // 한 페이지 15건. 요청 카드는 2줄이라 15개면 화면 두 번쯤 스크롤 — 훑기 좋은 양이다.
+  // 그보다 많으면 스크롤이 길어지고, 적으면 페이지만 늘어난다.
+  var PAGE=15;
+  function pager(total, cur, fn){
+    var last=Math.max(1,Math.ceil(total/PAGE));
+    if(last<=1) return '';
+    var out=[], win=2;
+    var mk=function(p,lb,on,dis){
+      return '<button class="pg'+(on?' on':'')+'"'+(dis?' disabled':'')+' data-p="'+p+'">'+lb+'</button>';
+    };
+    out.push(mk(cur-1,'이전',false,cur<=1));
+    for(var i=1;i<=last;i++){
+      if(i===1||i===last||Math.abs(i-cur)<=win) out.push(mk(i,String(i),i===cur,false));
+      else if(i===2&&cur-win>2) out.push('<span class="pgd">…</span>');
+      else if(i===last-1&&cur+win<last-1) out.push('<span class="pgd">…</span>');
+    }
+    out.push(mk(cur+1,'다음',false,cur>=last));
+    return '<div class="pgw" data-pg="1">'+out.join('')+
+           '<span class="pgn">'+total+'건 중 '+((cur-1)*PAGE+1)+'–'+Math.min(cur*PAGE,total)+'</span></div>';
+  }
+  function wirePager(root, fn){
+    $$('.pgw button[data-p]', root||document).forEach(function(b){
+      b.onclick=function(){ if(!b.disabled) fn(+b.dataset.p); };
+    });
+  }
+
+  // ── 검색 결과 화면 ──
+  // 드롭다운은 '바로 그 요청으로 뛰기'용이고, 결과가 여럿이면 페이지에서 훑어야 한다.
+  // 좁은 드롭다운 안에서 스크롤로 다 해결하게 두면 안 된다.
+  var SQ='', SPG=1;
+  function openSearch(q){
+    SQ=q; SPG=1;
+    if($('#gsres')) $('#gsres').classList.remove('on');
+    if($('#gsq')) $('#gsq').blur();
+    BACK=[]; renderSearch(); show('search');
+  }
+  function searchHits(q){
+    if(!q) return [];
+    var num=q.replace(/^dw:\/\//,''), db=DB();
+    var direct=db.filter(function(x){return x.no===num||x.no.split('-')[1]===num});
+    var rest=db.filter(function(x){
+      if(direct.length&&x.no===direct[0].no) return false;
+      var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
+      return hay.indexOf(q.toLowerCase())>=0;
+    });
+    return direct.concat(rest);
+  }
+  function renderSearch(){
+    var el=$('#s-search'); if(!el) return;
+    var all=searchHits(SQ), tot=all.length;
+    var last=Math.max(1,Math.ceil(tot/PAGE)); if(SPG>last) SPG=last;
+    var pageRows=all.slice((SPG-1)*PAGE, SPG*PAGE);
+    el.innerHTML=
+      '<div class="head"><div><h1>검색 결과</h1>'+
+        '<div class="sub">‘'+esc2(SQ)+'’ · '+tot+'건</div></div></div>'+
+      '<div class="card"><div class="cb">'+
+        (tot?pageRows.map(function(x){return row(T[x.no],'req')}).join(''):empty('일치하는 요청이 없습니다'))+
+      '</div></div>'+
+      pager(tot, SPG, null);
+    wirePager(el, function(p){ SPG=p; renderSearch(); window.scrollTo(0,0); });
+    wire(); tr();
+  }
+
   // ── 전역 검색 ──
   // 요청 찾기는 화면이 아니라 도구다. 별도 탭으로 두면 "찾으려고 페이지를 옮기는"
   // 단계가 생긴다. 헤더에 두면 어느 화면에서든 바로 전체를 찾는다.
@@ -1532,7 +1592,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var st=Math.max(0,i-30),e=Math.min(b2.length,i+q.length+60);
     return (st>0?'…':'')+b2.slice(st,e)+(e<b2.length?'…':'');
   }
-  var GSMAX=50;  // 스크롤로 다 볼 수 있게. 그보다 많으면 검색어를 좁히는 게 빠르다
+  var GSMAX=6;   // 드롭다운은 '바로 그 요청으로 뛰기'용. 훑는 건 검색 결과 화면에서.
   function gsRender(){
     var box=$('#gsres'); if(!box) return;
     var q=($('#gsq').value||'').trim();
@@ -1546,7 +1606,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
       return hay.indexOf(q.toLowerCase())>=0;
     });
-    var all=direct.concat(r), more=all.length-GSMAX;
+    var all=direct.concat(r);
     var rows=all.slice(0,GSMAX).map(function(x,i){
       if(x.lock) return '<div class="gsi" data-no="'+x.no+'"><div class="gst" style="color:var(--faint)">'+esc(x.t)+'</div>'+
         '<div class="gsm"><span class="gsn">dw://'+x.no+'</span><span class="sep">·</span>당사자만 조회 가능</div></div>';
@@ -1560,8 +1620,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '</div>';
     }).join('');
     box.innerHTML = all.length
-      ? '<div class="gsh2">결과 '+all.length+'건</div>'+rows+(more>0?'<div class="gsmore">+ '+more+'건 더 — 검색어를 좁혀보세요</div>':'')
+      ? '<div class="gsh2">결과 '+all.length+'건</div>'+rows+
+        '<button class="gsall" id="gsall">‘'+esc(q)+'’ 전체 결과 '+all.length+'건 보기</button>'
       : '<div class="gsnone">일치하는 요청이 없습니다</div>';
+    if($('#gsall')) $('#gsall').onclick=function(){ openSearch(q); };
     box.classList.add('on');
     $$('.gsi',box).forEach(function(el){ el.onclick=function(){
       $('#gsq').value=''; gsRender(); openT(el.dataset.no);
@@ -1851,23 +1913,27 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
   }
 
-  var WFIN=false;
+  var WFIN=false, WPG=1;
   function renderWork(){
     // 나(ME)에게 배정된 요청. 근무조에 배정된 건은 그 조원 전원의 업무다.
     var mine=byPeriod(allT().filter(function(t){return isMine(t,ME)}));
     var hid=0;
     if(!WFIN){ var n0=mine.length; mine=mine.filter(function(t){return !isFin(t)}); hid=n0-mine.length; }
+    var tot=mine.length, last=Math.max(1,Math.ceil(tot/PAGE)); if(WPG>last) WPG=last;
+    var pg=mine.slice((WPG-1)*PAGE, WPG*PAGE);
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
      '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+finBox('wFin',WFIN)+
        (hid?'<span class="hidn">종결 '+hid+'건 숨김</span>':'')+'</div>'+
-     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+mine.length+'건</span></div><div class="cb">'+
-       (mine.length?mine.map(function(t){return row(t,'own')}).join(''):empty('배정된 요청이 없습니다'))+'</div></div>';
-    if($('#wFin')) $('#wFin').onchange=function(){WFIN=this.checked;renderWork()};
+     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+tot+'건</span></div><div class="cb">'+
+       (tot?pg.map(function(t){return row(t,'own')}).join(''):empty('배정된 요청이 없습니다'))+'</div></div>'+
+     pager(tot, WPG, null);
+    if($('#wFin')) $('#wFin').onchange=function(){WFIN=this.checked;WPG=1;renderWork()};
+    wirePager($('#s-work'), function(p2){ WPG=p2; renderWork(); window.scrollTo(0,0); });
     wirePeriod(); wire(); tr();
   }
 
-  var MSC='mine', MD2='all', MFIN=false;
+  var MSC='mine', MD2='all', MFIN=false, MPG=1;
   // 끝난 요청은 기본으로 숨긴다 — 내 요청의 목적은 '지금 어떻게 되고 있나'다.
   // 종결이 쌓이면 살아있는 요청이 묻힌다. 필요하면 체크 하나로 되살린다.
   function isFin(t){ return t.state==='closed'||t.state==='cancel'||t.state==='reject' }
@@ -1885,6 +1951,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var hid=0;
     if(!MFIN){ var n0=own.length; own=own.filter(function(t){return !isFin(t)}); hid=n0-own.length; }
     var none = MSC==='cc' ? '회람 중인 요청이 없습니다' : '요청이 없습니다';
+    var tot=own.length, last=Math.max(1,Math.ceil(tot/PAGE)); if(MPG>last) MPG=last;
+    var pg=own.slice((MPG-1)*PAGE, MPG*PAGE);
     $('#s-mine').innerHTML=
      '<div class="head"><div><h1>내 요청</h1></div></div>'+
      '<div class="filt" id="mFilt" style="margin-bottom:12px">'+
@@ -1896,10 +1964,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
        (hid?'<span class="hidn">종결 '+hid+'건 숨김</span>':'')+
      '</div>'+
      '<div class="card"><div class="cb">'+
-       (own.length?own.map(function(t){return row(t,'req')}).join(''):empty(none))+'</div></div>';
-    if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;renderMine()};
-    if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;renderMine()};
-    if($('#mFin'))   $('#mFin').onchange=function(){MFIN=this.checked;renderMine()};
+       (tot?pg.map(function(t){return row(t,'req')}).join(''):empty(none))+'</div></div>'+
+     pager(tot, MPG, null);
+    if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;MPG=1;renderMine()};
+    if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;MPG=1;renderMine()};
+    if($('#mFin'))   $('#mFin').onchange=function(){MFIN=this.checked;MPG=1;renderMine()};
+    wirePager($('#s-mine'), function(p2){ MPG=p2; renderMine(); window.scrollTo(0,0); });
     wirePeriod(); wire(); tr();
   }
 
@@ -2518,7 +2588,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     ds.onchange=fillWho; fillWho();
   }
   var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
-  var SCR={intake:'요청하기',mine:'내 요청',work:'내 업무',find:'요청 찾기',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
+  var SCR={intake:'요청하기',mine:'내 요청',search:'검색 결과',work:'내 업무',find:'요청 찾기',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function eun(s){ // 은/는 조사
     var c=s.charCodeAt(s.length-1);
     if(c<0xAC00||c>0xD7A3) return s+'는';
@@ -3146,7 +3216,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     $('#gsq').onclick=function(e){ e.stopPropagation(); if(this.value.trim()) gsRender(); };
     $('#gsq').onkeydown=function(e){
       if(e.key==='Escape'){ this.value=''; gsRender(); this.blur(); }
-      if(e.key==='Enter'){ var f=$('.gsi'); if(f) f.click(); }
+      if(e.key==='Enter'){ var v=this.value.trim(); if(v) openSearch(v); }
     };
   }
   if($('#gsx')) $('#gsx').onclick=function(){ $('#gsq').value=''; gsRender(); $('#gsq').focus(); };
