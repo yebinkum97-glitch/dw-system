@@ -1100,13 +1100,22 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // 예시 데이터 없음 — 요청하기에서 접수한 건이 그대로 쌓인다.
   // 브라우저(localStorage)에 저장되며, 상단 '데이터 초기화'로 비울 수 있다.
   var LS='dw-demo-v1';
-  var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null, _SG=null;
+  // 기준정보 시드 버전 — 코드의 AXES/RULES/TEAM/GROUPS 기본값을 바꾸면 이 숫자를 올린다.
+  // 저장본이 이보다 낮으면 기준정보만 코드값으로 갱신한다(입력한 요청 T·SEQ는 보존).
+  // 이게 없으면 한 번이라도 열어본 브라우저는 옛 기준정보에 묶여 새 부서·축이 영영 안 열린다.
+  var SEED=2;
+  var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null, _SG=null, _RESEED=false;
   try{
     var _s=JSON.parse(localStorage.getItem(LS)||'null');
-    if(_s&&_s.T){T=_s.T; SEQ=_s.SEQ||1000; if(_s.RULES) _SAVED_RULES=_s.RULES; if(_s.MAXLOAD) _SAVED_MAX=_s.MAXLOAD;
-       if(_s.DEPT)_SD=_s.DEPT; if(_s.AXES)_SA=_s.AXES; if(_s.TEAM)_SW=_s.TEAM; if(_s.GROUPS)_SG=_s.GROUPS;}
+    if(_s&&_s.T){
+      T=_s.T; SEQ=_s.SEQ||1000;
+      if((_s.SEED||0)>=SEED){
+        if(_s.RULES) _SAVED_RULES=_s.RULES; if(_s.MAXLOAD) _SAVED_MAX=_s.MAXLOAD;
+        if(_s.DEPT)_SD=_s.DEPT; if(_s.AXES)_SA=_s.AXES; if(_s.TEAM)_SW=_s.TEAM; if(_s.GROUPS)_SG=_s.GROUPS;
+      } else _RESEED=true;   // 기준정보는 코드 기본값으로 되돌린다
+    }
   }catch(e){}
-  function save(){ try{ localStorage.setItem(LS, JSON.stringify({T:T,SEQ:SEQ,RULES:RULES,AXES:AXES,MAXLOAD:MAXLOAD,DEPT:DEPT,TEAM:TEAM,GROUPS:GROUPS})); }catch(e){} }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({SEED:SEED,T:T,SEQ:SEQ,RULES:RULES,AXES:AXES,MAXLOAD:MAXLOAD,DEPT:DEPT,TEAM:TEAM,GROUPS:GROUPS})); }catch(e){} }
 
   // ---- 역할 전환 ----
   // 인물 정보는 하드코딩하지 않는다. 백엔드 연동 시 인사 API(로그인 사용자)로 대체된다.
@@ -1371,7 +1380,21 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       {n:'공간 유형', a:true,  o:['사무-업무공간','사무-공용공간','세미나/공연','호스피탈리티-객실','호스피탈리티-기타','호스피탈리티-BOH','F&B','라운지','야외','가구','사이니지']},
       {n:'업무 유형', a:false, o:['단순문의(길이, 면적, 층고 등)','레이아웃 변경','인테리어 설계','인테리어 시공','VMD 연출','기타']}
     ],
-    '총무':[], '시설':[], '자산':[], '인사쉐어드':[], '회계기획쉐어드':[], '재무쉐어드':[], 'IT쉐어드':[]
+    // ── 총무 — 일일업무일지(2026-05~07, 민원 672건) 분석 기준 ──
+    //  · 배정축은 '분야'. 단 온도·점검은 특정 담당자가 없고 교대 근무조가 처리한다(전체의 67%)
+    //  · 로그의 '점검'(130건)은 분야가 아니라 '무슨 일'이라 [업무 유형]으로 분리했다
+    //  · 자산은 공간기획과 동일한 사업장 목록(자산별 탭 기준)
+    '총무':[
+      {n:'분야', a:true, o:['공조·온도','전기','기계','소방','설비·위생','건축·영선','미화','보안',
+                            '배차','음향','관리·행정','가스','승강기','기타']},
+      {n:'자산', a:false, o:['본관','신관','S빌딩','비워크서울','유로프라자','잠실선착장','마곡연구소',
+                             '용인경영개발원','용인 연구소','힐리언스 선마을','대전사옥','경남사옥',
+                             '시지메드텍 성수','시지메드텍 의정부','기타(공장)','기타(영업소)','기타(임대)','기타']},
+      {n:'층', a:false, o:['지하3층','지하2층','지하1층','1층','2층','3층','4층','5층','6층','7층','8층',
+                           '9층','10층','11층','옥상','전층·해당없음']},
+      {n:'업무 유형', a:false, o:['점검','수리','교체','설치','문의','기타']}
+    ],
+    '시설':[], '자산':[], '인사쉐어드':[], '회계기획쉐어드':[], '재무쉐어드':[], 'IT쉐어드':[]
   };
   function axesOf(d){ return AXES[d]||[] }
   function assignAxis(d){ return axesOf(d).filter(function(x){return x.a})[0]||null }   // 배정축
@@ -1439,7 +1462,27 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '가구':['윤희선','원종욱'],
       '사이니지':['원종욱','윤희선','탈리아']
     },
-    '총무':{}, '시설':{}, '자산':{}, '인사쉐어드':{}, '회계기획쉐어드':{}, '재무쉐어드':{}, 'IT쉐어드':{}
+    // ── 총무 — 일일업무일지 분석 기준 ──
+    //  전문 분야는 전담자가 1순위, 근무조가 백업.
+    //  온도는 전담자가 없다(6명 균등 = 교대) → 근무조를 순위대로. MAXLOAD로 조 간에 분산된다.
+    //  ※ "오늘 당번은 어느 조인가"(교대 캘린더)는 미구현 — 지금은 업무량 기준으로 다음 조에 넘어간다.
+    '총무':{
+      '공조·온도':['A조','B조','C조'],
+      '전기':['정선욱','A조','B조'],
+      '기계':['정동진','A조','B조'],
+      '소방':['정동진','A조'],
+      '설비·위생':['권오민','A조','B조'],
+      '건축·영선':['이진두','양용진','A조'],
+      '미화':['김재록'],
+      '보안':['박승경'],
+      '배차':['남궁철'],
+      '음향':['노윤형'],
+      '관리·행정':['이웅건','권소정'],
+      '가스':['정동진','A조'],
+      '승강기':['정동진','A조'],
+      '기타':['이웅건','A조']
+    },
+    '시설':{}, '자산':{}, '인사쉐어드':{}, '회계기획쉐어드':{}, '재무쉐어드':{}, 'IT쉐어드':{}
   };
 
   if(_SAVED_RULES) RULES=_SAVED_RULES;
