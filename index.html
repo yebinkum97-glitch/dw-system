@@ -103,6 +103,8 @@ button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;backgrou
 @media(max-width:760px){.brand .lk2{display:none}}
 input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--faint);letter-spacing:-.01em;opacity:1}
 .topr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.newreq{padding:7px 14px;font-size:12.5px;font-weight:700;border-radius:var(--r-field);letter-spacing:-.01em}
+.newreq:hover{background:var(--primary-2);border-color:var(--primary-2)}
 .lang{
   border:1px solid var(--line-2);border-radius:var(--r-pill);padding:5px 12px;
   font-size:12px;font-weight:500;color:var(--ink-2);background:#fff;letter-spacing:-.01em;
@@ -217,11 +219,31 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
 
 .thr{padding:4px 15px 14px}
-.ev{display:grid;grid-template-columns:88px 1fr;gap:13px;padding:12px 0;border-bottom:1px solid var(--line)}
+/* 이벤트 — 예전엔 왼쪽 88px 칸에 시각을 넣고 '07-17'과 '14:45'를 <br>로 쪼갰다.
+   시각이 두 줄로 접혀 읽기 나쁘고 칸도 낭비였다. 머리줄(누가·역할·언제) 한 줄 + 몸으로 바꾼다. */
+.ev{padding:13px 0;border-bottom:1px solid var(--line)}
 .ev:last-child{border-bottom:none}
-.evt{font-family:var(--mono);font-size:10.5px;color:var(--faint);padding-top:2px;line-height:1.5}
+.evh{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-bottom:5px}
+.evn{font-size:13px;font-weight:700;letter-spacing:-.012em;color:var(--ink)}
+.evh .org{font-size:11px;font-weight:500;color:var(--muted)}
+.evt{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap;flex:none}
+.evb{font-size:13px;color:var(--ink-2);line-height:1.6}
 .evw{font-size:12.5px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .evw .org{font-size:11px;font-weight:600;color:var(--muted)}
+
+/* 날짜 — 기한·희망 완료일·확인 마감이 부서/자산 칩과 같은 모양이라 뭐가 뭔지 구분이 안 됐다.
+   따로 묶고, 각자 뜻을 한 줄로 달고, '지금 의미 있는 것'만 보여준다. */
+.dates{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line-2)}
+.dt{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border:1px solid var(--line);
+    border-radius:var(--r-field);background:var(--surface-2)}
+.dt i{font-style:normal;font-size:9.5px;font-weight:800;color:var(--faint);letter-spacing:.04em}
+.dt b{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.dt em{font-style:normal;font-size:10px;color:var(--faint);line-height:1.4}
+.dt.key{border-color:var(--dw-gray);border-width:1.5px;background:var(--surface)}
+.dt.key b{font-size:15px}
+.dt.key i{color:var(--dw-gray)}
+.dt.warn{border-color:#f0c99a;background:var(--primary-tint)}
+.dt.warn b,.dt.warn i{color:var(--primary-ink)}
 .rl{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2)}
 .rl.rq{color:var(--primary-ink);border-color:#f0c99a;background:var(--primary-tint)}
 .rl.ow{color:var(--good);border-color:#b9dcc9;background:var(--good-tint)}
@@ -609,11 +631,15 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
   .kp,.pool,.cat,.eg,.mp,.split,.gr3{grid-template-columns:1fr}
 
-  /* 상단바 압축 */
-  .top{gap:8px;padding:0 12px}
+  /* 상단바 압축 — 폰에서는 로고+CTA+언어+이름이 한 줄에 안 들어간다.
+     주 행동(요청하기)은 남기고 이름표를 아바타만 남긴다. */
+  .top{gap:6px;padding:0 10px}
   .mark{gap:9px}
-  .me .dp{display:none}
-  .me{padding:4px}
+  .me .dp,.me .nm{display:none}
+  .me{padding:2px}
+  .newreq{padding:7px 11px;font-size:12px;flex:none}
+  .lang{padding:5px 9px;font-size:11.5px}
+  .brand{display:none}   /* 로고 워드마크만으로 충분 */
   .drop{width:calc(100vw - 20px);right:-4px}
 
   /* 탭 레일 — 스크롤바 숨김 */
@@ -756,6 +782,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 </clipPath>
 </defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn">Shared Service Request System</span></span></div>
   <div class="topr" style="position:relative">
+    <!-- 요청하기는 이 시스템의 단 하나의 주 행동이다. 페이지마다 제목 옆에 떠 있으니
+         페이지를 옮길 때마다 나타났다 사라져서 뜬금없어 보였다. 상단바에 고정한다. -->
+    <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
     <button class="lang" id="langBtn">EN</button>
     <button class="me">
       <span class="av" id="uav">유</span>
@@ -844,8 +873,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   <!-- FIND -->
   <section class="screen" id="s-find">
     <div class="head">
-      <div><h1>전체 요청</h1><div class="sub">쉐어드서비스에 접수된 모든 요청</div></div>
-      <button class="btn pri lg" data-j="intake" data-r="req"><span class="pl">＋</span>요청하기</button>
+      <div><h1>전체 요청</h1><div class="sub">쉐어드서비스에 접수된 모든 요청 · 읽기 전용</div></div>
     </div>
     <div class="sbig"><span class="sch">dw://</span><input type="text" id="sq" placeholder="요청번호, 제목, 내용" autocomplete="off"></div>
     <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
@@ -1739,7 +1767,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var el=$('#'+id); if(!el) return;
     if(el.value){ el.focus(); try{ el.setSelectionRange(el.value.length,el.value.length) }catch(e){} }
   }
-  var CTA='<button class="btn pri lg" data-j="intake"><span class="pl">＋</span>요청하기</button>';
+  var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
   function stateBar(list, sel, cur2, extra){
     return Object.keys(FGROUP).map(function(k){
       var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
@@ -2617,54 +2645,84 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   function esc2(s){return String(s==null?'':s).replace(/[&<>]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
   function lnk(s){return esc2(s).replace(/dw:\/\/([\w가-힣]+-\d+)/g,'<a class="tl" data-o="$1">dw://$1</a>')}
 
+  // 이벤트 한 줄 = 머리(누가 · 소속 · 역할 · 무엇을 · 언제) + 몸(내용)
+  // 예전엔 왼쪽 88px 칸에 시각을 넣고 '07-17'과 '14:45'를 <br>로 쪼개 두 줄로 접었다.
+  // 읽기도 나쁘고 칸도 낭비였다. 시각은 머리줄 오른쪽 끝에 한 줄로 붙인다.
+  function evH(who,org,rcls,rtxt,badge,at){
+    return '<div class="evh">'+
+      (who?'<span class="evn">'+esc2(who)+'</span>':'')+
+      (org?'<span class="org">'+esc2(org)+'</span>':'')+
+      (rtxt?'<span class="rl '+(rcls||'')+'">'+rtxt+'</span>':'')+
+      (badge||'')+
+      '<span class="evt">'+esc2(at)+'</span>'+
+    '</div>';
+  }
   function evHtml(e,t){
-    var w='<div class="evt">'+e.at.replace(' ','<br>')+'</div>';
-    if(e.t==='sys') return '<div class="ev">'+w+'<div><div class="evw">시스템 <span class="rl">자동</span></div><div class="evx">'+lnk(e.x)+'</div></div></div>';
+    var W=function(head,body){ return '<div class="ev">'+head+'<div class="evb">'+body+'</div></div>' };
+
+    if(e.t==='sys')
+      return W(evH('시스템','','','자동','',e.at), lnk(e.x));
+
     if(e.t==='plan'){
       var p=t.plan;
-      return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-commit">계획</span></div>'+
+      return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-commit">계획</span>',e.at),
         '<div class="bx cm"><dl class="f"><dt>무엇을</dt><dd>'+esc2(p.w)+'</dd></dl>'+
         '<dl class="f"><dt>언제까지</dt><dd><b>'+esc2(p.d)+'</b></dd></dl>'+
         '<dl class="f"><dt>어떻게</dt><dd>'+esc2(p.h)+'</dd></dl>'+
-        '<div class="ft" style="color:var(--good)">계획 마감 준수 · 요청자 메일 발송</div></div></div></div>';
+        '<div class="ft" style="color:var(--good)">계획 마감 준수 · 요청자 메일 발송</div></div>');
     }
-    if(e.t==='joiner') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl">회람</span></div>'+
-      (e.x?'<div class="evx">'+esc2(e.x)+'</div>':'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">회람 등록 · 이후 진행사항 메일 수신</div></div></div>';
-    if(e.t==='due') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-commit">기한 조정</span></div>'+
-      '<div class="bx cm"><div class="evx"><b>'+esc2(e.who)+'</b>'+(ga(e.who).slice(-1))+' 기한을 <b>'+esc2(e.fr)+'</b>에서 <b>'+esc2(e.to)+'</b>로 변경했습니다</div>'+
-      '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--good)">기한 확정 마감 전 조정 · 요청자 메일 발송</div></div></div></div>';
-    if(e.t==='nego'){
-      // item 4 — 새 기한 수락/거절 버튼을 '지연 미리 알림'(새 기한 제안) 카드 안에 둔다.
-      // 활성 제안(마지막 nego)이고 요청자 시점일 때만 노출한다.
-      var negoAct = (e===ACTIVE_NEGO && cur==='req')
-        ? '<div data-r="req" class="pk" style="margin-top:12px;gap:7px"><button class="btn pri sm" id="aNegoY">새 기한 수락</button><button class="btn dn sm" id="aNegoN">거절</button></div>'
-        : '';
-      return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">지연 미리 알림</span></div>'+
-      '<div class="bx sl"><dl class="f"><dt>지연 사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      (e.ct?'<dl class="f"><dt>대책</dt><dd>'+esc2(e.ct)+'</dd></dl>':'')+
-      '<dl class="f"><dt>새 완료 예정일</dt><dd><b>'+esc2(e.to)+'</b> <span style="color:var(--muted)">(기존 '+esc2(e.fr)+')</span></dd></dl>'+
-      '<div class="ft" style="color:var(--signal)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div>'+negoAct+'</div></div></div>';
-    }
-    if(e.t==='negoN') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">새 기한 거절</span></div>'+
-      '<div class="bx hd"><div class="evx">제안된 <b>'+esc2(e.to)+'</b>을(를) 거절 · 기존 기한 <b>'+esc2(e.keep)+'</b> 유지</div>'+
-      '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--primary-ink)">담당자 메일 발송 · 미완료 시 지연 처리</div></div></div></div>';
-    if(e.t==='reopen') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">재요청</span></div>'+
-      '<div class="bx hd"><dl class="f"><dt>부족한 점</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--primary-ink)">진행 상태로 복귀 · 담당자 메일 발송</div></div></div></div>';
-    if(e.t==='reject') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">반려</span></div>'+
-      '<div class="bx sl"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<dl class="f"><dt>설명</dt><dd>'+esc2(e.ex)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--signal)">요청자에게 반송 · 메일 발송</div></div></div></div>';
-    if(e.t==='cancel') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-closed">요청 취소</span></div>'+
-      (e.why?'<div class="bx"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl></div>':'')+
-      '<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자가 요청을 취소·회수 · 담당자 통보</div></div></div>';
-    if(e.t==='res') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-resolved">완료 처리</span></div>'+
-      (e.x?'<div class="evx">'+lnk(e.x)+'</div>':'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자 확인 대기 · 종결 권한은 요청자에게 있습니다</div></div></div>';
-    return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl '+(e.r||'')+'">'+(e.r==='ow'?'담당자':'요청자')+'</span></div><div class="evx">'+lnk(e.x)+'</div></div></div>';
-  }
 
+    if(e.t==='joiner')
+      return W(evH(e.who,e.org,'','회람','',e.at),
+        '<span style="color:var(--muted)">회람 등록 · 이후 진행사항을 메일로 받습니다</span>');
+
+    if(e.t==='due')
+      return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-commit">기한 조정</span>',e.at),
+        '<div class="bx cm"><div>기한을 <b>'+esc2(e.fr)+'</b>에서 <b>'+esc2(e.to)+'</b>로 변경했습니다</div>'+
+        '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+        '<div class="ft" style="color:var(--good)">담당자 확인 마감 전 조정 · 요청자 메일 발송</div></div>');
+
+    if(e.t==='nego'){
+      // 새 기한 수락/거절 버튼은 이 제안 카드 안에 둔다(활성 제안 + 요청자 시점일 때만)
+      var negoAct = (e===ACTIVE_NEGO && cur==='req')
+        ? '<div data-r="req" style="display:flex;gap:7px;margin-top:12px"><button class="btn pri sm" id="aNegoY">새 기한 수락</button><button class="btn sm" id="aNegoN">거절</button></div>'
+        : '';
+      return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-wait">지연 미리 알림</span>',e.at),
+        '<div class="bx hd"><dl class="f"><dt>지연 사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+        (e.ct?'<dl class="f"><dt>대책</dt><dd>'+esc2(e.ct)+'</dd></dl>':'')+
+        '<dl class="f"><dt>새 완료 예정일</dt><dd><b>'+esc2(e.to)+'</b> <span style="color:var(--muted)">(기존 '+esc2(e.fr)+')</span></dd></dl>'+
+        '<div class="ft" style="color:var(--primary-ink)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div>'+negoAct+'</div>');
+    }
+
+    if(e.t==='negoN')
+      return W(evH(e.who,e.org,'rq','요청자','<span class="badge b-wait">새 기한 거절</span>',e.at),
+        '<div class="bx hd"><div>제안된 <b>'+esc2(e.to)+'</b>을(를) 거절 · 기존 기한 <b>'+esc2(e.keep)+'</b> 유지</div>'+
+        '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+        '<div class="ft" style="color:var(--primary-ink)">담당자 메일 발송 · 미완료 시 지연 처리</div></div>');
+
+    if(e.t==='reopen')
+      return W(evH(e.who,e.org,'rq','요청자','<span class="badge b-wait">재요청</span>',e.at),
+        '<div class="bx hd"><dl class="f"><dt>부족한 점</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+        '<div class="ft" style="color:var(--primary-ink)">진행 상태로 복귀 · 담당자 메일 발송</div></div>');
+
+    if(e.t==='reject')
+      return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-slip">반려</span>',e.at),
+        '<div class="bx sl"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+        '<dl class="f"><dt>설명</dt><dd>'+esc2(e.ex)+'</dd></dl>'+
+        '<div class="ft" style="color:var(--signal)">요청자에게 반송 · 메일 발송</div></div>');
+
+    if(e.t==='cancel')
+      return W(evH(e.who,e.org,'rq','요청자','<span class="badge b-closed">요청 취소</span>',e.at),
+        (e.why?'<div class="bx"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl></div>':'')+
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자가 요청을 취소·회수 · 담당자 통보</div>');
+
+    if(e.t==='res')
+      return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-resolved">완료 처리</span>',e.at),
+        (e.x?lnk(e.x):'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자 확인 대기 · 종결 권한은 요청자에게 있습니다</div>');
+
+    // 의견
+    return W(evH(e.who,e.org,(e.r||''),(e.r==='ow'?'담당자':'요청자'),'',e.at), lnk(e.x));
+  }
 
   function evalBlk(t){
     var done = t.state==='closed';
@@ -2786,18 +2844,28 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     CUR=no;
     if(t.unseen&&cur==='own'){t.unseen=false;t.ev.push({t:'sys',at:now(),x:'담당자 최초 열람'});save();}
     var si=ST[t.state].i;
-    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b> · '+esc2(t.rq.org)+'</span>'+(t.jn.length?'<span class="kv">회람 <b style="color:var(--primary-ink)">'+t.jn.length+'명</b></span>':'')+
+    // 분류·사람 — 낮은 강조로 한 줄
+    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b>'+(t.rq.org?' · '+esc2(t.rq.org):'')+'</span>'+
+      (t.jn.length?'<span class="kv">회람 <b style="color:var(--primary-ink)">'+t.jn.length+'명</b></span>':'')+
       '<span class="kv">담당자 <b>'+esc2(t.as)+'</b>'+
         (isGroup(t.dept,t.as)?' <span style="color:var(--primary-ink);font-weight:600">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':'')+
         ' · '+esc2(t.asOrg)+'</span>'+
       '<span class="kv">부서 <b>'+esc2(t.dept)+'</b></span>'+
       Object.keys(t.attrs||{}).map(function(k){return '<span class="kv">'+esc2(k)+' <b>'+esc2(t.attrs[k])+'</b></span>'}).join('')+
-      '<span class="kv">접수 <b>'+esc2(t.open)+'</b></span>';
+      (t.att?'<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>':'');
     if(t.parent) meta+='<span class="kv" style="border-color:#f0bcc1;background:var(--signal-tint)">원 요청 <a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a></span>';
-    if(t.due) meta+='<span class="kv">기한 <b>'+esc2(t.due)+'</b>'+(t.dueOrig&&t.due!==t.dueOrig?' <span style="color:var(--primary-ink)">(당초 '+esc2(t.dueOrig)+')</span>':'')+'</span>';
-    if(t.fixBy) meta+='<span class="kv" style="border-color:#f0c99a;background:var(--primary-tint)">기한 확정 마감 <b style="color:var(--primary-ink)">'+esc2(t.fixBy)+'</b></span>';
-    if(t.want) meta+='<span class="kv">희망 완료일 <b>'+esc2(t.want)+'</b></span>';
-    if(t.att) meta+='<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>';
+
+    // 날짜 — 기한/희망 완료일/확인 마감이 전부 같은 회색 칩이라 뭐가 뭔지 몰랐다.
+    // 따로 묶고 각자 뜻을 한 줄로 달되, '지금 의미 있는 것'만 남긴다.
+    //   · 희망 완료일은 기한과 다를 때만 (같으면 같은 말을 두 번 하는 셈)
+    //   · 담당자 확인 마감은 아직 확인 전(접수)일 때만 — 확인 뒤엔 지난 얘기
+    //   · 당초 기한은 기한이 바뀐 적 있을 때만
+    var dates='<span class="dt"><i>접수</i><b>'+esc2(t.open)+'</b></span>';
+    if(t.due) dates+='<span class="dt key"><i>기한</i><b>'+esc2(t.due)+'</b><em>약속한 완료일 · 넘기면 지연</em></span>';
+    if(t.want && t.want!==t.due) dates+='<span class="dt"><i>희망 완료일</i><b>'+esc2(t.want)+'</b><em>요청자가 원한 날</em></span>';
+    if(t.dueOrig && t.due!==t.dueOrig) dates+='<span class="dt"><i>당초 기한</i><b>'+esc2(t.dueOrig)+'</b><em>지연 판정의 기준선</em></span>';
+    if(t.fixBy && t.state==='open') dates+='<span class="dt warn"><i>담당자 확인 마감</i><b>'+esc2(t.fixBy)+'</b><em>이때까지 [확인 · 진행]을 눌러야</em></span>';
+    if(t.resolved) dates+='<span class="dt"><i>완료</i><b>'+esc2(t.resolved)+'</b></span>';
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
     ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
@@ -2812,12 +2880,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '<div><div class="tid"><span class="s">dw://</span>'+esc2(t.no)+'</div><div class="tt">'+esc2(t.title)+'</div></div>'+
       '<span style="display:flex;gap:5px;align-items:center"><span class="lock" style="border-style:dashed">공개</span>'+
       (t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="tm">'+meta+'</div></div>';
+      '<div class="tm">'+meta+'</div><div class="dates">'+dates+'</div></div>';
 
     var body='<div class="tb"><div class="flow">'+flow+'</div><div class="thr">'+
-      '<div class="ev"><div class="evt">'+t.open.replace(' ','<br>')+'</div><div>'+
-        '<div class="evw">'+esc2(t.rq.nm)+' <span class="org">'+esc2(t.rq.org)+'</span> <span class="rl rq">요청자</span></div>'+
-        '<div class="split" style="margin-top:6px">'+
+      '<div class="ev">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+'<div class="evb">'+
+        '<div class="split" style="margin-top:2px">'+
           '<div><label class="fl2">현재 상황</label><div class="qt">'+esc2(t.asis)+'</div></div>'+
           '<div><label class="fl2">요청 사항</label><div class="qt">'+esc2(t.tobe)+'</div></div>'+
         '</div></div></div>'+
