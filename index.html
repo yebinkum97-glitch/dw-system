@@ -897,11 +897,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 <body>
 
 <div class="strip">
-  <b>데모</b> · 입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동 · <b style="color:#5FC08A">모바일최적화 v2 · 2026-07-17</b>
+  <b>데모</b> · 실제로는 로그인한 본인 역할 화면 하나만 보입니다 · 이 줄은 세 역할을 바꿔 보라고 둔 것이라 실제 시스템에는 없습니다
   <span class="rsw">
     <button data-r="req" class="on">요청자로 보기</button><button data-r="own">담당자로 보기</button><button data-r="adm">관리자로 보기</button>
     <select id="reqAs" style="display:none"></select>
     <select id="ownAs" style="display:none"></select>
+    <button id="rsAll" title="입력한 요청을 모두 지우고 예시만 남깁니다">예시로 초기화</button>
   </span>
 </div>
 
@@ -1366,26 +1367,30 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     return ST[state].l;
   }
 
-  // 예시 데이터 없음 — 요청하기에서 접수한 건이 그대로 쌓인다.
-  // 브라우저(localStorage)에 저장되며, 상단 '데이터 초기화'로 비울 수 있다.
+  // 예시 요청은 demoSeed() 가 깐다. 접수한 건은 그 위에 쌓인다.
+  // 브라우저(localStorage)에 저장되며, 상단 [예시로 초기화]로 비울 수 있다.
   var LS='dw-demo-v1';
+  // 예시 시드 버전 — 예시를 바꾸면 이 숫자를 올린다.
+  // '요청이 0건일 때만' 깔면, 한 번이라도 열어본 브라우저(=이미 저장본이 있는)는
+  // 예시를 영영 못 본다. 실제로 그래서 배포본에 예시가 안 떴다. 버전으로 판단한다.
+  var DEMOV=1;
   // 기준정보 시드 버전 — 코드의 AXES/RULES/TEAM/GROUPS 기본값을 바꾸면 이 숫자를 올린다.
   // 저장본이 이보다 낮으면 기준정보만 코드값으로 갱신한다(입력한 요청 T·SEQ는 보존).
   // 이게 없으면 한 번이라도 열어본 브라우저는 옛 기준정보에 묶여 새 부서·축이 영영 안 열린다.
   var SEED=4;
-  var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null, _SG=null, _RESEED=false;
+  var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null, _SG=null, _RESEED=false, _DEMO=true;
   try{
     var _s=JSON.parse(localStorage.getItem(LS)||'null');
     if(_s&&_s.T){
       T=_s.T; SEQ=_s.SEQ||1000;
+      if((_s.DEMOV||0)>=DEMOV) _DEMO=false;   // 이 버전의 예시를 이미 받았다
       if((_s.SEED||0)>=SEED){
         if(_s.RULES) _SAVED_RULES=_s.RULES; if(_s.MAXLOAD) _SAVED_MAX=_s.MAXLOAD;
         if(_s.DEPT)_SD=_s.DEPT; if(_s.AXES)_SA=_s.AXES; if(_s.TEAM)_SW=_s.TEAM; if(_s.GROUPS)_SG=_s.GROUPS;
       } else _RESEED=true;   // 기준정보는 코드 기본값으로 되돌린다
     }
   }catch(e){}
-  function save(){ try{ localStorage.setItem(LS, JSON.stringify({SEED:SEED,T:T,SEQ:SEQ,RULES:RULES,AXES:AXES,MAXLOAD:MAXLOAD,DEPT:DEPT,TEAM:TEAM,GROUPS:GROUPS})); }catch(e){} }
-  var _DEMO = !Object.keys(T).length;   // 저장된 요청이 하나도 없을 때만 예시를 깐다
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({SEED:SEED,DEMOV:DEMOV,T:T,SEQ:SEQ,RULES:RULES,AXES:AXES,MAXLOAD:MAXLOAD,DEPT:DEPT,TEAM:TEAM,GROUPS:GROUPS})); }catch(e){} }
 
   // ---- 역할 전환 ----
   // 인물 정보는 하드코딩하지 않는다. 백엔드 연동 시 인사 API(로그인 사용자)로 대체된다.
@@ -3133,8 +3138,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '1월':'Jan','2월':'Feb','3월':'Mar','4월':'Apr','5월':'May','6월':'Jun',
     '7월':'Jul','8월':'Aug','9월':'Sep','10월':'Oct','11월':'Nov','12월':'Dec',
     '접수':'Received','종결':'Closed',
-    '· 입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'· Requests are stored in this browser · no backend',
-    '입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'Requests are stored in this browser · no backend',
+    '· 실제로는 로그인한 본인 역할 화면 하나만 보입니다 · 이 줄은 세 역할을 바꿔 보라고 둔 것이라 실제 시스템에는 없습니다':
+      '· In production you only see your own role · this bar exists so you can switch between the three roles and does not exist in the real system',
+    '예시로 초기화':'Reset to examples',
     '건':'','명':'','전체':'All','미열람':'Unread',
     '요청자로 보기':'View as requester','담당자로 보기':'View as assignee','관리자로 보기':'View as admin',
     '전체 요청':'All requests','내 요청':'My requests','내 업무':'My work','검색 결과':'Search results',
@@ -3484,6 +3490,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
     save();
   }
+
+  // 예시로 초기화 — 저장본을 비우고 다시 열면 demoSeed 가 돈다.
+  // 데모를 만지다 보면 상태가 엉키는데, 되돌릴 길이 없으면 시연을 못 한다.
+  if($('#rsAll')) $('#rsAll').onclick=function(){
+    if(!confirm('입력한 요청을 모두 지우고 예시 요청만 남깁니다.\n기준정보(담당자·축) 변경도 함께 초기화됩니다.\n\n계속할까요?')) return;
+    try{ localStorage.removeItem(LS); }catch(e){}
+    location.reload();
+  };
 
   // ================= 초기화 =================
   // 위쪽 var 선언(empty 등)이 모두 평가된 뒤 실행되어야 한다.
