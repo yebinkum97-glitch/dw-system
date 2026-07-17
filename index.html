@@ -164,6 +164,8 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .nb .c.hot{background:var(--signal);border-color:var(--signal);color:#fff}
 .railf{display:none}
 .shell.fold .rail{display:none}
+.shell.nonav .rail{display:none}
+.shell.nonav .navbd{display:none}
 .navbd{display:none}
 
 .main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1100px;margin:0 auto}
@@ -536,6 +538,12 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 /* 필터 드롭다운 — 상태 6개를 버튼으로 깔면 줄이 길어져서 셀렉트로 통일 */
 /* select 와 input[type=date] 는 뒤쪽 전역 규칙(padding:8px 10px)에 덮이므로
    선택자를 같은 수준으로 맞춰서 높이를 일치시킨다 */
+.ckb{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;font-size:12.5px;
+     font-weight:600;color:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--r-field);
+     background:#fff;cursor:pointer;user-select:none}
+.ckb:hover{border-color:var(--line-3)}
+.ckb input{width:14px;height:14px;accent-color:var(--primary);cursor:pointer;margin:0}
+.hidn{font-size:11.5px;color:var(--faint);align-self:center}
 select.fsel, input.fsel[type=date]{
   width:auto;min-width:110px;height:32px;line-height:normal;font-size:12.5px;font-weight:600;padding:0 9px;
   border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff;
@@ -603,7 +611,16 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
 
 /* pool */
 .pool{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.pr{border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:8px;background:#fff}
+.pr{border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:8px;background:#fff;cursor:pointer}
+/* 끝난 요청 — 회색으로 가라앉힌다. 목록을 훑을 때 살아있는 건만 눈에 들어오게. */
+.pr.fin{background:var(--surface-2);border-color:var(--line)}
+.pr.fin .prt{color:var(--muted);font-weight:600}
+.pr.fin .prm{color:var(--faint)}
+.pr.fin:hover{background:#f2f2f2}
+/* 급한 것 — 지연·미열람 */
+.pr.urg{border-color:var(--signal);border-width:1.5px}
+/* 내 차례 — 완료 확인 대기·새 기한 확인 */
+.pr.wait{border-color:var(--primary);border-width:1.5px}
 .pr:last-child{margin-bottom:0}
 .pr[data-o]:hover{background:var(--surface-2);border-color:var(--line-2)}
 .prh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
@@ -1386,6 +1403,16 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
     if($('#ownAs'))$('#ownAs').style.display = r==='own' ? '' : 'none';
     if($('#reqAs'))$('#reqAs').style.display = r==='req' ? '' : 'none';
+    // 목적지가 하나뿐이면 사이드바를 띄우지 않는다.
+    // 회람·요청찾기를 없앤 뒤 요청자·담당자는 갈 곳이 하나다 — 항목 1개짜리 사이드바와
+    // 그걸 접는 햄버거는 자리만 차지한다. 관리자(4개)만 사이드바를 쓴다.
+    var multi = NAVORDER[r].length>1;
+    $('.shell').classList.toggle('nonav', !multi);
+    if($('#ham')) $('#ham').style.display = multi ? '' : 'none';
+    // 폰에서 사이드바가 있는 역할(관리자)로 오면 서랍은 닫힌 채로 시작해야 한다.
+    // 안 그러면 서랍이 열린 채 본문을 가린 상태로 전환된다.
+    if(!multi) $('.shell').classList.remove('fold');
+    else if(matchMedia('(max-width:900px)').matches) $('.shell').classList.add('fold');
     // 역할별 탭 순서 — 첫 탭이 그 역할의 홈
     var rail=$('.rail');
     if(rail) NAVORDER[r].forEach(function(s){
@@ -1505,7 +1532,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var st=Math.max(0,i-30),e=Math.min(b2.length,i+q.length+60);
     return (st>0?'…':'')+b2.slice(st,e)+(e<b2.length?'…':'');
   }
-  var GSMAX=8;   // 너무 많이 깔면 목록이 되어버린다 — 검색은 '찾는' 것이지 '둘러보는' 게 아니다
+  var GSMAX=50;  // 스크롤로 다 볼 수 있게. 그보다 많으면 검색어를 좁히는 게 빠르다
   function gsRender(){
     var box=$('#gsres'); if(!box) return;
     var q=($('#gsq').value||'').trim();
@@ -1762,12 +1789,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(t.state==='closed') m.push('종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:''));
     else if(t.state==='done') m.push('완료 '+t.resolved+' · 요청자 확인 대기');
     else if(t.due) m.push('기한 '+t.due);
-    // 지연이 가장 급한 신호 — 미열람·완료보다 위
-    var bd = (t.state==='slip')?'border-color:var(--signal);border-width:2px'
-           : t.unseen?'border-color:var(--signal);border-width:2px'
-           : (t.state==='done'||t.state==='nego')?'border-color:var(--primary-ink);border-width:2px':'';
-    // 카드 전체가 클릭 대상 — 전체 요청 화면과 동일하게
-    return '<div class="pr" data-o="'+t.no+'" style="cursor:pointer;'+bd+'">'+
+    // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
+    //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
+    var cls='pr';
+    if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
+    else if(t.state==='slip'||t.unseen) cls+=' urg';
+    else if(t.state==='done'||t.state==='nego') cls+=' wait';
+    return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt">'+esc2(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prm">'+m.join(' · ')+'</div>'+
     '</div>';
@@ -1810,52 +1838,42 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
 
   // 내 요청 / 내 업무 상태 필터 — 전체 요청과 같은 그룹을 쓴다
-  // 목록별 검색어 — 종결 건이 쌓이면 목록만으로는 못 찾는다
-  var MS='', WS='', CS='';
   function hay(t){
     return (t.no+' '+t.title+' '+t.asis+' '+t.tobe+' '+attrVals(t).join(' ')+' '+t.dept+' '+t.as+' '+t.rq.nm+' '+
       t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' ')).toLowerCase();
   }
-  function bySearch(list,q){
-    q=(q||'').trim().replace(/^dw:\/\//,'');
-    if(!q) return list;
-    return list.filter(function(t){return hay(t).indexOf(q.toLowerCase())>=0});
-  }
-  function searchBox(id,q){
-    return '<div class="sbig"><span class="sch">dw://</span>'+
-      '<input type="text" id="'+id+'" placeholder="요청번호, 제목, 내용" autocomplete="off" value="'+esc2(q)+'"></div>';
-  }
-  // innerHTML 교체로 포커스가 날아가므로 검색 중이면 커서를 되돌려준다
-  function keepFocus(id){
-    var el=$('#'+id); if(!el) return;
-    if(el.value){ el.focus(); try{ el.setSelectionRange(el.value.length,el.value.length) }catch(e){} }
-  }
+
+
+
   var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
   function deptFilt(id,cur2){
     return '<select id="'+id+'" class="fsel"><option value="all">부서 전체</option>'+
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
   }
 
+  var WFIN=false;
   function renderWork(){
     // 나(ME)에게 배정된 요청. 근무조에 배정된 건은 그 조원 전원의 업무다.
-    // 로그인 연동 시 ME는 로그인 사용자로 대체된다.
     var mine=byPeriod(allT().filter(function(t){return isMine(t,ME)}));
-    var list=bySearch(mine, WS);
+    var hid=0;
+    if(!WFIN){ var n0=mine.length; mine=mine.filter(function(t){return !isFin(t)}); hid=n0-mine.length; }
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
-     searchBox('wq',WS)+
-     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+'</div>'+
-     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
-       (list.length?list.map(function(t){return row(t,'own')}).join(''):empty(mine.length?'해당 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>';
-
-    if($('#wq')) $('#wq').oninput=function(){WS=this.value;renderWork()};
-    wirePeriod(); wire(); tr(); keepFocus('wq');
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+finBox('wFin',WFIN)+
+       (hid?'<span class="hidn">종결 '+hid+'건 숨김</span>':'')+'</div>'+
+     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+mine.length+'건</span></div><div class="cb">'+
+       (mine.length?mine.map(function(t){return row(t,'own')}).join(''):empty('배정된 요청이 없습니다'))+'</div></div>';
+    if($('#wFin')) $('#wFin').onchange=function(){WFIN=this.checked;renderWork()};
+    wirePeriod(); wire(); tr();
   }
 
-  // 내 요청 — 이 시스템의 홈. 회람은 별도 탭이 아니라 여기 '구분' 필터로 들어온다.
-  //   회람은 결국 '내가 지켜보는 요청'이라 내 요청과 같은 성격이다. 탭을 나누면
-  //   같은 걸 두 군데서 찾게 된다.
-  var MSC='mine', MD2='all';
+  var MSC='mine', MD2='all', MFIN=false;
+  // 끝난 요청은 기본으로 숨긴다 — 내 요청의 목적은 '지금 어떻게 되고 있나'다.
+  // 종결이 쌓이면 살아있는 요청이 묻힌다. 필요하면 체크 하나로 되살린다.
+  function isFin(t){ return t.state==='closed'||t.state==='cancel'||t.state==='reject' }
+  function finBox(id,on){
+    return '<label class="ckb"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'>종결 포함</label>';
+  }
   function renderMine(){
     var me=ROLE.req.nm;
     var base=allT().filter(function(t){
@@ -1864,25 +1882,25 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     });
     var own=byPeriod(base);
     if(MD2!=='all') own=own.filter(function(t){return (t.dept||'공간기획')===MD2});
-    var list=bySearch(own, MS);
+    var hid=0;
+    if(!MFIN){ var n0=own.length; own=own.filter(function(t){return !isFin(t)}); hid=n0-own.length; }
     var none = MSC==='cc' ? '회람 중인 요청이 없습니다' : '요청이 없습니다';
     $('#s-mine').innerHTML=
      '<div class="head"><div><h1>내 요청</h1></div></div>'+
-     searchBox('mq',MS)+
      '<div class="filt" id="mFilt" style="margin-bottom:12px">'+
        '<select id="mScope" class="fsel">'+
-         '<option value="mine"'+(MSC==='mine'?' selected':'')+'>내가 낸 요청</option>'+
+         '<option value="mine"'+(MSC==='mine'?' selected':'')+'>내 요청</option>'+
          '<option value="cc"'+(MSC==='cc'?' selected':'')+'>회람 중인 요청</option>'+
        '</select>'+
-       periodSel('m')+deptFilt('mDept',MD2)+
+       periodSel('m')+deptFilt('mDept',MD2)+finBox('mFin',MFIN)+
+       (hid?'<span class="hidn">종결 '+hid+'건 숨김</span>':'')+
      '</div>'+
      '<div class="card"><div class="cb">'+
-       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':none))+'</div></div>';
+       (own.length?own.map(function(t){return row(t,'req')}).join(''):empty(none))+'</div></div>';
     if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;renderMine()};
     if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;renderMine()};
-
-    if($('#mq')) $('#mq').oninput=function(){MS=this.value;renderMine()};
-    wirePeriod(); wire(); tr(); keepFocus('mq');
+    if($('#mFin'))   $('#mFin').onchange=function(){MFIN=this.checked;renderMine()};
+    wirePeriod(); wire(); tr();
   }
 
   // 회람 전용 화면은 없앴다 — [내 요청]의 '구분' 필터로 흡수.
@@ -3010,7 +3028,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '요청 번호·제목·내용으로 찾습니다':'Search by request no., title or content',
     '쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용':'Search every request submitted to shared services · read only',
     '언어':'Language','한국어':'한국어',
-    '내가 낸 요청':'Requests I submitted','회람 중인 요청':'Following',
+    '내 요청':'My requests','회람 중인 요청':'Following',
     '내가 접수한 요청':'Requests you submitted','나에게 배정된 요청':'Requests assigned to you',
     '내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다':'Others requests you follow · updates arrive by email',
     '요청번호, 제목, 내용':'Request no., title, content',
