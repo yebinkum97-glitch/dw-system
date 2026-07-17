@@ -1,0 +1,2483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통합 쉐어드 요청 관리 — Daewoong Shared Service Request System</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/700.css">
+<style>
+/* ── Design tokens — Apple (open-design/design-systems/apple/DESIGN.md) ──
+   중립 삼원색(#ffffff · #f5f5f7 · #1d1d1f)이 뼈대, 파랑은 액션·링크에만.
+   Apple에는 semantic 팔레트가 정의돼 있지 않아 상태색은 SF 시스템 컬러의
+   광량을 낮춘 값으로 보완했다(밝은 배경 위 텍스트 대비 확보). */
+:root{
+  --paper:#f5f5f7; --surface:#ffffff; --surface-2:#fafafc;
+  --ink:#1d1d1f; --ink-2:#424245; --muted:#6e6e73; --faint:#86868b;
+  --line:#d2d2d7; --line-2:#c7c7cc; --line-3:#86868b;
+  --primary:#0071e3; --primary-2:#0077ed; --primary-tint:#e8f2fe; --link:#0066cc;
+  --signal:#d70015; --signal-tint:#ffe9e7;
+  --amber:#a15c00; --amber-tint:#fff4e5;
+  --good:#248a3d; --good-tint:#e8f7ec;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Pretendard Variable",Pretendard,"Apple SD Gothic Neo",sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard Variable",Pretendard,"Apple SD Gothic Neo",sans-serif;
+  /* radius 계층 — 하나로 통일하지 않는다(필드 / 카드 / 캡슐) */
+  --r-field:8px; --r-card:18px; --r-pill:980px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--mono);font-variant-ligatures:none}
+
+.strip{background:#0C1420;color:#8E9BAC;font-size:11px;padding:5px 18px;letter-spacing:.01em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.strip b{color:#C7D2E0;font-weight:700}
+.rsw{margin-left:auto;display:flex;align-items:center;gap:3px}
+.rsw button{border:1px solid #2C3A4C;border-radius:4px;padding:2px 9px;font-size:11px;font-weight:700;color:#8E9BAC;background:transparent}
+.rsw button:hover{border-color:#4A5A70;color:#C7D2E0}
+.rsw button.on{background:#C7D2E0;border-color:#C7D2E0;color:#0C1420}
+.rsw select{
+  width:auto;background:transparent;border:1px solid #2C3A4C;border-radius:4px;
+  padding:2px 5px;font-size:11px;font-weight:700;color:#C7D2E0;margin-left:5px;font-family:inherit;
+}
+.rsw select option{color:#0C1420}
+
+/* topbar */
+.top{
+  background:var(--surface);border-bottom:1px solid var(--line);
+  height:54px;display:flex;align-items:center;gap:16px;padding:0 18px;position:sticky;top:0;z-index:30;
+}
+.mark{display:flex;align-items:center;gap:14px;flex:none}
+.mark .dwlogo{display:block;flex:none}
+/* 서비스 로고 락업 — DAEWOONG 워드마크에서 자연스럽게 이어지도록 */
+.brand{display:flex;align-items:baseline;gap:9px;flex:none;white-space:nowrap}
+.brand .lk1{font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.brand .lk2{font-size:11px;font-weight:400;letter-spacing:.01em;color:var(--faint)}
+@media(max-width:760px){.brand .lk2{display:none}}
+input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--faint);letter-spacing:-.01em;opacity:1}
+.topr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.lang{
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding:5px 12px;
+  font-size:12px;font-weight:500;color:var(--ink-2);background:#fff;letter-spacing:-.01em;
+}
+.lang:hover{border-color:var(--line-3);color:var(--ink)}
+.bell{position:relative;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink-2)}
+.bell:hover{background:var(--surface-2)}
+.bell .cnt{
+  position:absolute;top:2px;right:2px;background:var(--signal);color:#fff;
+  font-size:9px;font-weight:800;min-width:14px;height:14px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:var(--mono);
+}
+.me{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 4px;border-radius:6px}
+.me:hover{background:var(--surface-2)}
+.av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.me .nm{font-size:12.5px;font-weight:700;line-height:1.2}
+.me .dp{font-size:10.5px;color:var(--muted);line-height:1.2}
+
+.drop{
+  position:absolute;top:46px;right:0;width:330px;background:#fff;border:1px solid var(--line);
+  border-radius:8px;box-shadow:0 12px 32px rgba(12,20,32,.16);display:none;z-index:40;overflow:hidden;
+}
+.drop.on{display:block}
+.drop-h{padding:11px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800;background:var(--surface-2)}
+.ni{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px}
+.ni:last-child{border-bottom:none}
+.ni:hover{background:var(--surface-2);cursor:pointer}
+.ni-d{width:6px;height:6px;border-radius:50%;margin-top:6px;flex:none}
+.ni-x{font-size:12px;line-height:1.5}
+.ni-x b{font-weight:700}
+.ni-t{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:2px}
+
+/* shell — 상단 가로 탭 (화면 폭과 무관하게 동일 구조) */
+.shell{display:block}
+.rail{
+  background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:stretch;gap:2px;padding:0 18px;
+  position:sticky;top:54px;z-index:20;overflow-x:auto;
+}
+.rg{display:none}
+.nb{
+  display:flex;align-items:center;gap:7px;white-space:nowrap;
+  padding:13px 15px;font-size:13px;color:var(--muted);font-weight:400;letter-spacing:-.016em;
+  border-bottom:2px solid transparent;flex:none;
+}
+.nb:hover{color:var(--ink);background:var(--surface-2)}
+.nb.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600;background:transparent}
+.nb .c{font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:0 6px;min-width:20px;text-align:center}
+.nb.on .c{background:var(--primary-tint);border-color:#BBD2EE;color:var(--primary)}
+.nb .c.hot{background:var(--signal);border-color:var(--signal);color:#fff}
+.railf{display:none}
+
+.main{padding:22px 26px 60px;max-width:1140px;min-width:0;margin:0 auto}
+.screen{display:none}
+.screen.on{display:block;animation:f .2s ease}
+@keyframes f{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.019em;line-height:1.14}
+.sub{color:var(--muted);margin-top:4px;font-size:13px}
+.head{margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+.card+.card{margin-top:13px}
+.ch2{padding:11px 15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ch2 h3{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.ch2 .nt{font-size:11.5px;color:var(--muted)}
+.cb{padding:15px}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap;border:1px solid transparent;letter-spacing:-.01em}
+.b-open{background:var(--surface-2);color:var(--ink-2);border-color:var(--line-2)}
+.b-commit,.b-prog{background:var(--primary-tint);color:var(--primary);border-color:#BBD2EE}
+.b-wait,.b-verify{background:var(--amber-tint);color:var(--amber);border-color:#EAD4AE}
+.b-slip{background:var(--signal-tint);color:var(--signal);border-color:#F2C2BD}
+.b-resolved{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.b-closed{background:var(--surface-2);color:var(--muted);border-color:var(--line)}
+
+.tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2);white-space:nowrap}
+.tag.p1{background:var(--primary-tint);color:var(--primary);border-color:#BBD2EE}
+.tag.p2{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.tag.off{opacity:.5}
+
+/* clock */
+.clock{padding:14px 15px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.ct{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.cbar{height:24px;border:1px solid var(--line-2);border-radius:4px;background:#fff;display:flex;overflow:hidden}
+.seg{height:100%}
+.s-run{background:var(--primary)}
+.s-hold{background:repeating-linear-gradient(45deg,#E6D6B2,#E6D6B2 4px,#F7EEDB 4px,#F7EEDB 8px);border-left:1px dashed var(--amber);border-right:1px dashed var(--amber)}
+.cl{display:flex;justify-content:space-between;margin-top:5px;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+.lg{display:flex;gap:13px;margin-top:8px;font-size:11px;color:var(--ink-2);flex-wrap:wrap}
+.lg i{font-style:normal;display:inline-flex;align-items:center;gap:5px}
+.sw{width:10px;height:10px;border-radius:2px;border:1px solid var(--line-2);flex:none}
+
+/* ticket */
+.th{background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:7px 7px 0 0;padding:15px}
+.tid{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:-.03em;color:var(--primary)}
+.tid .s{color:var(--faint)}
+.tt{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.012em;margin-top:5px;line-height:1.19}
+.tm{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}
+.tm .kv{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:2px 7px}
+.tm .kv b{color:var(--ink-2);font-weight:700}
+.tb{background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 7px 7px}
+
+.flow{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:7px}
+.st{font-size:11px;font-weight:700;padding:4px 9px;border:1px solid var(--line-2);border-radius:20px;color:var(--muted);background:#fff;white-space:nowrap}
+.st.done{background:var(--primary);border-color:var(--primary);color:#fff}
+.st.now{background:#fff;border-color:var(--primary);border-width:2px;color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
+
+.thr{padding:4px 15px 14px}
+.ev{display:grid;grid-template-columns:88px 1fr;gap:13px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:none}
+.evt{font-family:var(--mono);font-size:10.5px;color:var(--faint);padding-top:2px;line-height:1.5}
+.evw{font-size:12.5px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.evw .org{font-size:11px;font-weight:600;color:var(--muted)}
+.rl{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2)}
+.rl.rq{color:var(--primary);border-color:#BBD2EE;background:var(--primary-tint)}
+.rl.ow{color:var(--good);border-color:#B7DCC9;background:var(--good-tint)}
+.evx{font-size:13px;color:var(--ink-2)}
+.bx{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin-top:7px;background:var(--surface-2)}
+.bx.cm{border-color:#BBD2EE;background:var(--primary-tint)}
+.bx.sl{border-color:#F2C2BD;background:var(--signal-tint)}
+.bx.hd{border-color:#EAD4AE;background:var(--amber-tint)}
+.f{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:12.5px;padding:2px 0}
+.f dt{font-weight:800;color:var(--muted);font-size:11px;padding-top:1px}
+.ft{font-size:11px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(0,0,0,.07);font-weight:700}
+
+.eg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.ei{border:1px solid var(--line);border-radius:5px;padding:11px}
+.ei .lb{font-size:10.5px;font-weight:800;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ei .by{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--faint)}
+.ei .by.au{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.ei .vl{font-size:19px;font-weight:800;letter-spacing:-.03em;margin-top:5px}
+.ei .wy{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.pk{display:flex;gap:4px;margin-top:7px}
+.pk button{flex:1;border:1px solid var(--line-2);border-radius:4px;padding:5px 0;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
+.pk button:hover{border-color:var(--primary);color:var(--primary)}
+.pk button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* 결과 평가 */
+.gr3{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+@media(max-width:760px){.gr3{grid-template-columns:1fr}}
+.gg{border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:var(--surface-2)}
+.gl{font-size:12px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.gd2{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.gg .pk{gap:3px;margin-top:6px}
+.gg .pk button{flex:none;width:30px;padding:3px 0;font-size:11.5px;font-family:var(--mono);font-weight:700}
+.gg .pk button:disabled{opacity:1}
+.gg .pk button.on:disabled{background:var(--primary);border-color:var(--primary);color:#fff}
+.gk{margin-top:7px;font-size:10.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:6px}
+.gk b{color:var(--ink-2);font-weight:700;font-family:var(--mono)}
+
+.acts{display:flex;gap:7px;padding:12px 15px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap;border-radius:0 0 7px 7px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:var(--r-field);padding:7px 13px;font-size:13px;font-weight:500;color:var(--ink);letter-spacing:-.016em}
+.btn:hover{border-color:var(--ink-2)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+.btn.pri:hover{background:var(--primary-2)}
+.btn.dn{background:var(--signal);border-color:var(--signal);color:#fff;font-weight:600}
+.btn.sm{padding:4px 10px;font-size:11.5px}
+.btn.lg{
+  padding:11px 24px;font-size:15px;font-weight:600;letter-spacing:-.016em;border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;gap:7px;
+}
+.btn.lg:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.btn.lg:active{transform:scale(.98)}
+.btn.lg .pl{font-size:16px;font-weight:400;line-height:1;margin-top:-1px}
+@media(prefers-reduced-motion:reduce){.btn.lg:hover{transform:none}}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+
+.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--amber-tint);color:var(--amber);border:1px solid #EAD4AE;margin-left:4px;vertical-align:1px}
+.deriv b{color:var(--ink)}
+
+.nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
+.nyx b{color:var(--ink)}
+.nyx span{font-size:11px;color:var(--faint)}
+
+/* intake */
+.chan{display:flex;gap:5px;margin-bottom:11px;flex-wrap:wrap}
+.chan button{border:1px solid var(--line-2);border-radius:20px;padding:4px 11px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
+.chan button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+textarea{width:100%;border:1px solid var(--line-3);border-radius:var(--r-field);padding:12px;font-family:inherit;font-size:14px;line-height:1.6;resize:vertical;min-height:88px;color:var(--ink)}
+textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.hint{font-size:11px;color:var(--faint);margin-top:6px}
+.ex{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.ex button{border:1px dashed var(--line-2);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--muted);background:#fff}
+.ex button:hover{border-style:solid;border-color:var(--primary);color:var(--primary)}
+.pipe{margin-top:15px;display:none}
+.pipe.on{display:block}
+.ps{display:grid;grid-template-columns:24px 1fr;gap:11px;padding:9px 0;opacity:0;transform:translateX(-5px);transition:.3s ease}
+.ps.in{opacity:1;transform:none}
+.pi{width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--faint)}
+.ps.in .pi{background:var(--primary);border-color:var(--primary);color:#fff}
+.pn{font-size:12.5px;font-weight:800}
+.pd{font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-top:2px;word-break:break-all}
+.mp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.ml{border:1px solid var(--line);border-radius:5px;background:var(--surface-2);padding:10px}
+.ml .to{font-size:9.5px;font-weight:800;color:var(--primary);letter-spacing:.05em;margin-bottom:5px}
+.ml .sj{font-size:11.5px;font-weight:700;margin-bottom:4px}
+.ml ul{list-style:none;font-size:11px;color:var(--muted);line-height:1.7}
+.ml li::before{content:"·";margin-right:4px;color:var(--line-2)}
+
+/* radar-style intake */
+.two{display:grid;grid-template-columns:1fr 292px;gap:13px;align-items:start}
+.fl2{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:13px 0 4px;letter-spacing:.02em}
+.fl2:first-child{margin-top:0}
+.rq{color:var(--signal)}
+.opt{color:var(--faint);font-weight:600}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+.split textarea{min-height:78px;font-size:13px}
+.split .fl2{margin-top:0}
+.arrow{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin:9px 0 0;font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.04em;
+}
+.arrow::before,.arrow::after{content:"";height:1px;background:var(--line);flex:1}
+input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
+.chipbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:5px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+  padding:4px 9px;border-radius:5px;background:var(--primary-tint);color:var(--primary);border:1px solid #BBD2EE;
+}
+.chip .x{font-family:var(--mono);font-size:9.5px;opacity:.7;font-weight:400}
+.chip.own{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.fl2 .auto{margin-left:2px}
+.chipbar .to{color:var(--faint);font-size:11px;font-family:var(--mono)}
+.chip.gh{background:#fff;color:var(--muted);border-color:var(--line-2);border-style:dashed}
+.chip.gh:hover{border-style:solid;color:var(--primary);border-color:var(--primary);cursor:pointer}
+.conf{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:2px}
+.att{border:1px dashed var(--line-2);border-radius:5px;padding:11px;text-align:center;font-size:11.5px;color:var(--faint);margin-top:4px}
+.att:hover{border-color:var(--primary);color:var(--primary);cursor:pointer}
+
+.side{position:sticky;top:68px}
+.dp{border:1px solid var(--line);border-radius:5px;padding:10px;margin-bottom:7px;background:#fff}
+.dp:last-child{margin-bottom:0}
+.dph{display:flex;justify-content:space-between;gap:7px;align-items:flex-start}
+.dpt{font-size:12px;font-weight:700;line-height:1.4;color:var(--ink)}
+.dpm{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:4px}
+.dpa{margin-top:7px;display:flex;gap:5px}
+.mini{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--muted)}
+.mini:hover{border-color:var(--primary);color:var(--primary)}
+.mini.p{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* screening — radar field grid */
+.rg2{display:grid;grid-template-columns:118px 1fr;border-top:1px solid var(--line)}
+.rg2:first-of-type{border-top:none}
+.rk{
+  background:var(--surface-2);border-right:1px solid var(--line);padding:9px 12px;
+  font-size:11px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:5px;
+}
+.rk .en{font-family:var(--mono);font-size:9px;color:var(--faint);font-weight:400}
+.rv{padding:8px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;min-height:38px}
+.rv select,.rv input[type=text]{max-width:280px;padding:5px 8px;font-size:12.5px}
+.rv .ro{color:var(--ink-2);font-family:var(--mono);font-size:12px}
+.auto{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--good-tint);color:var(--good);border:1px solid #B7DCC9;white-space:nowrap}
+.qt{background:var(--surface-2);border-left:2px solid var(--line-2);padding:8px 11px;font-size:12.5px;color:var(--ink-2);border-radius:0 4px 4px 0;line-height:1.55}
+
+.bk{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;background:#fff;margin-bottom:11px}
+.bk:hover{border-color:var(--primary);color:var(--primary)}
+.bk .a{font-size:12px;line-height:1}
+
+.tl{color:var(--link);font-weight:500;text-decoration:none;cursor:pointer}
+.tl:hover{text-decoration:underline}
+
+/* comment box */
+.cmb{border-top:1px solid var(--line);padding:13px 15px;background:var(--surface-2)}
+.cmb .row{display:flex;gap:9px;align-items:flex-start}
+.cmb .av2{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:2px}
+.cmb .fld{flex:1}
+.cmb textarea{width:100%;min-height:62px;border:1px solid var(--line-2);border-radius:6px;background:#fff;padding:9px 11px;font-family:inherit;font-size:13px;line-height:1.6;color:var(--ink);resize:vertical}
+.cmb textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.cmb .bar2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+.cmb .nt2{font-size:11px;color:var(--faint);margin-left:auto;font-family:var(--mono)}
+.cmb .atc{font-size:11.5px;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px;padding:4px 9px;background:#fff}
+.cmb .atc:hover{border-color:var(--primary);color:var(--primary)}
+
+.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--amber-tint);color:var(--amber);border:1px solid #EAD4AE;margin-left:4px;vertical-align:1px}
+.deriv b{color:var(--ink)}
+
+.nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
+.nyx b{color:var(--ink)}
+.nyx span{font-size:11px;color:var(--faint)}
+
+/* intake */
+.fr{display:grid;grid-template-columns:104px minmax(0,1fr);gap:20px;align-items:start;padding:13px 0;border-bottom:1px solid var(--line)}
+@media(max-width:620px){.fr{grid-template-columns:1fr;gap:5px}}
+.fk{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.02em;padding-top:8px;white-space:nowrap}
+.fk .rq{color:var(--signal);margin-left:1px}
+.fv{min-width:0}
+.fv textarea{width:100%;min-height:88px}
+.cf{padding:13px 16px;border-top:1px solid var(--line);background:var(--surface-2)}
+
+/* service cascade */
+.casc{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.casc select{max-width:none;width:auto;min-width:118px;flex:0 1 auto}
+.casc select:disabled{background:var(--surface-2);color:var(--faint);cursor:not-allowed}
+.casc .cs{color:var(--line-2);font-size:12px;flex:none}
+.deriv{margin-top:7px;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.deriv .sep2{margin:0 6px;color:var(--line-2)}
+
+/* search results */
+mark{background:#FDECC8;color:var(--ink);border-radius:2px;padding:0 1px}
+/* 요청 검색 — dw:// 는 요청의 고유 주소 체계. 번호를 넣으면 그 요청으로 바로 간다. */
+.sbig{position:relative;margin-bottom:12px}
+/* 뒤에 오는 input[type=text] 규칙에 덮이지 않도록 선택자를 강하게 */
+.sbig input[type=text]{width:100%;border:1px solid var(--line-2);border-radius:7px;background:#fff;padding:11px 13px 11px 60px;font-family:var(--sans);font-size:15px;color:var(--ink)}
+.sbig input[type=text]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.sbig .sch{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary);pointer-events:none;
+}
+.res{border-bottom:1px solid var(--line);padding:13px 15px}
+.res:last-child{border-bottom:none}
+.res:hover{background:var(--surface-2);cursor:pointer}
+.resh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.rest{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.45}
+.resm{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;font-family:var(--mono);font-size:10.5px;color:var(--faint);align-items:center}
+.resm .sep{color:var(--line-2)}
+.ans{margin-top:8px;border-left:2px solid var(--good);background:var(--good-tint);padding:7px 10px;border-radius:0 4px 4px 0}
+.ansl{font-size:9.5px;font-weight:800;color:var(--good);letter-spacing:.05em}
+.ansx{font-size:12px;color:var(--ink-2);margin-top:2px;line-height:1.5}
+.lock{font-size:10px;font-weight:700;color:var(--muted);background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:1px 5px;white-space:nowrap}
+
+/* table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+th{text-align:left;font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.04em;padding:8px 11px;border-bottom:1px solid var(--line-2);background:var(--surface-2)}
+td{padding:9px 11px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+tbody tr:hover{background:var(--surface-2)}
+td.tc{font-family:var(--mono);font-size:11px;color:var(--primary);font-weight:700}
+td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.gr{font-family:var(--mono);font-weight:700}
+.ga{color:var(--good)} .gc{color:var(--amber)} .gd{color:var(--signal)}
+
+.filt{display:flex;gap:5px;flex-wrap:wrap}
+.filt button{border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
+.filt button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* pool */
+.pool{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.pr{border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:8px;background:#fff}
+.pr:last-child{margin-bottom:0}
+.pr[data-o]:hover{background:var(--surface-2);border-color:var(--line-2)}
+.prh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+.prt{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.45}
+.prm{font-size:10.5px;color:var(--faint);margin-top:4px;font-family:var(--mono)}
+.hp{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.hp.w{background:var(--signal-tint);border-color:#F2C2BD;color:var(--signal)}
+
+/* kpi */
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px}
+.k{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:15px 16px}
+.k .kk{font-size:10.5px;font-weight:800;color:var(--muted);line-height:1.4;min-height:29px}
+.k .kv2{font-family:var(--mono);font-size:25px;font-weight:700;letter-spacing:-.04em;margin-top:3px}
+.k .kn{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.45}
+.bar{height:4px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--primary);border-radius:3px}
+.bar i.lo{background:var(--signal)} .bar i.md{background:var(--amber)}
+
+/* catalog */
+.cat{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ci{border:1px solid var(--line);border-radius:6px;padding:12px;background:#fff}
+.cih{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cin{font-size:13px;font-weight:800;letter-spacing:-.02em}
+.cid{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:2px}
+.cil{list-style:none;margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2);line-height:1.9}
+.cil li{display:flex;justify-content:space-between;gap:8px}
+.cil .sla{font-family:var(--mono);font-size:10.5px;color:var(--muted);flex:none}
+.own{font-size:10.5px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--line);font-family:var(--mono)}
+.own b{font-family:var(--sans);color:var(--ink-2)}
+
+/* modal */
+.mk{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;background:rgba(12,20,32,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.mk.on{display:flex}
+.md{background:#fff;border-radius:var(--r-card);max-width:500px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.18);max-height:90vh;overflow:auto}
+.mdh{padding:14px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.mdh h3{font-size:14.5px;font-weight:800;letter-spacing:-.02em}
+.mdb{padding:17px}
+.mdf{padding:12px 17px;border-top:1px solid var(--line);background:var(--surface-2);display:flex;gap:7px;justify-content:flex-end;border-radius:0 0 var(--r-card) var(--r-card)}
+label.fl{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:11px 0 4px}
+label.fl:first-child{margin-top:0}
+input[type=text],input[type=date],select{width:100%;border:1px solid var(--line-3);border-radius:var(--r-field);padding:8px 10px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.wb{background:var(--signal-tint);border:1px solid #F2C2BD;border-radius:5px;padding:9px 11px;font-size:11.5px;color:#8A2318;line-height:1.5}
+.wb b{font-weight:800}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,70px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transition:.3s ease;z-index:60;max-width:90vw}
+.toast.on{transform:translate(-50%,0);opacity:1}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:900px){
+  .rail{padding:0 10px}
+  .nb{padding:11px 10px;font-size:12.5px}
+  .main{padding:16px 14px 50px}
+  .pool,.eg,.kp,.mp,.cat{grid-template-columns:1fr}
+  .ev{grid-template-columns:1fr;gap:3px}
+  .evt{padding-top:0}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   모바일 대응 — 폰(~640px) · 갤럭시탭(~1024px)
+   추가만 한다. 위쪽 규칙은 건드리지 않는다(데스크톱 회귀 방지).
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 탭 (~1024px) ── */
+@media(max-width:1024px){
+  .two{grid-template-columns:1fr}          /* 요청하기 2단 → 1단 (기존 미대응 구간) */
+  .side{position:static;top:auto}
+  .kp{grid-template-columns:repeat(2,1fr)} /* KPI 4 → 2 (900px에서 1단은 낭비) */
+  .pool,.cat{grid-template-columns:repeat(2,1fr)}
+  .main{padding:20px 20px 56px}
+}
+
+/* ── 900px 구간 보정 — 기존 규칙이 1단으로 떨구는 걸 되돌린다 ── */
+@media(max-width:900px) and (min-width:641px){
+  .kp,.pool,.cat,.eg{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── 폰 (~640px) ── */
+@media(max-width:640px){
+  .main{padding:14px 12px 60px}
+  h1{font-size:22px;letter-spacing:-.015em}
+  .sub{font-size:12.5px}
+  .tt{font-size:18px}
+  .tid{font-size:15px}
+
+  .kp,.pool,.cat,.eg,.mp,.split,.gr3{grid-template-columns:1fr}
+
+  /* 상단바 압축 */
+  .top{gap:8px;padding:0 12px}
+  .mark{gap:9px}
+  .me .dp{display:none}
+  .me{padding:4px}
+  .drop{width:calc(100vw - 20px);right:-4px}
+
+  /* 탭 레일 — 스크롤바 숨김 */
+  .rail{padding:0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .rail::-webkit-scrollbar{display:none}
+
+  /* 라벨 좌측 고정폭 그리드 → 세로 스택 */
+  .rg2{grid-template-columns:1fr}
+  .rk{border-right:none;border-bottom:1px solid var(--line);padding:7px 12px}
+  .rv{padding:9px 12px}
+  .rv select,.rv input[type=text]{max-width:none;width:100%}
+
+  /* 분류 캐스케이드 — select 가로 나열 → 세로 */
+  .casc{flex-direction:column;align-items:stretch;gap:7px}
+  .casc select{width:100%;min-width:0;max-width:none}
+  .casc .cs{display:none}
+
+  /* 표 — 가로 스크롤 + 첫 열 고정 (12열 관리대장은 카드화보다 이게 낫다) */
+  .tw{-webkit-overflow-scrolling:touch}
+  .tw table th:first-child,.tw table td:first-child{
+    position:sticky;left:0;z-index:1;background:var(--surface);
+    box-shadow:1px 0 0 var(--line);
+  }
+  .tw table th:first-child{background:var(--surface-2);z-index:2}
+  .tw table tbody tr:hover td:first-child{background:var(--surface-2)}
+
+  /* 입력 — 16px 미만이면 포커스 시 자동 확대(iOS). 가독성에도 유리 */
+  input[type=text],input[type=date],select,textarea,
+  .sbig input[type=text],.rv select,.rv input[type=text],
+  .cmb textarea,.split textarea,input.ti{font-size:16px}
+  .fk{padding-top:0}
+
+  /* 모달 → 바텀시트 */
+  .mk{padding:0;align-items:flex-end}
+  .md{max-width:100%;width:100%;border-radius:18px 18px 0 0;max-height:92vh}
+  .mdf{border-radius:0;position:sticky;bottom:0}
+  .mdf .btn{flex:1;text-align:center;justify-content:center}
+
+  /* 액션 버튼 — 가로 넘침 방지 */
+  .acts{gap:6px}
+  .acts .btn{flex:1 1 calc(50% - 3px);text-align:center;justify-content:center}
+  .acts .btn.lg{flex:1 1 100%}
+
+  .toast{left:12px;right:12px;bottom:12px;transform:translateY(70px);max-width:none}
+  .toast.on{transform:translateY(0)}
+}
+
+/* ── 좁은 폰 (~380px) ── */
+@media(max-width:380px){
+  .acts .btn{flex:1 1 100%}
+  .brand .lk1{font-size:13px}
+}
+
+/* ── 터치 기기 — 탭 타깃 최소 크기 ── */
+@media(hover:none) and (pointer:coarse){
+  .btn{min-height:42px;padding:9px 15px}
+  .btn.sm{min-height:36px;padding:7px 12px}
+  .mini,.filt button,.chan button,.ex button,.bk{min-height:36px;padding:7px 12px}
+  .pk button{min-height:42px}
+  .gg .pk button{width:auto;flex:1;min-height:42px;font-size:13px}
+  .nb{padding:14px 14px}
+  .bell{width:40px;height:40px}
+  .lang{padding:8px 14px}
+  .rsw button{min-height:30px;padding:4px 11px}
+  .chip{padding:6px 10px}
+  .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
+  .res{padding:15px}
+  .tl{padding:2px 0;display:inline-block}
+}
+
+/* ── 탭 반응성 — 300ms 지연·더블탭 확대 제거, 탭 피드백 ──
+   모든 기기 공통. 모바일에서 "탭해도 반응이 없다"의 흔한 원인이
+   더블탭 줌 대기(약 300ms)와 탭 하이라이트 부재라, 이를 제거·보완한다. */
+button,a,select,label.fl,[onclick],
+.nb,.tl,.mini,.tag,.chip,.st,.badge,.filt button,.chan button,
+.pk button,.rsw button,.ex button,.bk,.lang,.bell,.me,.att,.cmb .atc{
+  touch-action:manipulation;
+}
+button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.dp{
+  -webkit-tap-highlight-color:rgba(0,113,227,.16);
+}
+
+/* ── 탭 타깃 최소 크기 — 폭 기준 폴백 ──
+   일부 모바일 웹뷰(삼성 인터넷 등)·데스크톱 모드 폰은 pointer:coarse 를
+   보고하지 않아 위의 coarse 규칙이 적용되지 않는다. 폭으로도 보장한다. */
+@media(max-width:1024px){
+  .nb{padding-top:14px;padding-bottom:14px}
+}
+@media(max-width:640px){
+  .btn{min-height:42px}
+  .btn.sm,.mini,.filt button,.chan button,.ex button,.bk,.rsw button{min-height:34px}
+  .pk button,.gg .pk button{min-height:40px}
+  .bell{width:40px;height:40px}
+  .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
+  .tl{display:inline-block;padding:3px 0}
+  .res{padding:15px}
+}
+
+/* 노치·홈바 대응 */
+@supports(padding:max(0px)){
+  @media(max-width:640px){
+    .main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));
+          padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+    .md{padding-bottom:env(safe-area-inset-bottom)}
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="strip">
+  <b>데모</b> · 입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동 · <b style="color:#5FC08A">모바일최적화 v2 · 2026-07-17</b>
+  <span class="rsw">
+    <button data-r="req" class="on">요청자로 보기</button><button data-r="own">담당자로 보기</button><button data-r="adm">관리자로 보기</button>
+    <select id="reqAs" style="display:none"></select>
+    <select id="ownAs" style="display:none"></select>
+  </span>
+</div>
+
+<header class="top">
+  <div class="mark"><svg class="dwlogo" viewBox="0 0 160 28" width="108.6" height="19" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="대웅제약"><g clip-path="url(#dwlogo)">
+<path d="M3.461 18.2407C3.27175 18.1231 3.13575 18.2181 3.08543 18.2743C3.04167 18.3236 2.97531 18.4674 3.0847 18.6416C3.80412 19.7767 5.01688 23.1215 2.06665 27.9946H6.91588C7.62362 24.7335 7.23821 20.5577 3.461 18.2407Z" fill="#F18A00"/>
+<path d="M14.0499 19.953C13.7709 19.8917 13.5653 20.1334 13.8001 20.3616C13.8001 20.3616 16.0791 22.3704 15.6255 27.9946H19.83C19.83 27.9946 19.7308 21.2287 14.0499 19.953Z" fill="#F18A00"/>
+<path d="M25.7228 11.5021C25.7228 11.5021 27.0763 10.7646 26.176 9.4655C26.176 9.4655 26.9647 8.72798 26.2314 7.88311C26.2314 7.88311 26.7379 6.97545 26.0072 6.35476C26.0072 6.35476 27.0409 4.69642 25.8358 4.01549C25.4796 3.81358 25.1368 3.8092 24.8495 3.88296C24.6744 3.92786 24.506 4.00563 24.3517 4.10348C24.0371 4.29882 23.826 4.54928 23.6207 4.85707C23.3775 5.22255 23.0059 5.84944 22.4455 6.91849L20.3116 4.99837C20.1618 4.85671 20.3441 4.60515 20.425 4.47772C20.572 4.255 20.7765 4.09436 21.0026 3.95415C21.2407 3.80519 21.5003 3.69383 21.768 3.61022C21.9641 3.54596 22.4207 3.46381 22.4148 3.1845C22.4115 3.00523 22.2048 2.94316 22.063 2.92381C21.9492 2.90665 21.8303 2.89387 21.7115 2.88876C21.629 2.8862 21.5029 2.90665 21.4475 2.82121C21.4139 2.76973 21.4052 2.69744 21.4161 2.63829C21.4358 2.55541 21.5383 2.52328 21.6101 2.50831C21.6101 2.50831 22.3765 2.32539 22.3357 2.14028C22.3357 2.14028 22.3357 2.02637 21.7738 0.891966C21.7738 0.891966 21.66 0.678011 21.1813 1.08036C21.1022 1.14389 21.0449 1.22385 20.9399 1.24649C20.7065 1.29286 20.5111 1.05371 20.3572 0.911317C20.1596 0.727301 19.9525 0.553143 19.7133 0.424259C19.3873 0.249006 19.0249 0.159919 18.654 0.143489C18.5946 0.139838 18.5319 0.139838 18.4703 0.139838C18.1694 0.143489 17.83 0.191318 17.5481 0.303407C17.4329 0.349776 17.2932 0.352697 17.1908 0.28004C17.0985 0.221622 17.0194 0.138742 16.9202 0.088722C16.7984 0.0299391 16.6686 0 16.5344 0C16.052 0 15.6651 0.387748 15.6651 0.871155C15.6651 0.90365 15.6673 0.935049 15.6713 0.964988C15.6732 0.982879 15.6754 0.997848 15.6772 1.01428C15.698 1.13403 15.7421 1.25051 15.811 1.35091C15.8238 1.37209 15.8394 1.39071 15.8515 1.40933C15.8799 1.44365 15.9109 1.47687 15.9109 1.52324C15.9109 1.56121 15.8981 1.59079 15.8708 1.61708C15.5671 1.92852 14.9596 2.52109 14.397 4.23857C14.397 4.23857 11.7516 2.10194 9.43033 2.92673C9.27572 2.9815 9.12768 3.04795 8.98511 3.12827C8.98511 3.12827 10.1363 3.8092 10.5581 4.49488C10.5891 4.54782 10.5796 4.58652 10.5643 4.61537C10.5494 4.64531 10.5279 4.67671 10.448 4.69168C10.448 4.69168 10.4469 4.68876 10.4458 4.68876L5.61337 5.45257C5.57399 5.46133 5.543 5.45111 5.52987 5.41971C5.51601 5.38977 5.53716 5.35983 5.55065 5.35107L9.7935 1.77334C9.7935 1.77334 9.95868 1.63789 10.0874 1.4327C10.1662 1.32681 10.2139 1.19647 10.2139 1.05481C10.2139 0.733143 9.97399 0.467707 9.66369 0.423894C9.62869 0.417322 9.59368 0.412575 9.55977 0.408924C9.3213 0.37862 9.10617 0.385557 9.10617 0.385557H5.32714C5.32714 0.385557 5.24436 0.387748 5.14992 0.407464V0.408924C5.02741 0.438863 4.93625 0.548762 4.93625 0.680567C4.93625 0.780607 5.00298 0.868234 5.08867 0.947098C5.28083 1.12308 5.44127 1.20341 5.44965 1.48491C5.45549 1.78065 5.29942 2.0585 5.15868 2.3075L3.31437 5.5318C3.28447 5.57707 3.24509 5.67017 3.15539 5.74247C3.0657 5.8133 2.97235 5.82973 2.84181 5.84981C2.1224 5.94875 0.409725 6.18681 0.272623 6.20433C0.0779105 6.22916 0.000244141 6.35439 0.000244141 6.49752C0.000244141 6.61983 0.0779105 6.72352 0.18657 6.76405C0.305805 6.8075 0.403161 6.84547 0.564328 6.90279C0.564328 6.90279 1.01538 8.25443 1.08611 8.44502C1.15685 8.63524 1.4657 9.0982 2.25877 8.83204C2.55631 8.73309 2.976 8.81196 2.976 9.37788V16.8882C2.976 16.9061 2.97891 16.9474 3.00152 16.9831C3.02486 17.0204 3.06825 17.0452 3.11018 17.0525C3.44345 17.1153 4.35321 17.319 5.20863 17.8291C5.24291 17.8463 5.26551 17.8598 5.29724 17.8397C5.32969 17.8211 5.32714 17.7882 5.32714 17.7696V15.6589H9.52003L9.51383 16.7407C9.51383 16.7407 9.51383 17.8138 8.37873 17.8138C8.37873 17.8138 6.01483 17.8123 5.92841 17.8123C5.82413 17.8123 5.74464 17.8857 5.73625 17.9671C5.72276 18.0996 5.80371 18.169 5.93935 18.2501C5.93935 18.2501 10.9042 21.1345 9.60535 27.9942L13.7629 28C13.7629 28 14.0969 23.6643 10.9042 21.1348C10.8068 21.0592 10.7729 20.9979 10.7714 20.9552C10.766 20.8668 10.8615 20.8453 10.9242 20.8318C10.9548 20.8219 10.9855 20.8139 11.0154 20.8077C11.7253 20.6102 14.9982 19.5112 15.0343 15.8593L15.0562 8.97881C15.093 7.60052 15.2396 7.34749 15.5087 7.34749C15.6841 7.34749 15.7917 7.62826 15.9033 8.04084C16.1133 8.83824 16.4232 9.52794 17.0146 10.1154C17.4077 10.5021 17.8001 10.8891 18.1931 11.2757C18.1931 11.2757 20.2934 13.3353 20.4455 13.5029C20.751 13.8406 22.0075 15.8838 18.8243 17.7272C18.6529 17.8276 18.4455 17.8747 18.3561 18.0701C18.2435 18.3118 18.5111 18.5491 18.6555 18.7061C19.0774 19.1632 19.3961 19.6525 19.6899 20.1936C20.5975 21.853 21.8814 25.0499 21.259 27.9942H26.0881C26.0881 27.9942 26.5333 21.2568 20.44 18.9164C20.3503 18.8821 20.2788 18.8087 20.3124 18.7046C20.3499 18.605 20.4549 18.5597 20.5373 18.502C21.0238 18.1712 22.8163 16.7969 22.4743 14.7403C22.4743 14.7403 25.6648 14.8377 25.7228 11.5021ZM9.57436 14.0769H5.34063V12.987H9.57436V14.0769ZM9.57436 11.4053H5.34063V10.3162H9.57436V11.4053ZM12.2734 18.3027L12.2708 18.3012C12.2435 18.3198 12.2121 18.3297 12.1771 18.3297C12.0859 18.3297 12.0115 18.2563 12.0115 18.165C12.0115 18.1621 12.0126 18.1599 12.0126 18.1559L12.0115 18.1537V9.89816C12.0115 8.82692 11.2965 8.73638 10.9607 8.73638H5.15795C4.73388 8.73638 4.53662 8.54652 4.44728 8.37638C4.41957 8.32563 4.39587 8.26575 4.42431 8.18798C4.45421 8.11021 4.5089 8.07954 4.56178 8.06019L10.4699 6.09042C10.5348 6.06815 10.6198 6.04368 10.7109 6.01374C10.7346 6.00863 10.7795 5.98234 10.8323 6.01374C10.8921 6.04806 10.8885 6.07946 10.898 6.11415C10.9508 6.32956 11.0551 6.67606 11.2024 6.94295C11.931 8.26721 13.4052 8.33366 13.4052 8.33366L13.4074 16.2719C13.4074 17.5155 12.689 18.0175 12.2734 18.3027ZM18.4976 0.786814C18.7937 0.786814 19.0387 1.02998 19.0387 1.32864C19.0387 1.63022 18.7937 1.87192 18.4976 1.87192C18.1982 1.87192 17.9514 1.63022 17.9514 1.32864C17.9514 1.02998 18.1982 0.786814 18.4976 0.786814ZM21.9332 12.4496C21.7581 12.2794 17.9452 8.53922 17.8052 8.39536C17.6644 8.25114 16.844 7.34749 17.6644 6.49131C18.2588 5.87208 19.062 6.22113 19.3807 6.51139C19.695 6.80056 23.0548 9.87114 23.0548 9.87114C23.2867 7.89188 24.141 7.42782 24.141 7.42782C24.141 7.42782 24.6245 7.08133 24.9523 7.54392C25.2163 7.91634 24.7959 8.43662 24.7959 8.43662C25.0602 8.50782 25.1167 8.78202 25.077 9.02481C25.0526 9.17232 24.9826 9.30887 24.8794 9.41256C24.8032 9.48668 24.7401 9.51881 24.7401 9.51881C24.8546 9.50895 24.9293 9.56518 24.9727 9.6466C25.0194 9.73203 25.0351 9.84558 25.0343 9.94307C25.0314 10.1713 24.9505 10.4053 24.7948 10.5754C24.5494 10.8409 24.1957 10.9771 24.1957 10.9771C24.2354 11.7595 24.0079 12.1513 23.6808 12.4189C22.8808 13.1089 22.0841 12.5949 21.9332 12.4496Z" fill="#F18A00"/>
+<path d="M63.8938 21.2101L57.663 7.32715H55.9412L49.3928 22.0517H51.3534L53.7286 16.7853H58.8966L60.5863 20.4627L60.5899 20.4657C60.6242 20.542 60.677 20.6676 60.731 20.7851C61.2955 21.9904 62.5224 22.0517 62.6574 22.0517H64.2453L63.8938 21.2101ZM54.3296 15.4582L56.2938 11.1112L58.2894 15.4582H54.3299H54.3296Z" fill="#53575A"/>
+<path d="M47.1665 9.0211C45.4947 7.72276 43.5738 7.10938 40.7742 7.10938H34.9131V20.1C34.9131 20.7284 34.9131 21.321 35.3915 21.7638C35.8691 22.206 36.6495 22.206 37.1731 22.206H42.3366C46.9011 22.206 49.7784 18.5848 49.7809 15.1049C49.7835 12.5148 48.842 10.318 47.1669 9.02146M41.3237 20.904H38.7322C38.4846 20.8832 38.3165 20.7769 38.2258 20.6521C38.139 20.525 38.1073 20.3439 38.1073 20.0924V8.41465H40.866C42.9258 8.4183 44.1248 8.8641 45.1574 9.91927C46.349 11.1373 46.7169 12.7332 46.7195 15.0177C46.6837 18.7637 44.7815 20.873 41.3233 20.9036" fill="#53575A"/>
+<path d="M105.735 7.00355V7.00209C103.227 6.99843 101.288 7.91742 100.009 9.34683C98.7267 10.7722 98.0923 12.6843 98.0912 14.6742C98.0967 18.6247 101.45 22.3656 105.735 22.3787H105.746C108.23 22.3787 110.153 21.4587 111.423 20.0333C112.7 18.602 113.339 16.683 113.339 14.6742C113.33 10.7536 109.982 7.01596 105.735 7.00355ZM105.735 21.0523C103.204 21.0464 101.033 18.9777 101.01 14.6742C101.033 10.4042 103.204 8.33657 105.735 8.33146C108.223 8.33292 110.401 10.4042 110.424 14.6742C110.401 18.9777 108.223 21.0479 105.735 21.0523Z" fill="#53575A"/>
+<path d="M122.349 7.00355V7.00209C119.843 6.99843 117.905 7.91742 116.623 9.34683C115.342 10.7722 114.707 12.6843 114.707 14.6742C114.713 18.6261 118.065 22.3656 122.349 22.3787H122.363C124.846 22.3787 126.767 21.4587 128.04 20.0296C129.317 18.602 129.952 16.683 129.952 14.6742C129.944 10.7536 126.598 7.01596 122.349 7.00355M122.349 21.0523C119.819 21.0464 117.646 18.9777 117.623 14.6742C117.646 10.4042 119.818 8.33401 122.349 8.33146C124.838 8.33292 127.015 10.4042 127.033 14.6742C127.015 18.9777 124.838 21.0479 122.349 21.0523Z" fill="#53575A"/>
+<path d="M65.6601 19.9465C65.6462 20.8636 65.9719 21.243 66.5272 21.6672C67.0264 22.0517 67.6663 22.0481 68.4696 22.0517H76.7777V20.7238H69.3709C69.041 20.7238 68.8772 20.6709 68.742 20.5456C68.5957 20.4094 68.5764 20.1619 68.5764 19.9125V15.0434H75.1624V13.714H68.5764V8.65834H76.0389V7.32715H65.6601V19.9465Z" fill="#53575A"/>
+<path d="M160 14.5168H154.174V15.844H156.994C157.061 15.8491 157.258 15.8768 157.399 16.0057C157.573 16.1583 157.585 16.3642 157.585 16.377V19.9069C157.336 20.344 155.99 21.0486 154.427 21.0486C151.233 21.0486 149.161 18.6754 149.137 15.2288C149.137 12.7245 149.659 11.1833 150.493 10.0982C151.332 9.01164 152.461 8.33071 153.88 8.33071C157.167 8.33071 157.428 11.3097 157.428 11.3097H159.93C159.93 10.4195 158.97 7.00098 153.739 7.00098C151.071 7.00098 149.481 7.91229 148.168 9.38698C146.849 10.8613 146.222 12.8705 146.222 15.0659C146.222 18.9076 149.412 22.3762 154.01 22.3773C155.838 22.3773 157.408 21.8982 158.288 21.4908C159.328 21.003 159.989 20.4447 160 19.77V14.5157L160 14.5168Z" fill="#53575A"/>
+<path d="M96.888 7.32715L92.2473 18.5116L87.7357 7.32715H84.7403L87.312 13.809L85.3025 18.5116L80.7866 7.32715H77.7944L83.2993 21.1817C83.4575 21.5694 83.7901 22.3781 84.597 22.3781C85.2118 22.3781 85.5082 22.2554 86.0136 21.1645L88.1602 15.9452L90.2546 21.2101C90.4132 21.5993 90.7479 22.3781 91.5516 22.3781C92.1514 22.3781 92.5062 22.162 92.947 21.1966L98.6236 7.32715H96.888Z" fill="#53575A"/>
+<path d="M144.516 7.35547H142.721V17.2211C141.731 15.9261 137.694 10.6466 136.214 8.71879C135.612 7.93636 135.092 7.35547 133.854 7.35547H131.717V22.0767H133.511V9.6323C133.511 9.6323 141.364 19.8715 142.048 20.8507C142.733 21.8255 143.261 22.3889 143.69 22.4032H143.712C143.889 22.4032 144.129 22.3619 144.299 22.1698C144.463 21.9789 144.513 21.7357 144.516 21.4111V7.35547Z" fill="#53575A"/>
+</g>
+<defs>
+<clipPath id="dwlogo">
+<rect width="160" height="28" fill="white"/>
+</clipPath>
+</defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn">Shared Service Request System</span></span></div>
+  <div class="topr" style="position:relative">
+    <button class="lang" id="langBtn">EN</button>
+    <button class="me">
+      <span class="av" id="uav">유</span>
+      <span style="text-align:left"><span class="nm" id="unm" style="display:block">요청자</span></span>
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail">
+    <button class="nb on" data-s="find" data-r="req own adm">전체 요청<span class="c" id="cAll">0</span></button>
+    <button class="nb" data-s="mine" data-r="req">내 요청<span class="c" id="cMine">0</span></button>
+    <button class="nb" data-s="cc" data-r="req">회람 중인 요청<span class="c" id="cCC">0</span></button>
+    <button class="nb" data-s="work" data-r="own">내 업무<span class="c" id="cWork">0</span></button>
+    <button class="nb" data-s="dash" data-r="adm">대시보드</button>
+    <button class="nb" data-s="ledger" data-r="adm">관리대장</button>
+    <button class="nb" data-s="rule" data-r="adm">담당자 관리</button>
+    <button class="nb" data-s="master" data-r="adm">기준정보</button>
+  </nav>
+
+  <main class="main">
+
+  <!-- INTAKE -->
+  <section class="screen on" id="s-intake">
+    <button class="bk" id="bkIntake"><span class="a">←</span>뒤로</button>
+    <div class="head"><div><h1>요청하기</h1></div></div>
+
+    <div class="card" style="margin:0">
+        <div class="cb" style="padding:4px 16px">
+          <div class="fr">
+            <label class="fk">부서 <span class="rq">*</span></label>
+            <div class="fv"><select id="s0" style="min-width:190px"><option value="">선택</option></select></div>
+          </div>
+
+          <!-- 부서별 분류축 — 부서마다 개수·이름이 다르므로 동적으로 그린다 -->
+          <div id="axg"></div>
+
+          <div class="fr" id="nyd" style="display:none">
+            <label class="fk"></label>
+            <div class="fv"><div class="nyx"><span id="nydT"></span> 아직 준비 중입니다</div></div>
+          </div>
+
+          <div class="fr">
+            <label class="fk">제목 <span class="rq">*</span></label>
+            <div class="fv"><input type="text" class="ti" id="ti" placeholder="한 줄로 요약해주세요"></div>
+          </div>
+
+          <div class="fr">
+            <label class="fk">현재 상황 <span class="rq">*</span></label>
+            <div class="fv"><textarea id="asis" placeholder="지금 무엇이 문제인지 적어주세요"></textarea></div>
+          </div>
+
+          <div class="fr">
+            <label class="fk">요청 사항 <span class="rq">*</span></label>
+            <div class="fv"><textarea id="tobe" placeholder="어떻게 되기를 원하는지 적어주세요"></textarea></div>
+          </div>
+
+          <div class="fr">
+            <label class="fk">요청 기한 <span class="rq">*</span></label>
+            <div class="fv">
+              <div class="casc">
+                <input type="date" id="want" style="max-width:180px">
+                <span class="hint" style="margin:0">담당자가 조정할 수 있음</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fr" style="border-bottom:none">
+            <label class="fk">첨부</label>
+            <div class="fv"><div class="att">파일 선택 또는 끌어놓기</div></div>
+          </div>
+        </div>
+        <div class="cf"><button class="btn pri" id="go">요청 접수</button></div>
+
+        <div class="pipe" id="pipe">
+          <div class="cb" style="border-top:1px solid var(--line)" id="pipeBody"></div>
+        </div>
+      </div>
+
+  </section>
+
+  <!-- MINE -->
+  <section class="screen" id="s-mine"></section>
+  <section class="screen" id="s-cc"></section>
+
+  <!-- FIND -->
+  <section class="screen" id="s-find">
+    <div class="head">
+      <div><h1>전체 요청</h1><div class="sub">쉐어드서비스에 접수된 모든 요청</div></div>
+      <button class="btn pri lg" data-j="intake" data-r="req"><span class="pl">＋</span>요청하기</button>
+    </div>
+    <div class="sbig"><span class="sch">dw://</span><input type="text" id="sq" placeholder="요청번호, 제목, 내용" autocomplete="off"></div>
+    <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
+    <div id="hit"></div>
+    <div class="card">
+      <div class="ch2"><h3 id="rcount">결과</h3><span class="nt">제목·본문·완료 결과 전체 검색</span></div>
+      <div id="rl"></div>
+    </div>
+  </section>
+
+  <!-- TICKET · 데이터로 렌더 -->
+  <section class="screen" id="s-ticket"></section>
+
+  <section class="screen" id="s-work"></section>
+
+  <!-- 서비스 카탈로그 — 탭에서 뺐고 화면만 보관. 다시 쓰려면 rail에 nb 버튼만 추가하면 된다. -->
+  <section class="screen" id="s-cat">
+    <div class="head"><div><h1>서비스 카탈로그</h1></div>
+      <div class="filt"><button class="on">공간기획</button><button>총무</button><button>시설</button><button>자산</button></div></div>
+    <div class="card" style="margin-bottom:13px">
+      <div class="ch2"><h3>업무 유형</h3><span class="nt">서비스와 무관하게 공통 적용 · 전 서비스 공개 기본</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>코드</th><th>업무 유형</th><th>정의</th><th>계획</th><th>기본 기한</th><th>에스컬레이션</th><th>생성</th></tr></thead>
+        <tbody>
+          <tr><td class="tc">SAF</td><td><b>안전·보안</b></td><td>인명·자산에 즉시 위험</td><td class="d" style="color:var(--signal)">2시간</td><td class="d">24시간</td><td class="d" style="color:var(--signal)">팀장 + 실장</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">OUT</td><td><b>장애·중단</b></td><td>업무가 지금 멈춰 있음</td><td class="d" style="color:var(--signal)">4시간</td><td class="d">24시간</td><td class="d" style="color:var(--amber)">팀장</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">DEF</td><td><b>고장·수리</b></td><td>작동하나 결함</td><td class="d">익일 18시</td><td class="d">3일</td><td class="d">—</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">REQ</td><td><b>신규 요청</b></td><td>없던 것을 제공</td><td class="d">익일 18시</td><td class="d">계획 등록 시 확정</td><td class="d">—</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">CHG</td><td><b>변경 요청</b></td><td>기존 것을 변경</td><td class="d">익일 18시</td><td class="d">계획 등록 시 확정</td><td class="d">—</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">INQ</td><td><b>문의</b></td><td>답변으로 종결</td><td class="d">익일 18시</td><td class="d">2일</td><td class="d">—</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">ENH</td><td><b>개선 제안</b></td><td>즉시 처리 대상 아님</td><td class="d">익일 18시</td><td class="d">분기 검토</td><td class="d">—</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">RTN</td><td><b>정기 업무</b></td><td>주기 반복</td><td class="d" style="color:var(--faint)">면제</td><td class="d">주기 기준</td><td class="d">—</td><td class="d" style="color:var(--muted)">시스템</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="cat">
+      <div class="ci">
+        <div class="cih"><div><div class="cin">사무공간</div><div class="cid">SVC-SPC-01x</div></div><span class="tag p1">1단계</span></div>
+        <ul class="cil">
+          <li><span>레이아웃 변경</span><span class="sla">익일 / 20일</span></li>
+          <li><span>좌석 배치·재배치</span><span class="sla">익일 / 14일</span></li>
+          <li><span>파티션·가벽 설치</span><span class="sla">익일 / 20일</span></li>
+          <li><span>공간 실사</span><span class="sla">익일 / 10일</span></li>
+        </ul>
+        <div class="own">오너 <b>공간기획팀</b> · spaceplanning@dwdevelop.co.kr</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">회의실</div><div class="cid">SVC-SPC-02x</div></div><span class="tag p1">1단계</span></div>
+        <ul class="cil">
+          <li><span>회의실 신설·분할</span><span class="sla">익일 / 20일</span></li>
+          <li><span>예약 충돌 조정</span><span class="sla">익일 / 2일</span></li>
+          <li><span>비품·AV 설치</span><span class="sla">익일 / 7일</span></li>
+        </ul>
+        <div class="own">오너 <b>공간기획팀</b> · spaceplanning@dwdevelop.co.kr</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">법인차량</div><div class="cid">SVC-GAF-01x</div></div><span class="tag p2">1단계</span></div>
+        <ul class="cil">
+          <li><span>배차 신청</span><span class="sla">익일 / 3일</span></li>
+          <li><span>장기 배차</span><span class="sla">익일 / 5일</span></li>
+          <li><span>사고·정비</span><span class="sla">즉시 / 3일</span></li>
+        </ul>
+        <div class="own">오너 <b>총무팀</b> · dwdevelop.co.kr</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">출입·보안</div><div class="cid">SVC-GAF-02x</div></div><span class="tag p2">1단계</span></div>
+        <ul class="cil">
+          <li><span>출입증 발급·재발급</span><span class="sla">익일 / 2일</span></li>
+          <li><span>출입권한 변경</span><span class="sla">익일 / 2일</span></li>
+          <li><span>방문객 등록</span><span class="sla">익일 / 1일</span></li>
+        </ul>
+        <div class="own">오너 <b>총무팀</b> · dwdevelop.co.kr</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">사무용품·비품</div><div class="cid">SVC-GAF-03x</div></div><span class="tag p2">1단계</span></div>
+        <ul class="cil">
+          <li><span>정기 발주</span><span class="sla">익일 / 14일</span></li>
+          <li><span>수시 요청</span><span class="sla">익일 / 5일</span></li>
+          <li><span>명함 제작</span><span class="sla">익일 / 14일</span></li>
+        </ul>
+        <div class="own">오너 <b>총무팀</b> · dwdevelop.co.kr</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">시설·설비</div><div class="cid">SVC-FAC-01x</div></div><span class="tag">1단계</span></div>
+        <ul class="cil">
+          <li><span>조명·전기</span><span class="sla">익일 / 3일</span></li>
+          <li><span>공조·냉난방</span><span class="sla">익일 / 3일</span></li>
+          <li><span>가벽·시공</span><span class="sla">익일 / 20일</span></li>
+          <li><span>미화</span><span class="sla">익일 / 2일</span></li>
+        </ul>
+        <div class="own">오너 <b>시설팀(본사)</b> · daewoong-eng.com · <b>시설관리팀</b> healience.com</div>
+      </div>
+      <div class="ci">
+        <div class="cih"><div><div class="cin">자산</div><div class="cid">SVC-AST-01x</div></div><span class="tag">1단계</span></div>
+        <ul class="cil">
+          <li><span>자산 등록·이관</span><span class="sla">익일 / 7일</span></li>
+          <li><span>불용 처리</span><span class="sla">익일 / 14일</span></li>
+        </ul>
+        <div class="own">오너 <b>자산관리팀</b> · dwdevelop.co.kr <span style="color:var(--signal)">· 1인 운영 — 대리 지정 필요</span></div>
+      </div>
+      <div class="ci" style="opacity:.55">
+        <div class="cih"><div><div class="cin">인사쉐어드</div><div class="cid">SVC-HRS-0xx</div></div><span class="tag off">2단계</span></div>
+        <ul class="cil"><li><span>서비스 정의 예정</span><span class="sla">—</span></li></ul>
+        <div class="own">오너 <b>인사쉐어드1~4팀</b></div>
+      </div>
+      <div class="ci" style="opacity:.55">
+        <div class="cih"><div><div class="cin">회계기획쉐어드</div><div class="cid">SVC-FIS-0xx</div></div><span class="tag off">2단계</span></div>
+        <ul class="cil"><li><span>서비스 정의 예정</span><span class="sla">—</span></li></ul>
+        <div class="own">오너 <b>회계기획쉐어드1~4팀 · 재무쉐어드팀 · 재무회계쉐어드실</b></div>
+      </div>
+      <div class="ci" style="opacity:.55">
+        <div class="cih"><div><div class="cin">IT쉐어드</div><div class="cid">SVC-ITS-0xx</div></div><span class="tag off">2단계</span></div>
+        <ul class="cil"><li><span>기존 ITSM 서비스 이관</span><span class="sla">—</span></li></ul>
+        <div class="own">오너 <b>IT쉐어드파트</b> · idstrust.com</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEDGER -->
+  <section class="screen" id="s-ledger">
+    <div class="head"><div><h1>관리대장</h1></div>
+      <div class="filt" id="ledBar" style="align-items:center"></div></div>
+
+    <div class="card">
+      <div class="ch2"><h3>요청 관리대장</h3><span class="nt" id="ledNote">요청에서 자동 생성</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>요청번호</th><th>분류</th><th>요청내용</th><th>요청자</th><th>담당자</th><th>접수일자</th><th>기한</th><th>진행 상태</th><th>지연</th><th>결과</th><th>소통</th><th>평가</th></tr></thead>
+        <tbody id="ledBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="ch2"><h3>반복 요청 상위</h3><span class="nt">업무 유형별 접수 집계 · 자동</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>분류</th><th>반복 요청 내용</th><th>접수</th><th>누적 처리시간</th><th>판단</th></tr></thead>
+        <tbody id="repBody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- RULE — 담당자 관리 -->
+  <section class="screen" id="s-rule">
+    <div class="head"><div><h1>담당자 관리</h1><div class="sub">요청이 접수되면 이 표대로 담당자가 자동 지정됩니다</div></div>
+      <div class="filt" id="ruleBar" style="align-items:center"></div></div>
+    <div class="card">
+      <div class="ch2"><h3>담당자 지정</h3><span class="nt" id="ruleNote">순위대로 배정 · 앞 순위가 한도를 넘으면 다음 순위로</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>공간 유형</th><th>1순위</th><th>2순위</th><th>3순위</th><th>현재 업무</th></tr></thead>
+        <tbody id="ruleBody"></tbody>
+      </table></div>
+      <div class="cf" id="ruleFoot"></div>
+    </div>
+    <div class="card">
+      <div class="ch2"><h3>팀원 명부</h3><span class="nt">인사 API 연동 시 자동 동기화 — 지금은 데모 고정값</span></div>
+      <div class="cb"><div id="teamBody"></div></div>
+      <div class="cf" id="moveFoot"></div>
+    </div>
+  </section>
+
+  <!-- MASTER — 기준정보 관리 (부서 단위) -->
+  <section class="screen" id="s-master">
+    <div class="head"><div><h1>기준정보</h1><div class="sub">요청 폼의 분류를 부서가 직접 관리합니다 · 개발자 요청 없이 추가·수정·삭제</div></div>
+      <div class="filt" id="mBar" style="align-items:center"></div></div>
+    <div class="card">
+      <div class="ch2"><h3>분류축</h3><span class="nt">이 부서가 요청을 나누는 기준 · <b>배정축</b>의 값이 담당자를 결정합니다</span></div>
+      <div class="cb"><div id="mAxes"></div></div>
+    </div>
+    <div id="mOpts"></div>
+    <div class="card">
+      <div class="ch2"><h3>부서</h3><span class="nt">읽기 전용 — 부서 신설·폐지는 시스템 관리자만</span></div>
+      <div class="cb"><div id="mDept"></div></div>
+    </div>
+  </section>
+
+  <!-- DASH -->
+  <section class="screen" id="s-dash">
+    <div class="head"><div><h1>대시보드</h1><div class="sub" id="dashSub">전체 부서 기준</div></div>
+      <div class="filt" id="dashBar" style="align-items:center"></div></div>
+    <div class="kp" id="kpi"></div>
+
+    <div class="card">
+      <div class="ch2"><h3>부서별 처리 현황</h3><span class="nt">요청 데이터 기준 자동 산출</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>부서</th><th>접수</th><th>진행 중</th><th>종결</th><th>기한 준수율</th><th>지연율</th><th>평균 등급</th></tr></thead>
+        <tbody id="deptBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="ch2"><h3>월별 접수 · 종결 건수</h3><span class="nt">최근 6개월</span></div>
+      <div class="cb"><div id="trend"></div></div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<!-- modals -->
+<div class="mk" id="m-due"><div class="md">
+  <div class="mdh"><h3 id="dueT">기한 조정</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb" id="dueW"></div>
+    <label class="fl">현재 기한</label><input type="text" id="du0" disabled>
+    <label class="fl" id="du2L">사유 <span style="color:var(--signal)">필수</span></label>
+    <input type="text" id="du2" placeholder="요청자에게 그대로 공개됩니다">
+    <div id="du3W">
+      <label class="fl">대책 <span style="color:var(--signal)">필수</span></label>
+      <input type="text" id="du3" placeholder="요청자 업무 영향을 줄일 방안">
+    </div>
+    <label class="fl" id="du1L">새 기한 <span style="color:var(--signal)">필수</span></label><input type="date" id="du1">
+  </div>
+  <div class="mdf"><button class="btn" data-c>취소</button><button class="btn pri" id="dugo">요청자에게 알리기</button></div>
+</div></div>
+
+<div class="mk" id="m-hd"><div class="md">
+  <div class="mdh"><h3 id="hdT">이관</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb">수락 전까지 기존 담당자에게 책임이 있으며 기한은 변동되지 않습니다 · 사유는 요청자에게 공개됩니다</div>
+    <label class="fl">방식</label>
+    <select id="hm"><option value="n">지명 — 수신자 수락 필요</option><option value="l">팀장 이관 — 수락 불필요</option></select>
+    <div id="hn">
+      <label class="fl">수신 담당자 <span style="color:var(--signal)">필수</span></label><input type="text" placeholder="이메일 또는 성명 검색">
+      <div class="hint">인사 API 재직 검증 후 발송</div>
+    </div>
+    <div id="hl" style="display:none">
+      <label class="fl">수신</label>
+      <div class="qt">소속 팀장 <span class="auto">인사 API 자동 조회</span></div>
+    </div>
+    <label class="fl">사유 <span style="color:var(--signal)">필수 · 공개됨</span></label><input type="text">
+  </div>
+  <div class="mdf"><button class="btn" data-c>취소</button><button class="btn pri" data-c id="hgo" data-t="이관 제안 발송 · 수락 전까지 책임 유지 · 요청자 통보">이관 제안</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var $=function(s,c){return (c||document).querySelector(s)};
+  var $$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
+
+  var PREV='find';   // 요청하기 직전에 보던 화면 — 뒤로가기 목적지
+  function show(id){
+    if(id==='intake'){
+      var cs=$('.screen.on');
+      if(cs && cs.id!=='s-intake' && cs.id!=='s-ticket') PREV=cs.id.replace('s-','');
+      resetIntake();                   // 새로 들어올 땐 항상 빈 요청서
+    }
+    $$('.screen').forEach(function(x){x.classList.remove('on')});
+    $('#s-'+id).classList.add('on');
+    $$('.nb').forEach(function(b){b.classList.toggle('on',b.dataset.s===id)});
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  // 접수 폼 초기화 — 직전 접수 내용이 남아 있으면 안 된다.
+  function resetIntake(){
+    ['#ti','#asis','#tobe'].forEach(function(s){ if($(s)) $(s).value=''; });
+    if($('#s0')) $('#s0').value='';
+    if($('#axg')) $('#axg').innerHTML='';
+    if($('#want')) $('#want').value='';
+
+    if($('#pipe')) $('#pipe').classList.remove('on');
+    if($('#pipeBody')) $('#pipeBody').innerHTML='';
+  }
+  $$('.nb').forEach(function(b){b.onclick=function(){BACK=[];show(b.dataset.s);if(b.dataset.s==='find'&&typeof render==='function')render()}});
+  if($('#bkIntake')) $('#bkIntake').onclick=function(){ show(PREV); if(PREV==='find'&&typeof render==='function') render(); };
+
+
+  // ================= 데이터 =================
+  // 백엔드 연결 시 이 객체를 GET /api/tickets 응답으로 교체한다.
+  // 상태 기계
+  //  접수 ──담당자[확인·진행]──> 진행 ──담당자[완료]──> 완료 ──요청자[완료]──> 종결
+  //                               ↑                        │
+  //                               └────요청자[재요청]───────┘
+  //  진행 → 지연(기한 경과 자동 / 담당자 사전신고)
+  //  진행 → 지연 알림(담당자가 기한 전 알림 → 요청자 수락/거절)
+  var ST={
+    open  :{l:'접수',      c:'b-open',   i:0},   // 담당자 미확인 — 공은 담당자에게
+    prog  :{l:'진행',      c:'b-prog',   i:1},
+    nego  :{l:'지연 알림 · 요청자 확인 대기', c:'b-slip', i:1},
+    slip  :{l:'지연',      c:'b-slip',   i:1},
+    done  :{l:'완료', c:'b-verify', i:2},
+    closed:{l:'종결',      c:'b-closed', i:3}
+  };
+  var FLOW=['접수','진행','완료','종결'];
+
+  // 같은 상태라도 보는 쪽에 따라 이름이 다르다.
+  // 담당자는 자기 손을 떠났으니 '완료', 요청자는 아직 확인할 게 남았으니 '종결 대기'.
+  function stl(state){
+    if(state==='done') return cur==='req' ? '종결 대기' : '완료';
+    return ST[state].l;
+  }
+
+  // 예시 데이터 없음 — 요청하기에서 접수한 건이 그대로 쌓인다.
+  // 브라우저(localStorage)에 저장되며, 상단 '데이터 초기화'로 비울 수 있다.
+  var LS='dw-demo-v1';
+  var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null;
+  try{
+    var _s=JSON.parse(localStorage.getItem(LS)||'null');
+    if(_s&&_s.T){T=_s.T; SEQ=_s.SEQ||1000; if(_s.RULES) _SAVED_RULES=_s.RULES; if(_s.MAXLOAD) _SAVED_MAX=_s.MAXLOAD;
+       if(_s.DEPT)_SD=_s.DEPT; if(_s.AXES)_SA=_s.AXES; if(_s.TEAM)_SW=_s.TEAM;}
+  }catch(e){}
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({T:T,SEQ:SEQ,RULES:RULES,AXES:AXES,MAXLOAD:MAXLOAD,DEPT:DEPT,TEAM:TEAM})); }catch(e){} }
+
+  // ---- 역할 전환 ----
+  // 인물 정보는 하드코딩하지 않는다. 백엔드 연동 시 인사 API(로그인 사용자)로 대체된다.
+  var ROLE={
+    req:{nm:'요청자',dp:'',av:'요',home:'find'},
+    own:{nm:'담당자',dp:'공간기획팀',av:'담',home:'work'},
+    adm:{nm:'관리자',dp:'',av:'관',home:'dash'}
+  };
+  var cur='req';
+  // 역할별 탭 순서 (첫 항목이 홈)
+  var NAVORDER={
+    req:['find','mine','cc'],
+    own:['work','find'],
+    adm:['dash','ledger','rule','master','find']
+  };
+  // 각 뷰는 "특정 개인 본인"의 뷰다. 로그인 연동 전까지는 선택기로 누구 시점인지 고른다.
+  var ME=null;      // 담당자 본인
+  var YOU=null;     // 요청자 본인
+
+  // 요청자 데모 계정 — 로그인 연동 시 삭제. 회람·다중 요청자 동작 확인용.
+  var REQS=['요청자 A','요청자 B','요청자 C'];
+  function reqPick(){
+    var sel=$('#reqAs'); if(!sel) return;
+    if(!YOU) YOU=REQS[0];
+    sel.innerHTML=REQS.map(function(n){
+      var c=Object.keys(T).filter(function(k){return T[k].rq.nm===n&&T[k].state!=='closed'}).length;
+      return '<option value="'+n+'">'+n+(c?' ('+c+')':'')+'</option>';
+    }).join('');
+    sel.onchange=function(){ YOU=sel.value; refresh(); setRole('req'); };
+    sel.value=YOU; ROLE.req.nm=YOU; ROLE.req.av=YOU.slice(-1);
+  }
+  function roster(d){ return (TEAM[d||RD]||[]).slice(); }
+  function nOpen(nm){
+    return Object.keys(T).filter(function(n){return T[n].as===nm&&T[n].state!=='closed'}).length;
+  }
+  function ownPick(){
+    var sel=$('#ownAs'); if(!sel) return;
+    var r=roster();
+    // 기본값: 배정 건이 있는 담당자 우선 — 없으면 명부 첫 번째
+    if(!ME){
+      var busy=r.filter(function(n){return nOpen(n)>0});
+      ME = busy.length ? busy[0] : r[0];
+    }
+    sel.innerHTML=r.map(function(n){
+      var c=nOpen(n);
+      return '<option value="'+n+'">'+n+' · 공간기획팀'+(c?' ('+c+')':'')+'</option>';
+    }).join('');
+    sel.onchange=function(){ ME=sel.value; refresh(); setRole('own'); };
+    sel.value=ME; ROLE.own.nm=ME; ROLE.own.dp='공간기획팀'; ROLE.own.av=ME.slice(0,1);
+  }
+  function setRole(r,keep){
+    cur=r;
+    if(r==='own') ownPick();
+    if(r==='req') reqPick();
+    var m=ROLE[r];
+    $('#unm').textContent=m.nm; if($('#udp'))$('#udp').textContent=m.dp; $('#uav').textContent=m.av;
+    if($('#cav'))$('#cav').textContent=m.av;
+    // 관리자 화면은 국문 고정 — 영문 전환은 요청자·담당자 화면에만
+    if(r==='adm' && LANG==='en') setLang('ko');
+    if($('#langBtn'))$('#langBtn').style.display = r==='adm' ? 'none' : '';
+    if($('#ownAs'))$('#ownAs').style.display = r==='own' ? '' : 'none';
+    if($('#reqAs'))$('#reqAs').style.display = r==='req' ? '' : 'none';
+    // 역할별 탭 순서 — 첫 탭이 그 역할의 홈
+    var rail=$('.rail');
+    if(rail) NAVORDER[r].forEach(function(s){
+      var b=rail.querySelector('.nb[data-s="'+s+'"]');
+      if(b) rail.appendChild(b);
+    });
+    $$('.rsw button').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
+    // 상태 이름이 역할별로 다르므로(완료 / 종결 대기) 목록을 다시 그린다
+    renderWork(); renderMine(); renderCC(); counts(); if($('#sq')) render();
+    $$('[data-r]').forEach(function(el){
+      if(el.classList.contains('rsw')||el.parentNode.classList.contains('rsw'))return;
+      el.style.display = el.dataset.r.split(' ').indexOf(r)>=0 ? '' : 'none';
+    });
+    if(!keep) show(m.home);
+  }
+  $$('.rsw button').forEach(function(b){b.onclick=function(){setRole(b.dataset.r)}});
+  // 초기 렌더는 스크립트 맨 끝(init)에서 수행한다 — 위에서 부르면 아래 var가 아직 undefined.
+
+  var tt;
+  function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},3400)}
+
+  $$('.chan button').forEach(function(b){b.onclick=function(){$$('.chan button').forEach(function(x){x.classList.remove('on')});b.classList.add('on')}});
+  $$('.filt button').forEach(function(b){
+    if(b.classList.contains('btn'))return;
+    b.onclick=function(){$$('button',b.parentNode).forEach(function(x){if(!x.classList.contains('btn'))x.classList.remove('on')});b.classList.add('on')};
+  });
+
+  // ---- 요청 접수: 입력한 값으로 실제 요청 생성 ----
+  if($('#go'))$('#go').onclick=function(){
+    var ti=$('#ti').value.trim(), d0=$('#s0').value,
+        asis=$('#asis').value.trim(), tobe=$('#tobe').value.trim(), want=$('#want').value;
+    if(!d0){toast('부서를 선택해주세요');return}
+    if(!axesOf(d0).length){toast(d0+' 은(는) 아직 준비 중입니다');return}
+    var attrs={}, miss=null;
+    $$('.axs').forEach(function(s){ if(!s.value) miss=miss||s.dataset.n; attrs[s.dataset.n]=s.value; });
+    if(miss){toast(miss+'을(를) 선택해주세요');return}
+    if(!ti){toast('제목을 입력해주세요');$('#ti').focus();return}
+    if(!asis){toast('현재 상황을 입력해주세요');$('#asis').focus();return}
+    if(!tobe){toast('요청 사항을 입력해주세요');$('#tobe').focus();return}
+    if(!want){toast('요청 기한을 선택해주세요');return}
+
+    var ax=assignAxis(d0), av=ax?attrs[ax.n]:null;
+    var r=assign(d0,av);
+    var no=(DEPTCODE[d0]||d0)+'-'+(++SEQ);
+    var fx=addD(today(),1)+' 18:00';
+    T[no]={no:no,title:ti,state:'open',vis:'public',
+      dept:d0, attrs:attrs,
+      rq:{nm:ROLE.req.nm,org:ROLE.req.dp},jn:[],
+      as:r.nm, asOrg:(TEAMORG[d0]||d0),
+      open:now(),openDate:today(),due:want,dueOrig:want,fixBy:fx,want:want,unseen:true,
+      asis:asis,tobe:tobe,
+      ev:[{t:'sys',at:now(),x:(av||d0)+' 접수 → '+(r.pending?'담당 미배정 · '+r.why:(r.rank?r.rank+'순위 ':'')+r.nm+' 배정(업무 '+(r.load||0)+'건)')+' · 요청 기한 '+want+' · 양측 메일 발송'},
+          {t:'sys',at:now(),x:'담당자 확인 대기 · 기한 확정 마감 '+fx+' · 이 시점까지 담당자가 요청을 확인하고 기한을 확정해야 합니다'}]};
+    refresh();
+    var p=$('#pipe');
+    $('#pipeBody').innerHTML='<div class="bx cm" style="margin-top:0">'+
+      '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--primary);letter-spacing:-.03em">dw://'+esc2(no)+'</div>'+
+      '<div style="font-size:13px;font-weight:700;margin-top:3px">접수되었습니다</div>'+
+      '<dl class="f" style="margin-top:9px"><dt>담당자</dt><dd>'+esc2(r.nm)+' · '+esc2(TEAMORG[d0]||d0)+'</dd></dl>'+
+      '<dl class="f"><dt>요청 기한</dt><dd>'+esc2(want)+' · 담당자가 조정할 수 있음</dd></dl>'+
+      '<dl class="f"><dt>기한 확정 마감</dt><dd>'+esc2(fx)+' · 이후 변경은 요청자 확인 필요</dd></dl>'+
+      '<div style="margin-top:11px;display:flex;gap:6px">'+
+        '<button class="btn pri sm" data-o="'+esc2(no)+'">요청 보기</button>'+
+        '<button class="btn sm" data-j="mine">내 요청 목록</button></div></div>';
+    p.classList.add('on');
+    wire();
+    $('#ti').value='';$('#asis').value='';$('#tobe').value='';
+    p.scrollIntoView({behavior:'smooth',block:'nearest'});
+    toast('dw://'+no+' 접수 · 담당 '+r.nm);
+  };
+
+  var pk={};   // 요청자 평가 선택값 — 실제 핸들러는 wire()에 있다
+
+  function op(i){$('#'+i).classList.add('on')}
+  function cl(i){$('#'+i).classList.remove('on')}
+  $$('[data-c]').forEach(function(b){b.onclick=function(){b.closest('.mk').classList.remove('on');if(b.dataset.t)toast(b.dataset.t)}});
+  $$('.mk').forEach(function(m){m.onclick=function(e){if(e.target===m)m.classList.remove('on')}});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!$$('.mk.on').length&&$('#bkBtn')){$('#bkBtn').click();return}
+    if(e.key==='Escape')$$('.mk').forEach(function(m){m.classList.remove('on')})});
+
+
+  // ---- 전체 요청 ----
+  function DB(){ return Object.keys(T).map(function(n){
+    var t=T[n];
+    return {no:n, t:t.title, av:attrVals(t), st:stl(t.state), stc:ST[t.state].c,
+      state:t.state, rq:t.rq.nm, dept:t.dept||'공간기획', openDate:t.openDate,
+      o:t.as, d:t.open.split(' ')[0], cm:t.ev.filter(function(e){return e.t==='cm'}).length,
+      jn:1+t.jn.length, lock:t.vis==='locked',
+      // 본문 검색은 현재상황·요청사항 + 의견 전체를 훑는다(완료 결과도 의견으로 남으므로).
+      b:t.asis+' '+t.tobe+' '+t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' '),
+      // 종결된 건은 담당자의 마지막 의견을 '완료 결과'로 노출
+      a:(function(){
+        if(t.state!=='closed'&&t.state!=='done') return '';
+        var c=t.ev.filter(function(e){return e.t==='cm'&&e.r==='ow'});
+        return c.length?c[c.length-1].x:'';
+      })()};
+  }).sort(newestFirst); }
+
+  // 전체 요청 필터 — 분야(드롭다운) × 상태
+  var FQ='all', FD='all';
+  var FGROUP={
+    all:   {l:'전체', f:function(){return true}},
+    open:  {l:'접수', f:function(x){return x.state==='open'}},
+    prog:  {l:'진행', f:function(x){return x.state==='prog'||x.state==='nego'}},
+    slip:  {l:'지연', f:function(x){return x.state==='slip'}},
+    done:  {l:null, f:function(x){return x.state==='done'}},   // 라벨은 stl()이 역할별로 결정
+    closed:{l:'종결', f:function(x){return x.state==='closed'}}
+  };
+  function byDept(db){ return FD==='all' ? db : db.filter(function(x){return x.dept===FD}) }
+  function findFilt(db){
+    var el=$('#findBar'); if(!el) return;
+    var scoped=byDept(db);
+    el.innerHTML=
+      periodSel('f')+
+      '<select id="findDept" style="width:auto;min-width:118px;font-size:12px;font-weight:700;padding:4px 7px">'+
+        '<option value="all">분야 전체</option>'+
+        DEPT.map(function(x){return '<option value="'+x+'"'+(FD===x?' selected':'')+'>'+x+'</option>'}).join('')+
+      '</select>'+
+      '<span style="width:1px;height:18px;background:var(--line-2);flex:none;margin:0 3px"></span>'+
+      Object.keys(FGROUP).map(function(k){
+        var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
+        return '<button data-f="'+k+'"'+(FQ===k?' class="on"':'')+'>'+lb+' '+scoped.filter(FGROUP[k].f).length+'</button>';
+      }).join('');
+    $$('button',el).forEach(function(b){b.onclick=function(){FQ=b.dataset.f;render()}});
+    $('#findDept').onchange=function(){FD=this.value;render()};
+    wirePeriod(); tr();
+  }
+  function esc(s){return s.replace(/[&<>]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
+  function hl(s,q){
+    if(!q)return esc(s);
+    var i=s.toLowerCase().indexOf(q.toLowerCase());
+    if(i<0)return esc(s);
+    return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));
+  }
+  function snip(b,q){
+    if(!q)return '';
+    var i=b.toLowerCase().indexOf(q.toLowerCase()); if(i<0)return '';
+    var s=Math.max(0,i-40),e=Math.min(b.length,i+q.length+70);
+    return (s>0?'…':'')+b.slice(s,e)+(e<b.length?'…':'');
+  }
+  function render(){
+    var q=$('#sq').value.trim();
+    var num=q.replace(/^dw:\/\//,'');
+    var _db=byPeriod(DB());
+    var direct=q?_db.filter(function(x){return x.no===num||x.no.split('-')[1]===num}):[];
+    $('#hit').innerHTML = direct.length ? '<div class="card" style="margin-bottom:12px;border-color:var(--primary)"><div class="res" data-no="'+direct[0].no+'"><div class="resh"><div class="rest">'+esc(direct[0].t)+'</div><span class="badge '+direct[0].stc+'">'+direct[0].st+'</span></div><div class="resm"><span style="color:var(--primary);font-weight:700">dw://'+direct[0].no+'</span><span class="sep">·</span><span>번호 일치 — 바로가기</span></div></div></div>' : '';
+
+    findFilt(_db);
+    var r = q ? _db.filter(function(x){
+      var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
+      return hay.indexOf(q.toLowerCase())>=0;
+    }) : _db;
+    r = byDept(r).filter(FGROUP[FQ].f);
+    var fl = (FD==='all'?'':' · '+FD)+(FQ==='all'?'':' · '+FGROUP[FQ].l);
+    $('#rcount').textContent = (q ? '결과 '+r.length+'건' : '전체 '+r.length+'건')+fl;
+    if(!r.length){ $('#rl').innerHTML=empty(_db.length?'조건에 맞는 요청이 없습니다':'요청이 없습니다'); wire(); tr(); return; }
+    $('#rl').innerHTML = r.map(function(x){
+      if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">🔒 잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
+      var s=snip(x.b,q), m=[];
+      m.push('<span style="color:var(--primary);font-weight:700">dw://'+x.no+'</span>');
+      x.av.forEach(function(v){m.push(esc(v))}); m.push(esc(x.o)); m.push(x.d); m.push('의견 '+x.cm);
+      if(x.jn>1) m.push('<span style="color:var(--primary)">회람 '+(x.jn-1)+'명</span>');
+      return '<div class="res" data-no="'+x.no+'">'+
+        '<div class="resh"><div class="rest">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
+        '<div class="resm">'+m.join('<span class="sep">·</span>')+'</div>'+
+        (s?'<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">'+hl(s,q)+'</div>':'')+
+        (x.a?'<div class="ans"><div class="ansl">완료 결과</div><div class="ansx">'+hl(x.a,q)+'</div></div>':'')+
+      '</div>';
+    }).join('');
+    $$('#rl .res[data-no]').forEach(function(b){b.onclick=function(){openT(b.dataset.no)}});
+    var d=$('#hit .res'); if(d)d.onclick=function(){openT(d.dataset.no)};
+    tr();
+  }
+
+  // ---- 공간기획 요청 축 (실제 데이터) ----
+  // 분야 — 요청하기 폼과 전체 요청/관리대장 드롭다운이 공유.
+  // ITSM 사용자정보(2026-07-09) 기준 실제 쉐어드 조직. 현재는 공간기획만 하위 분류·담당 매핑이 있고
+  // 나머지는 이름만 등록된 상태(선택 시 "준비 중" 안내).
+  var DEPT=['공간기획','총무','시설','자산','인사쉐어드','회계기획쉐어드','재무쉐어드','IT쉐어드'];
+  // ── 부서별 분류축 (AXES) ──
+  // 부서마다 요청을 나누는 축이 다르다. 공간기획은 "공간 유형"이 축이지만
+  // 총무는 "서비스", 시설은 "설비 종류"가 축이 될 것이다.
+  // 그래서 고정 컬럼이 아니라 [부서 → 축 → 값] 구조로 둔다. 백엔드도 이 구조를 그대로 쓴다.
+  //   n: 축 이름 · a: 배정축 여부(이 축의 값이 담당자를 결정) · o: 선택지
+  // 축은 부서 관리자가 [기준정보]에서 직접 추가·수정·삭제한다.
+  var AXES={
+    '공간기획':[
+      {n:'자산', a:false, o:['본관','신관','S빌딩','유로프라자','잠실선착장','마곡연구소','용인경영개발원','힐리언스 선마을','기타(공장)','기타(영업소)','기타(임대)','기타']},
+      {n:'공간 유형', a:true,  o:['사무-업무공간','사무-공용공간','세미나/공연','호스피탈리티-객실','호스피탈리티-기타','호스피탈리티-BOH','F&B','라운지','야외','가구','사이니지']},
+      {n:'업무 유형', a:false, o:['단순문의(길이, 면적, 층고 등)','레이아웃 변경','인테리어 설계','인테리어 시공','VMD 연출','기타']}
+    ],
+    '총무':[], '시설':[], '자산':[], '인사쉐어드':[], '회계기획쉐어드':[], '재무쉐어드':[], 'IT쉐어드':[]
+  };
+  function axesOf(d){ return AXES[d]||[] }
+  function assignAxis(d){ return axesOf(d).filter(function(x){return x.a})[0]||null }   // 배정축
+  function attrOf(t,n){ return (t.attrs||{})[n] }
+  function attrVals(t){ var a=t.attrs||{}; return Object.keys(a).map(function(k){return a[k]}).filter(Boolean) }
+  function assignVal(t){ var ax=assignAxis(t.dept); return ax?attrOf(t,ax.n):null }
+  // 부서가 열려 있는가 = 축이 있고, 배정축이 있고, 배정 규칙에 담당자가 하나라도 있는가
+  function deptReady(d){
+    var ax=assignAxis(d); if(!ax) return false;
+    var r=RULES[d]||{};
+    return ax.o.some(function(v){ return (r[v]||[]).length });
+  }
+  // 팀원 명부 — 인사 API 연동 시 이 목록이 재직자로 자동 대체된다.
+  // 퇴사/입사는 인사에서 오고, "누가 무엇을 맡는지"는 [담당자 관리]에서 관리자가 지정한다.
+  var TEAM={ '공간기획':['조은혜','윤종배','박수지','윤희선','이유진','원종욱','탈리아'],
+             '총무':[], '시설':[], '자산':[], '인사쉐어드':[], '회계기획쉐어드':[], '재무쉐어드':[], 'IT쉐어드':[] };
+  var MAXLOAD=3;   // 1순위가 이 건수 이상 업무를 들고 있으면 다음 순위로 넘긴다
+
+  // ── 부서별 배정 규칙 (RULES) ──
+  //   RULES[부서][배정축 값] = [1순위, 2순위, 3순위]
+  // 인사 API가 주지 않는 정보다. "이 값은 누가 맡는가"는 팀의 업무 분장이므로
+  // 관리자가 [담당자 관리]에서 직접 지정한다. 연동 후에도 이 표는 사라지지 않는다.
+  var RULES={
+    '공간기획':{
+      '사무-업무공간':['조은혜','윤종배'],
+      '사무-공용공간':['조은혜','박수지'],
+      '세미나/공연':['박수지','윤종배'],
+      '호스피탈리티-객실':['윤희선','이유진'],
+      '호스피탈리티-기타':['이유진','윤희선'],
+      '호스피탈리티-BOH':['윤희선','조은혜'],
+      'F&B':['박수지','조은혜','이유진'],
+      '라운지':['이유진'],
+      '야외':['원종욱','탈리아'],
+      '가구':['윤희선','원종욱'],
+      '사이니지':['원종욱','윤희선','탈리아']
+    },
+    '총무':{}, '시설':{}, '자산':{}, '인사쉐어드':{}, '회계기획쉐어드':{}, '재무쉐어드':{}, 'IT쉐어드':{}
+  };
+
+  if(_SAVED_RULES) RULES=_SAVED_RULES;
+  if(_SAVED_MAX) MAXLOAD=_SAVED_MAX;
+  if(_SD) DEPT=_SD;
+  if(_SA) AXES=_SA;
+  if(_SW) TEAM=_SW;
+
+  // 업무 건수 — 종결만 제외 (접수·진행·지연 알림·지연·완료)
+  function load(nm){
+    return Object.keys(T).filter(function(n){
+      return T[n].as===nm && T[n].state!=='closed' && T[n].vis!=='locked';
+    }).length;
+  }
+  // 1순위 우선 · 미종결이 한도 이상이면 다음 순위
+  function assign(dept, val){
+    var c=(RULES[dept]||{})[val]||[];
+    if(!c.length) return {nm:'미배정', rank:0, load:0, pending:true,
+      why:'담당자 미지정 · [담당자 관리]에서 지정해야 배정됩니다'};
+    for(var i=0;i<c.length;i++){
+      if(load(c[i])<MAXLOAD) return {nm:c[i], rank:i+1, load:load(c[i]),
+        why: i===0 ? '1순위' : c.slice(0,i).map(function(x){return x+' 업무 '+load(x)+'건'}).join(' · ')+' → '+(i+1)+'순위'};
+    }
+    return {nm:c[0], rank:1, load:load(c[0]), over:true,
+      why:'후보 전원 '+MAXLOAD+'건 이상 · 1순위 배정'};
+  }
+  function fill(sel,items,ph){
+    sel.innerHTML='<option value="">'+ph+'</option>'+items.map(function(x){return '<option>'+x+'</option>'}).join('');
+    sel.disabled=!items.length;
+  }
+  // 선택한 부서의 축을 그린다. 축 개수·이름이 부서마다 다르므로 고정 폼을 쓸 수 없다.
+  function renderAxes(){
+    var d=$('#s0').value, g=$('#axg'); if(!g) return;
+    if(!d){ g.innerHTML=''; return; }
+    var ax=axesOf(d);
+    if(!ax.length){
+      g.innerHTML='<div class="fr"><label class="fk"></label><div class="fv"><div class="nyx">'+
+        '<b>'+esc2(d)+'</b> 은(는) 아직 준비 중입니다 <span>— 관리자가 [기준정보]에서 분류축을, [담당자 관리]에서 담당자를 지정하면 열립니다</span></div></div></div>';
+      return;
+    }
+    g.innerHTML=ax.map(function(x,i){
+      return '<div class="fr"><label class="fk">'+esc2(x.n)+' <span class="rq">*</span></label>'+
+        '<div class="fv"><select class="axs" data-n="'+esc2(x.n)+'" style="min-width:190px">'+
+          '<option value="">선택</option>'+x.o.map(function(v){return '<option>'+esc2(v)+'</option>'}).join('')+
+        '</select>'+(x.a?'<div class="deriv" id="deriv" style="display:none"><div id="dvOwn"></div></div>':'')+'</div></div>';
+    }).join('');
+    $$('.axs',g).forEach(function(s){ s.onchange=deriv });
+    deriv();
+  }
+  // 배정축 값이 정해지면 담당자를 미리 보여준다
+  function deriv(){
+    var d=$('#s0').value, ax=assignAxis(d);
+    if(!$('#deriv')) return;
+    var all=$$('.axs').every(function(s){return s.value});
+    var av=ax ? ($$('.axs').filter(function(s){return s.dataset.n===ax.n})[0]||{}).value : null;
+    if(all && av){
+      var r=assign(d,av);
+      $('#dvOwn').innerHTML = r.pending
+        ? '담당 <b>미배정</b> · <span style="color:var(--signal)">'+esc2(r.why)+'</span>'
+        : '담당 <b style="color:var(--good)">'+esc2(r.nm)+'</b> · 업무 '+r.load+'건';
+      $('#deriv').style.display='block';
+    } else $('#deriv').style.display='none';
+  }
+  function deptSwitch(){ renderAxes(); }
+
+  // 기준정보가 바뀌면 요청 폼 선택지도 즉시 갱신된다 (선택값 유지)
+  function fillForms(){
+    if(!$('#s0')) return;
+    var keep=$('#s0').value;
+    fill($('#s0'),DEPT,'선택');
+    if(keep && DEPT.indexOf(keep)>=0){ $('#s0').value=keep; renderAxes(); }
+    else if($('#axg')) $('#axg').innerHTML='';
+  }
+  if($('#s0')){ fillForms(); $('#s0').onchange=deptSwitch; }
+
+  if($('#sq')) $('#sq').oninput=render;   // 초기 렌더는 맨 끝 init의 refresh()가 한다
+
+
+
+
+  // ================= 목록 렌더 =================
+  function row(t, forRole){
+    var s=ST[t.state], m=[];
+    m.push('dw://'+t.no); if(attrVals(t).length) m.push(attrVals(t).join(' · '));
+    m.push(forRole==='own' ? '요청자 '+t.rq.nm+(t.jn.length?' · 회람 '+t.jn.length+'명':'') : '담당 '+t.as+' · '+t.asOrg);
+    if(t.parent) m.push('원 요청 dw://'+t.parent);
+    if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--amber)">'+t.fixBy+'</b>');
+    if(t.state==='closed') m.push('종결 '+t.resolved+(t.ev2?' · 평가 '+t.ev2.g:''));
+    else if(t.state==='done') m.push('완료 '+t.resolved+' · 요청자 확인 대기');
+    else if(t.due) m.push('기한 '+t.due);
+    // 지연이 가장 급한 신호 — 미열람·완료보다 위
+    var bd = (t.state==='slip')?'border-color:var(--signal);border-width:2px'
+           : t.unseen?'border-color:var(--signal);border-width:2px'
+           : (t.state==='done'||t.state==='nego')?'border-color:var(--amber);border-width:2px':'';
+    // 카드 전체가 클릭 대상 — 전체 요청 화면과 동일하게
+    return '<div class="pr" data-o="'+t.no+'" style="cursor:pointer;'+bd+'">'+
+      '<div class="prh"><div class="prt">'+esc2(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="prm">'+m.join(' · ')+'</div>'+
+    '</div>';
+  }
+  function byNo(list){return list.map(function(n){return T[n]})}
+
+  // 최신 요청이 위로 — 요청번호가 접수 순서다.
+  function seqOf(n){ return parseInt(String(n).split('-')[1],10)||0 }
+  function newestFirst(a,b){ return seqOf(b.no)-seqOf(a.no) }
+  function allT(){return Object.keys(T).map(function(n){return T[n]}).filter(function(t){return t.vis!=='locked'}).sort(newestFirst)}
+  function empty(msg){return '<div style="padding:28px 15px;text-align:center;color:var(--faint);font-size:12.5px">'+msg+'</div>'}
+
+  // ---- 기간 필터 (접수일 기준) ----
+  // 모든 목록 화면이 같은 기간을 공유한다 — "지금 보고 있는 기간"이 화면마다 다르면 헷갈린다.
+  var PD={k:'all',from:'',to:''};
+  var PDOPT=[['all','전체 기간'],['7','최근 7일'],['30','최근 30일'],['90','최근 90일'],['365','최근 1년'],['custom','직접 지정']];
+  function openDate(t){ return t.openDate || today(); }
+  function inPeriod(t){
+    var d=openDate(t);
+    if(PD.k==='all') return true;
+    if(PD.k==='custom') return (!PD.from||d>=PD.from)&&(!PD.to||d<=PD.to);
+    return d>=addD(today(),-parseInt(PD.k,10));
+  }
+  function byPeriod(list){ return list.filter(inPeriod) }
+  function periodSel(id){
+    return '<select class="pdsel" data-pd="'+id+'" style="width:auto;min-width:112px;font-size:12px;font-weight:700;padding:4px 7px">'+
+      PDOPT.map(function(o){return '<option value="'+o[0]+'"'+(PD.k===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'+
+      (PD.k==='custom'
+        ? '<input type="date" class="pdfrom" value="'+PD.from+'" style="width:auto;font-size:12px;padding:4px 6px">'+
+          '<span style="color:var(--faint);font-size:11px">~</span>'+
+          '<input type="date" class="pdto" value="'+PD.to+'" style="width:auto;font-size:12px;padding:4px 6px">'
+        : '')+
+      '<span style="width:1px;height:18px;background:var(--line-2);flex:none;margin:0 3px"></span>';
+  }
+  function wirePeriod(){
+    $$('.pdsel').forEach(function(s){ s.onchange=function(){ PD.k=s.value; refresh(); }; });
+    $$('.pdfrom').forEach(function(s){ s.onchange=function(){ PD.from=s.value; refresh(); }; });
+    $$('.pdto').forEach(function(s){ s.onchange=function(){ PD.to=s.value; refresh(); }; });
+  }
+
+  // 내 요청 / 내 업무 상태 필터 — 전체 요청과 같은 그룹을 쓴다
+  var MQ='all', WQ='all';
+  // 목록별 검색어 — 종결 건이 쌓이면 목록만으로는 못 찾는다
+  var MS='', WS='', CS='';
+  function hay(t){
+    return (t.no+' '+t.title+' '+t.asis+' '+t.tobe+' '+attrVals(t).join(' ')+' '+t.dept+' '+t.as+' '+t.rq.nm+' '+
+      t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' ')).toLowerCase();
+  }
+  function bySearch(list,q){
+    q=(q||'').trim().replace(/^dw:\/\//,'');
+    if(!q) return list;
+    return list.filter(function(t){return hay(t).indexOf(q.toLowerCase())>=0});
+  }
+  function searchBox(id,q){
+    return '<div class="sbig"><span class="sch">dw://</span>'+
+      '<input type="text" id="'+id+'" placeholder="요청번호, 제목, 내용" autocomplete="off" value="'+esc2(q)+'"></div>';
+  }
+  // innerHTML 교체로 포커스가 날아가므로 검색 중이면 커서를 되돌려준다
+  function keepFocus(id){
+    var el=$('#'+id); if(!el) return;
+    if(el.value){ el.focus(); try{ el.setSelectionRange(el.value.length,el.value.length) }catch(e){} }
+  }
+  var CTA='<button class="btn pri lg" data-j="intake"><span class="pl">＋</span>요청하기</button>';
+  function stateBar(list, sel, cur2, extra){
+    return Object.keys(FGROUP).map(function(k){
+      var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
+      return '<button data-'+sel+'="'+k+'"'+(cur2===k?' class="on"':'')+'>'+lb+' '+list.filter(FGROUP[k].f).length+'</button>';
+    }).join('')+(extra||'');
+  }
+
+  function renderWork(){
+    // 나(ME)에게 배정된 요청만. 로그인 연동 시 ME는 로그인 사용자로 대체된다.
+    var mine=byPeriod(allT().filter(function(t){return t.as===ME}));
+    var list=bySearch(mine.filter(FGROUP[WQ].f), WS);
+    $('#s-work').innerHTML=
+     '<div class="head"><div><h1>내 업무</h1><div class="sub">나에게 배정된 요청</div></div></div>'+
+     searchBox('wq',WS)+
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateBar(mine,'w',WQ)+'</div>'+
+     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
+       (list.length?list.map(function(t){return row(t,'own')}).join(''):empty(mine.length?'해당 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>';
+    $$('#wFilt button').forEach(function(b){b.onclick=function(){WQ=b.dataset.w;renderWork()}});
+    if($('#wq')) $('#wq').oninput=function(){WS=this.value;renderWork()};
+    wirePeriod(); wire(); tr(); keepFocus('wq');
+  }
+
+  function renderMine(){
+    var own=byPeriod(allT().filter(function(t){return t.rq.nm===ROLE.req.nm}));   // 내가 낸 요청만
+    var list=bySearch(own.filter(FGROUP[MQ].f), MS);
+    $('#s-mine').innerHTML=
+     '<div class="head"><div><h1>내 요청</h1><div class="sub">내가 접수한 요청</div></div>'+CTA+'</div>'+
+     searchBox('mq',MS)+
+     '<div class="filt" id="mFilt" style="margin-bottom:12px">'+periodSel('m')+stateBar(own,'m',MQ)+'</div>'+
+     '<div class="card"><div class="cb">'+
+       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':'요청이 없습니다'))+'</div></div>';
+    $$('#mFilt button').forEach(function(b){b.onclick=function(){MQ=b.dataset.m;renderMine()}});
+    if($('#mq')) $('#mq').oninput=function(){MS=this.value;renderMine()};
+    wirePeriod(); wire(); tr(); keepFocus('mq');
+  }
+
+  // 회람 중인 요청 — 내가 낸 건 아니지만 팔로업 중인 남의 요청
+  var CQ='all';
+  function renderCC(){
+    var me=ROLE.req.nm;
+    var cc=byPeriod(allT().filter(function(t){return t.rq.nm!==me&&t.jn.some(function(j){return j.nm===me})}));
+    var list=bySearch(cc.filter(FGROUP[CQ].f), CS);
+    $('#s-cc').innerHTML=
+     '<div class="head"><div><h1>회람 중인 요청</h1><div class="sub">내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다</div></div>'+CTA+'</div>'+
+     searchBox('cq',CS)+
+     '<div class="filt" id="cFilt" style="margin-bottom:12px">'+periodSel('c')+stateBar(cc,'c',CQ)+'</div>'+
+     '<div class="card"><div class="cb">'+
+       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(cc.length?'해당 요청이 없습니다':'회람 중인 요청이 없습니다'))+'</div></div>';
+    $$('#cFilt button').forEach(function(b){b.onclick=function(){CQ=b.dataset.c;renderCC()}});
+    if($('#cq')) $('#cq').oninput=function(){CS=this.value;renderCC()};
+    wirePeriod(); wire(); tr(); keepFocus('cq');
+  }
+
+  // 등급 색상 (관리대장·대시보드 공용)
+  function gc(v){return v==='A'?'ga':v==='B'?'gc':v==='C'?'gc':v==='D'?'gd':''}
+  // 요청에 등장한 담당 부서 목록
+  function ORGS(){
+    var s={},o=[];
+    Object.keys(T).forEach(function(n){var x=T[n].asOrg||'미배정'; if(!s[x]){s[x]=1;o.push(x)}});
+    return o.sort();
+  }
+  // 분야 → 담당 부서(팀). 요청이 없는 부서도 대시보드에 0으로 표시하기 위한 등록부.
+  // ITSM 사용자정보(2026-07-09) 기준.
+  // 요청번호 접두 — 부서별. 백엔드에서는 부서 마스터의 code 컬럼
+  var DEPTCODE={'공간기획':'공간','총무':'총무','시설':'시설','자산':'자산',
+    '인사쉐어드':'인사','회계기획쉐어드':'회계','재무쉐어드':'재무','IT쉐어드':'IT'};
+  var TEAMORG={'공간기획':'공간기획팀','총무':'총무팀','시설':'시설팀','자산':'자산관리팀',
+    '인사쉐어드':'인사쉐어드팀','회계기획쉐어드':'회계기획쉐어드팀','재무쉐어드':'재무쉐어드팀','IT쉐어드':'IT쉐어드파트'};
+  var DEPTORG={
+    '공간기획':'공간기획팀', '총무':'총무팀', '시설':'시설팀', '자산':'자산관리팀',
+    '인사쉐어드':'인사쉐어드1~4팀', '회계기획쉐어드':'회계기획쉐어드1~4팀',
+    '재무쉐어드':'재무쉐어드팀', 'IT쉐어드':'IT쉐어드파트'
+  };
+
+  // ---- 관리대장: 요청에서 자동 생성 ----
+  var LD='all';
+  function renderLedger(){
+    var b=$('#ledBody'); if(!b) return;
+    var all=byPeriod(allT());
+    if($('#ledBar')){
+      $('#ledBar').innerHTML=periodSel('l')+
+        '<select id="ledDept" style="width:auto;min-width:118px;font-size:12px;font-weight:700;padding:4px 7px">'+
+          '<option value="all">분야 전체</option>'+
+          DEPT.map(function(x){return '<option value="'+x+'"'+(LD===x?' selected':'')+'>'+x+'</option>'}).join('')+
+        '</select>'+
+        '<button class="btn sm" style="border-radius:5px;margin-left:6px">엑셀 내려받기</button>';
+      $('#ledDept').onchange=function(){LD=this.value;renderLedger()};
+      wirePeriod();
+    }
+    if(LD!=='all') all=all.filter(function(t){return (t.dept||'공간기획')===LD});
+    if($('#ledNote'))$('#ledNote').textContent='갱신 '+now()+' · '+all.length+'건 · 요청에서 자동 생성';
+    b.innerHTML = all.length ? all.map(function(t){
+      var s=ST[t.state], e=t.ev2||{};
+      return '<tr><td class="tc">'+esc2(t.no)+'</td><td>'+esc2(assignVal(t)||t.dept)+'</td><td>'+esc2(t.title)+'</td><td>'+esc2(t.rq.nm)+'</td><td>'+esc2(t.as)+'</td>'+
+        '<td class="d">'+esc2((t.open||'').split(' ')[0])+'</td><td class="d">'+esc2(t.due||'—')+'</td>'+
+        '<td><span class="badge '+s.c+'">'+s.l+'</span></td>'+
+        '<td class="d"'+(e.late?' style="color:var(--signal)"':'')+'>'+(e.lateFact||(isLate(t)?'지연':'—'))+'</td>'+
+        '<td class="gr '+gc(e.fl)+'">'+(e.fl||'—')+'</td><td class="gr '+gc(e.cm)+'">'+(e.cm||'—')+'</td>'+
+        '<td class="gr '+gc(e.g)+'">'+(e.g||'—')+'</td></tr>';
+    }).join('') : '<tr><td colspan="12" style="text-align:center;color:var(--faint);padding:26px 12px">요청이 없습니다</td></tr>';
+    var rb=$('#repBody'); if(!rb) return;
+    var cnt={};
+    all.forEach(function(t){var k=assignVal(t)||t.dept||'기타';cnt[k]=(cnt[k]||0)+1});
+    var keys=Object.keys(cnt).sort(function(x,y){return cnt[y]-cnt[x]}).slice(0,5);
+    rb.innerHTML = keys.length ? keys.map(function(k){
+      return '<tr><td><b>'+esc2(k)+'</b></td><td class="d">—</td><td><b'+(cnt[k]>=3?' style="color:var(--signal)"':'')+'>'+cnt[k]+'건</b></td><td class="d">—</td><td class="d">'+(cnt[k]>=3?'<span class="tag p1">자동화 검토 대상</span>':'—')+'</td></tr>';
+    }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:26px 12px">요청이 없습니다</td></tr>';
+    tr();
+  }
+
+  // ---- 서비스레벨: 요청에서 자동 산출 ----
+  // ---- 대시보드 ----
+  var DD='all';                                  // 부서 필터
+  var GV2={A:4,B:3,C:2,D:1};
+  function avgGrade(list){                       // 종결 건들의 평균 등급
+    var c=list.filter(function(t){return t.state==='closed'&&t.ev2&&t.ev2.g});
+    if(!c.length) return null;
+    var s=c.reduce(function(a,t){return a+(GV2[t.ev2.g]||0)},0)/c.length;
+    return {avg:s, g: s>=3.5?'A' : s>=2.5?'B' : s>=1.5?'C' : 'D'};
+  }
+  // 월별 접수·종결 건수 — 접수 대비 종결이 적으면 미종결 건이 누적된다
+  function renderTrend(list){
+    var el=$('#trend'); if(!el) return;
+    var months=[], n=new Date();
+    for(var i=5;i>=0;i--){ var d=new Date(n.getFullYear(),n.getMonth()-i,1);
+      months.push({key:d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2), lb:(d.getMonth()+1)+'월'}); }
+    var rows=months.map(function(m){
+      return {lb:m.lb,
+        inn:list.filter(function(t){return (t.openDate||'').slice(0,7)===m.key}).length,
+        out:list.filter(function(t){return t.state==='closed'&&(t.closedDate||'').slice(0,7)===m.key}).length};
+    });
+    var max=Math.max(1,Math.max.apply(null,rows.map(function(r){return Math.max(r.inn,r.out)})));
+    el.innerHTML=
+      '<div style="display:flex;gap:10px;align-items:flex-end;height:120px">'+
+        rows.map(function(r){
+          return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">'+
+            '<div style="display:flex;gap:3px;align-items:flex-end;height:96px">'+
+              '<div title="접수 '+r.inn+'" style="width:16px;height:'+(r.inn/max*96)+'px;min-height:'+(r.inn?2:0)+'px;background:var(--primary);border-radius:2px 2px 0 0"></div>'+
+              '<div title="종결 '+r.out+'" style="width:16px;height:'+(r.out/max*96)+'px;min-height:'+(r.out?2:0)+'px;background:var(--good);border-radius:2px 2px 0 0"></div>'+
+            '</div>'+
+            '<div style="font-size:10.5px;color:var(--muted);font-family:var(--mono)">'+r.lb+'</div>'+
+            '<div style="font-size:10px;color:var(--faint);font-family:var(--mono)">'+r.inn+'/'+r.out+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>'+
+      '<div style="display:flex;gap:14px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)">'+
+        '<span style="display:flex;align-items:center;gap:6px;font-size:11.5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--primary)"></span>접수</span>'+
+        '<span style="display:flex;align-items:center;gap:6px;font-size:11.5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--good)"></span>종결</span>'+
+      '</div>';
+  }
+
+  // ---- 기준정보 관리 ----
+  // 목표: 현업이 바꿀 여지가 있는 값은 전부 화면에서 바꾼다. 개발자 배포를 기다리지 않는다.
+  // 백엔드에서는 각 마스터 테이블(code, name_ko, name_en, 활성여부, 정렬순서)이 이 자리를 대신한다.
+  // 공통 편집 리스트 — 추가 / 이름 변경 / 삭제(사용 중이면 차단)
+  function usedByAttr(axis,val){
+    return Object.keys(T).filter(function(n){return (T[n].attrs||{})[axis]===val}).length;
+  }
+  function masterList(elId, opt){
+    var el=$('#'+elId); if(!el) return;
+    var items=opt.get();
+    el.innerHTML=
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px">'+
+        (items.length?items.map(function(v){
+          var c=usedByAttr(opt.axis,v);
+          return '<span class="chip own" style="padding:5px 8px"><b>'+esc2(v)+'</b>'+
+            '<span class="x">'+(c?'사용 '+c:'미사용')+'</span>'+
+            '<button class="mEdit" data-v="'+esc2(v)+'" title="이름 변경" style="font-size:11px;padding:0 3px;opacity:.6">✎</button>'+
+            '<button class="mDel" data-v="'+esc2(v)+'" title="삭제" style="font-size:12px;padding:0 3px;opacity:.6">×</button></span>';
+        }).join(''):'<span class="hint">값이 없습니다 — 값을 넣어야 요청 폼에 나옵니다</span>')+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<input type="text" class="mNew" placeholder="'+esc2(opt.ph||'새 항목')+'" style="max-width:260px;font-size:12.5px;padding:6px 9px">'+
+        '<button class="btn sm mAdd">추가</button>'+
+      '</div>';
+    var add=function(){
+      var i=el.querySelector('.mNew'), v=(i.value||'').trim();
+      if(!v){ toast('이름을 입력하세요'); i.focus(); return; }
+      if(opt.get().indexOf(v)>=0){ toast('이미 있는 항목입니다'); return; }
+      opt.add(v); save(); refresh(); show('master');
+      toast(opt.label+' "'+v+'" 추가 · 요청 폼에 바로 반영됩니다');
+    };
+    el.querySelector('.mAdd').onclick=add;
+    el.querySelector('.mNew').onkeydown=function(e){ if(e.key==='Enter') add(); };
+    $$('.mEdit',el).forEach(function(b){ b.onclick=function(){
+      var old=b.dataset.v, v=prompt(opt.label+' 이름 변경', old);
+      if(v===null) return; v=v.trim();
+      if(!v||v===old) return;
+      if(opt.get().indexOf(v)>=0){ toast('이미 있는 항목입니다'); return; }
+      var c=usedByAttr(opt.axis,old);
+      opt.rename(old,v);
+      // 이름만 바뀐 것이지 다른 항목이 아니므로 기존 요청에도 소급 적용한다
+      if(c) Object.keys(T).forEach(function(n){ var t=T[n];
+        if(t.attrs&&t.attrs[opt.axis]===old) t.attrs[opt.axis]=v; });
+      save(); refresh(); show('master');
+      toast(opt.label+' "'+old+'" → "'+v+'"'+(c?' · 기존 요청 '+c+'건도 함께 변경':''));
+    };});
+    $$('.mDel',el).forEach(function(b){ b.onclick=function(){
+      var v=b.dataset.v, c=usedByAttr(opt.axis,v);
+      if(c){ toast('"'+v+'" 은(는) 요청 '+c+'건에서 쓰이고 있어 삭제할 수 없습니다 · 이름 변경은 가능합니다'); return; }
+      if(!confirm('"'+v+'" 을(를) 삭제할까요?\n요청 폼 선택지에서 사라집니다.')) return;
+      opt.del(v); save(); refresh(); show('master');
+      toast(opt.label+' "'+v+'" 삭제');
+    };});
+  }
+
+  var MD='공간기획';   // 기준정보에서 보고 있는 부서
+  function renderMaster(){
+    if(!$('#mAxes')) return;
+    if($('#mBar')){
+      $('#mBar').innerHTML=deptSel('mDeptSel',MD);
+      $('#mDeptSel').onchange=function(){MD=this.value;renderMaster()};
+    }
+    var ax=axesOf(MD);
+
+    // 1) 분류축 — 추가 / 이름변경 / 배정축 지정 / 삭제
+    $('#mAxes').innerHTML=
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px">'+
+        (ax.length?ax.map(function(x){
+          var used=Object.keys(T).filter(function(n){return T[n].dept===MD&&(T[n].attrs||{})[x.n]}).length;
+          return '<span class="chip'+(x.a?' own':'')+'" style="padding:5px 8px">'+
+            (x.a?'<b style="font-size:9px;background:var(--good);color:#fff;border-radius:3px;padding:1px 4px;margin-right:2px">배정축</b>':'')+
+            '<b>'+esc2(x.n)+'</b><span class="x">값 '+x.o.length+(used?' · 사용 '+used:'')+'</span>'+
+            (x.a?'':'<button class="axA" data-n="'+esc2(x.n)+'" title="배정축으로 지정" style="font-size:10px;padding:0 3px;opacity:.6">배정축</button>')+
+            '<button class="axE" data-n="'+esc2(x.n)+'" title="이름 변경" style="font-size:11px;padding:0 3px;opacity:.6">✎</button>'+
+            '<button class="axD" data-n="'+esc2(x.n)+'" title="삭제" style="font-size:12px;padding:0 3px;opacity:.6">×</button>'+
+          '</span>';
+        }).join(''):'<span class="hint">분류축이 없습니다 — 이 부서는 아직 접수를 받을 수 없습니다</span>')+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<input type="text" id="axNew" placeholder="예) 서비스 · 설비 종류 · 처리 유형" style="max-width:280px;font-size:12.5px;padding:6px 9px">'+
+        '<button class="btn sm" id="axAdd">축 추가</button>'+
+        '<span class="hint" style="margin:0">부서마다 축이 다릅니다 — 공간기획은 "공간 유형", 총무는 "서비스"가 될 수 있습니다</span>'+
+      '</div>';
+    var addAx=function(){
+      var v=($('#axNew').value||'').trim();
+      if(!v){toast('축 이름을 입력하세요');return}
+      if(ax.some(function(x){return x.n===v})){toast('이미 있는 축입니다');return}
+      (AXES[MD]=AXES[MD]||[]).push({n:v,a:!ax.some(function(x){return x.a}),o:[]});  // 첫 축은 자동으로 배정축
+      save(); refresh(); show('master');
+      toast('분류축 "'+v+'" 추가 · 값을 넣어야 요청 폼에 나옵니다');
+    };
+    $('#axAdd').onclick=addAx;
+    $('#axNew').onkeydown=function(e){if(e.key==='Enter')addAx()};
+    $$('.axA').forEach(function(b2){b2.onclick=function(){
+      // 배정축 교체는 그 부서의 배정 규칙을 통째로 무의미하게 만든다 — 반드시 확인받는다
+      var old=(AXES[MD].filter(function(x){return x.a})[0]||{}).n;
+      var n=Object.keys(RULES[MD]||{}).filter(function(k){return (RULES[MD][k]||[]).length}).length;
+      if(n && !confirm('배정축을 "'+old+'" → "'+b2.dataset.n+'" 으로 바꿉니다.\n\n'+
+        '기존 배정 규칙 '+n+'건("'+old+'" 기준)이 더 이상 쓰이지 않습니다.\n'+
+        '새 축의 값마다 담당자를 다시 지정해야 접수가 열립니다.\n\n계속할까요?')) return;
+      AXES[MD].forEach(function(x){x.a = x.n===b2.dataset.n});
+      save(); refresh(); show('master');
+      toast('배정축 "'+b2.dataset.n+'" 지정'+(n?' · 기존 규칙 '+n+'건은 미사용 · 담당자를 다시 지정하세요':'')+' · 이 축의 값이 담당자를 결정합니다');
+    }});
+    $$('.axE').forEach(function(b2){b2.onclick=function(){
+      var o=b2.dataset.n, v=prompt('분류축 이름 변경', o); if(v===null)return; v=v.trim();
+      if(!v||v===o)return;
+      if(ax.some(function(x){return x.n===v})){toast('이미 있는 축입니다');return}
+      AXES[MD].forEach(function(x){if(x.n===o)x.n=v});
+      Object.keys(T).forEach(function(n){var t=T[n];
+        if(t.dept===MD&&t.attrs&&t.attrs[o]!==undefined){t.attrs[v]=t.attrs[o];delete t.attrs[o];}});
+      save(); refresh(); show('master');
+      toast('분류축 "'+o+'" → "'+v+'" · 기존 요청도 함께 변경');
+    }});
+    $$('.axD').forEach(function(b2){b2.onclick=function(){
+      var n2=b2.dataset.n;
+      var used=Object.keys(T).filter(function(k){return T[k].dept===MD&&(T[k].attrs||{})[n2]}).length;
+      if(used){toast('"'+n2+'" 은(는) 요청 '+used+'건에서 쓰이고 있어 삭제할 수 없습니다');return}
+      if(!confirm('분류축 "'+n2+'" 을(를) 삭제할까요?\n이 축의 값 전부가 사라집니다.'))return;
+      AXES[MD]=AXES[MD].filter(function(x){return x.n!==n2});
+      save(); refresh(); show('master');
+      toast('분류축 "'+n2+'" 삭제');
+    }});
+
+    // 2) 각 축의 값
+    $('#mOpts').innerHTML=ax.map(function(x,i){
+      return '<div class="card"><div class="ch2"><h3>'+esc2(x.n)+
+        (x.a?' <span style="font-weight:400;color:var(--good)">— 배정축</span>':'')+'</h3>'+
+        '<span class="nt">'+(x.a?'이 값이 담당자를 결정합니다 · 추가하면 담당자 관리에 행이 생깁니다':'요청 폼 선택지')+'</span></div>'+
+        '<div class="cb"><div id="mo'+i+'"></div></div></div>';
+    }).join('');
+    ax.forEach(function(x,i){
+      masterList('mo'+i,{
+        label:x.n, axis:x.n, ph:'새 '+x.n+' 값',
+        get:function(){return x.o},
+        add:function(v){x.o.push(v); if(x.a) (RULES[MD]=RULES[MD]||{})[v]=[];},
+        rename:function(o,v){ x.o[x.o.indexOf(o)]=v;
+          if(x.a&&RULES[MD]&&RULES[MD][o]){RULES[MD][v]=RULES[MD][o];delete RULES[MD][o];} },
+        del:function(v){ x.o.splice(x.o.indexOf(v),1); if(x.a&&RULES[MD]) delete RULES[MD][v]; }
+      });
+    });
+
+    // 3) 부서 — 읽기 전용
+    $('#mDept').innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      DEPT.map(function(d){
+        var c=Object.keys(T).filter(function(n){return T[n].dept===d}).length;
+        return '<span class="chip'+(deptReady(d)?' own':' gh')+'" style="padding:5px 9px"><b>'+esc2(d)+'</b>'+
+          '<span class="x">'+(deptReady(d)?'요청 '+c:'준비 중')+'</span></span>';
+      }).join('')+'</div>'+
+      '<div class="hint" style="margin-top:9px">부서 신설·폐지는 시스템 관리자만 합니다. '+
+      '부서 관리자는 <b>자기 부서의 분류축과 값</b>만 관리합니다.</div>';
+    fillForms(); tr();
+  }
+
+  // 부서 선택기 — 실제로는 로그인 사용자의 권한(scope)이 목록을 결정한다.
+  // 부서 관리자면 자기 부서만, 마스터면 전체. 지금은 데모라 전부 보인다.
+  function deptSel(id,cur){
+    return '<select id="'+id+'" style="width:auto;min-width:132px;font-size:12px;font-weight:700;padding:4px 7px">'+
+      DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur===x?' selected':'')+'>'+esc2(x)+(deptReady(x)?'':' (준비 중)')+'</option>'}).join('')+
+      '</select>';
+  }
+
+  // ---- 담당자 관리 ----
+  // 담당자가 바뀔 때 개발자가 배포해야 하는 구조면 아무도 안 쓴다.
+  // 관리자가 여기서 직접 지정하고, 저장 즉시 다음 접수부터 반영된다.
+  var RD='공간기획';
+  function renderRule(){
+    var b=$('#ruleBody'); if(!b) return;
+    if($('#ruleBar')){
+      $('#ruleBar').innerHTML=deptSel('ruleDept',RD);
+      $('#ruleDept').onchange=function(){RD=this.value;renderRule()};
+    }
+    var ax=assignAxis(RD);
+    if(!ax){
+      b.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:26px 12px">'+
+        esc2(RD)+' 의 배정축이 없습니다 — [기준정보]에서 분류축을 만들고 "배정축"으로 지정하세요</td></tr>';
+      if($('#ruleFoot')) $('#ruleFoot').innerHTML='';
+      if($('#teamBody')) $('#teamBody').innerHTML='<div class="hint">먼저 [기준정보]에서 분류축을 지정하세요</div>';
+      if($('#moveFoot')) $('#moveFoot').innerHTML='';
+      if($('#ruleNote')) $('#ruleNote').textContent='배정축 미지정';
+      tr(); return;
+    }
+    if($('#ruleNote')) $('#ruleNote').textContent='배정축: '+ax.n+' · 순위대로 배정 · 앞 순위가 한도를 넘으면 다음 순위로';
+    $('#s-rule .tw thead tr').firstElementChild.textContent=ax.n;
+
+    var team=roster(RD), R=RULES[RD]||(RULES[RD]={});
+    var sel=function(sp,i){
+      var cur=(R[sp]||[])[i]||'';
+      return '<select class="rsel" data-sp="'+esc2(sp)+'" data-i="'+i+'" style="width:auto;min-width:104px;font-size:12.5px;padding:4px 7px">'+
+        '<option value="">— 없음</option>'+
+        team.map(function(n){return '<option'+(cur===n?' selected':'')+'>'+esc2(n)+'</option>'}).join('')+'</select>';
+    };
+    b.innerHTML=ax.o.map(function(sp){
+      var loads=(R[sp]||[]).map(function(n){return n+' '+load(n)}).join(' · ');
+      return '<tr><td><b>'+esc2(sp)+'</b></td>'+
+        '<td>'+sel(sp,0)+'</td><td>'+sel(sp,1)+'</td><td>'+sel(sp,2)+'</td>'+
+        '<td class="d">'+(loads||'—')+'</td></tr>';
+    }).join('');
+    $$('.rsel').forEach(function(s){
+      s.onchange=function(){
+        var sp=s.dataset.sp, i=+s.dataset.i, v=s.value;
+        var arr=(R[sp]||[]).slice();
+        while(arr.length<3) arr.push('');
+        arr=arr.map(function(x,j){ return j===i ? v : (x===v ? '' : x) });   // 중복 방지
+        R[sp]=arr.filter(function(x){return x});
+        save(); refresh(); show('rule');
+        toast(sp+' 담당자 변경 · 다음 접수부터 적용 · 기존 요청의 담당자는 그대로');
+      };
+    });
+    if($('#ruleFoot')) $('#ruleFoot').innerHTML=
+      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
+        '<span style="font-size:12.5px;font-weight:700">1인 최대 업무</span>'+
+        '<input type="number" id="maxLoad" min="1" max="20" value="'+MAXLOAD+'" style="width:64px;font-size:12.5px;padding:5px 7px">'+
+        '<span class="hint" style="margin:0">이 건수 이상 업무를 들고 있는 담당자는 건너뛰고 다음 순위로 배정합니다 (미종결 기준)</span>'+
+      '</div>';
+    if($('#maxLoad')) $('#maxLoad').onchange=function(){
+      MAXLOAD=Math.max(1,+this.value||3); save(); toast('1인 최대 업무 '+MAXLOAD+'건으로 변경 · 다음 접수부터 적용');
+    };
+
+    // 업무 이관 — 퇴사·휴직·부서이동에서 실제로 필요한 동작
+    if($('#moveFoot')){
+      var opt=function(id){ return '<select id="'+id+'" style="width:auto;min-width:104px;font-size:12.5px;padding:5px 7px">'+
+        '<option value="">선택</option>'+team.map(function(n){return '<option>'+esc2(n)+'</option>'}).join('')+'</select>'; };
+      $('#moveFoot').innerHTML=
+        '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+
+          '<span style="font-size:12.5px;font-weight:700">업무 이관</span>'+
+          opt('mvFrom')+'<span style="color:var(--faint)">→</span>'+opt('mvTo')+
+          '<button class="btn sm" id="mvGo">미종결 업무 전부 넘기기</button>'+
+          '<span class="hint" style="margin:0">퇴사·휴직·부서이동 시 사용 · 종결된 건은 기록이므로 그대로 둡니다</span>'+
+        '</div>';
+      $('#mvGo').onclick=function(){
+        var f=$('#mvFrom').value, t2=$('#mvTo').value;
+        if(!f||!t2){ toast('넘길 사람과 받을 사람을 고르세요'); return; }
+        if(f===t2){ toast('같은 사람입니다'); return; }
+        var ids=Object.keys(T).filter(function(n){return T[n].as===f && T[n].state!=='closed'});
+        if(!ids.length){ toast(f+' 님이 들고 있는 미종결 업무가 없습니다'); return; }
+        if(!confirm(f+' → '+t2+'\n미종결 업무 '+ids.length+'건을 넘깁니다. 요청자와 새 담당자에게 메일이 갑니다.')) return;
+        ids.forEach(function(n){
+          T[n].as=t2; T[n].unseen=true;
+          T[n].ev.push({t:'sys',at:now(),x:'관리자 일괄 이관 · 담당자 '+f+' → '+t2+' · 기한 '+(T[n].due||'—')+' 유지 · 요청자·새 담당자 메일 발송'});
+        });
+        save(); refresh(); show('rule');
+        toast(f+' → '+t2+' · '+ids.length+'건 이관 · 기한은 그대로 · 양측 메일 발송');
+      };
+    }
+
+    var tb=$('#teamBody');
+    if(tb) tb.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      (team.length?team.map(function(n){
+        var c=load(n), used=Object.keys(R).some(function(k){return R[k].indexOf(n)>=0});
+        var orphan=!used&&c>0;
+        return '<span class="chip'+(orphan?'"  style="background:var(--signal-tint);color:var(--signal);border-color:#F2C2BD':(used?'':' gh'))+'">'+esc2(n)+
+          '<span class="x">'+(orphan?'업무 '+c+' · 이관 필요':(used?'업무 '+c:'미지정'))+'</span></span>';
+      }).join(''):'<span class="hint">'+esc2(RD)+' 팀원이 없습니다 — 인사 API 연동 시 자동으로 채워집니다</span>')+'</div>'+
+      '<div class="hint" style="margin-top:9px">퇴사자는 인사 API에서 빠지면 이 명부에서 사라집니다. '+
+      '<b style="color:var(--signal)">단, 그 사람이 들고 있던 미종결 업무는 자동으로 넘어가지 않습니다</b> — 아래에서 이관하세요. '+
+      '자동으로 넘기면 받는 사람이 모르는 사이에 일이 생깁니다.</div>';
+    tr();
+  }
+
+  function renderDash(){
+    var k=$('#kpi'); if(!k) return;
+    var all=byPeriod(allT());
+    if($('#dashBar')){
+      $('#dashBar').innerHTML=periodSel('d')+
+        '<select id="dashDept" style="width:auto;min-width:132px;font-size:12px;font-weight:700;padding:4px 7px">'+
+          '<option value="all">전체 부서</option>'+
+          DEPT.map(function(x){return '<option value="'+x+'"'+(DD===x?' selected':'')+'>'+x+'</option>'}).join('')+
+        '</select>';
+      $('#dashDept').onchange=function(){DD=this.value;renderDash()};
+      wirePeriod();
+    }
+    var scoped = DD==='all' ? all : all.filter(function(t){return (t.dept||'공간기획')===DD});
+    if($('#dashSub')) $('#dashSub').textContent=(DD==='all'?'전체 부서':DD)+' 기준';
+
+    var closed=scoped.filter(function(t){return t.state==='closed'&&t.ev2});
+    var onTime=closed.filter(function(t){return !t.ev2.late}).length;
+    var late=scoped.filter(isLate);
+    var ag=avgGrade(scoped);
+    var pct=function(a,b){return b?Math.round(a/b*100)+'<span style="font-size:14px">%</span>':'—'};
+    var bar=function(a,b,cls){return b?'<div class="bar"><i class="'+(cls||'')+'" style="width:'+Math.round(a/b*100)+'%"></i></div>':''};
+    var lateRate = scoped.length?Math.round(late.length/scoped.length*100):0;
+    k.innerHTML=
+      '<div class="k"><div class="kk">접수</div><div class="kv2">'+scoped.length+'<span style="font-size:14px">건</span></div><div class="kn">선택 기간 기준</div></div>'+
+      '<div class="k"><div class="kk">종결</div><div class="kv2">'+closed.length+'<span style="font-size:14px">건</span></div>'+bar(closed.length,scoped.length)+'<div class="kn">요청자 확인 완료 기준</div></div>'+
+      '<div class="k"><div class="kk">기한 준수율</div><div class="kv2">'+pct(onTime,closed.length)+'</div>'+bar(onTime,closed.length,onTime/(closed.length||1)<0.7?'md':'')+'<div class="kn">종결 '+closed.length+'건 중 '+onTime+'건 기한 내</div></div>'+
+      '<div class="k'+(lateRate>=30?'" style="border-color:var(--signal);border-width:2px':'')+'"><div class="kk"'+(lateRate>=30?' style="color:var(--signal)"':'')+'>지연율</div>'+
+        '<div class="kv2"'+(lateRate>=30?' style="color:var(--signal)"':'')+'>'+pct(late.length,scoped.length)+'</div>'+bar(late.length,scoped.length,'lo')+'<div class="kn">접수 '+scoped.length+'건 중 '+late.length+'건 기한 초과</div></div>';
+
+    renderTrend(scoped);
+
+    // 등록된 분야를 모두 보여준다 — 요청이 0건인 부서도 관리 대상이다.
+    var db=$('#deptBody'); if(!db) return;
+    var g={};
+    all.forEach(function(t){var o=t.dept||'공간기획';(g[o]=g[o]||[]).push(t)});
+    var rows=DEPT.filter(function(o){return DD==='all'||o===DD});
+    db.innerHTML = rows.map(function(o){
+      var l=g[o]||[];
+      if(!l.length) return '<tr style="opacity:.5"><td><b>'+esc2(o)+'</b> <span class="d">'+esc2(DEPTORG[o]||'')+'</span></td>'+
+        '<td class="d">0</td><td class="d">—</td><td class="d">—</td><td class="d">—</td><td class="d">—</td><td class="d">—</td></tr>';
+      var c=l.filter(function(t){return t.state==='closed'&&t.ev2});
+      var prog=l.filter(function(t){return t.state!=='closed'}).length;
+      var a=c.filter(function(t){return !t.ev2.late}).length;
+      var lt=l.filter(isLate);
+      var ag2=avgGrade(l);
+      var lr=Math.round(lt.length/l.length*100);
+      return '<tr><td><b>'+esc2(o)+'</b> <span class="d">'+esc2(DEPTORG[o]||'')+'</span></td>'+
+        '<td class="d">'+l.length+'</td><td class="d">'+prog+'</td><td class="d">'+c.length+'</td>'+
+        '<td class="d">'+(c.length?Math.round(a/c.length*100)+'%':'—')+'</td>'+
+        '<td class="d"'+(lr>=30?' style="color:var(--signal);font-weight:700"':'')+'>'+lr+'%</td>'+
+        '<td class="gr '+(ag2?gc(ag2.g):'')+'">'+(ag2?ag2.g:'—')+'</td></tr>';
+    }).join('');
+    tr();
+  }
+
+  function counts(){
+    var all=allT();
+    var m=all.filter(function(t){return t.rq.nm===ROLE.req.nm&&t.state!=='closed'}).length;
+    var w=all.filter(function(t){return t.as===ME&&t.state!=='closed'}).length;
+    // 관리자 탭에서는 전체 요청 건수 배지를 빼둔다 — 집계는 대시보드가 한다
+    if($('#cAll')){ $('#cAll').textContent=all.length; $('#cAll').style.display = cur==='adm' ? 'none' : ''; }
+    if($('#cCC'))$('#cCC').textContent=all.filter(function(t){return t.rq.nm!==ROLE.req.nm&&t.jn.some(function(j){return j.nm===ROLE.req.nm})}).length;
+    if($('#cMine'))$('#cMine').textContent=m;
+    if($('#cWork')){$('#cWork').textContent=w;$('#cWork').classList.toggle('hot',w>0);}
+  }
+
+  function wire(){
+    $$('[data-o]').forEach(function(b){b.onclick=function(e){e.preventDefault();openT(b.dataset.o)}});
+    $$('[data-j]').forEach(function(b){b.onclick=function(){show(b.dataset.j)}});
+    $$('[data-t2]').forEach(function(b){b.onclick=function(){toast(b.dataset.t2)}});
+    $$('[data-ac]').forEach(function(b){b.onclick=function(){b.textContent='수락됨';b.disabled=true;toast('수락 · '+b.dataset.ac+' · 책임 이전 · 기한 유지 · 요청자 통보')}});
+    $$('[data-rj]').forEach(function(b){b.onclick=function(){toast('거절 · 사유 필수 · '+b.dataset.rj+' 제안자에게 반송 · 이관 1회 기록')}});
+    if($('#bkBtn'))$('#bkBtn').onclick=function(){
+      var p=BACK.pop(); if(!p) return;
+      if(p.s==='ticket'&&p.no) openT(p.no,true);
+      else { CUR=null; show(p.s); }
+    };
+    if($('#hdX'))$('#hdX').onclick=function(){if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR;op('m-hd')};
+    if($('#aDue'))$('#aDue').onclick=function(){
+      var t=T[CUR];
+      $('#dueT').textContent='기한 조정 · dw://'+CUR;
+      $('#dueW').innerHTML='접수 단계에서는 기한을 자유롭게 조정할 수 있습니다. <b>[확인 · 진행]</b> 이후에는 요청자 확인을 거쳐야 변경됩니다.';
+      $('#du0').value=t.due+' (요청자 희망 기한)';
+      $('#du2L').innerHTML='사유 <span style="color:var(--signal)">필수</span>';
+      $('#du1L').innerHTML='조정 기한 <span style="color:var(--signal)">필수</span>';
+      $('#du3W').style.display='none';
+      $('#du2').value=''; $('#du1').value=t.due;
+      $('#dugo').textContent='조정하고 요청자에게 알리기';
+      DUEMODE='fix'; op('m-due');
+    };
+    if($('#dugo'))$('#dugo').onclick=function(){ (DUEMODE==='nego'?actNego:actDue)(); };
+    if($('#joinBtn'))$('#joinBtn').onclick=actJoin;
+    if($('#csend'))$('#csend').onclick=actComment;
+    if($('#rcl'))$('#rcl').onclick=function(){toast('제안 취소 · dw://공간-2452 담당 유지')};
+    if($('#esc'))$('#esc').onclick=function(){toast('팀장 이관 · 거절 불가 · 요청자 통보')};
+    pk={};
+    $$('.pk[data-g]').forEach(function(g){
+      g.querySelectorAll('button').forEach(function(b){
+        b.onclick=function(){
+          if(b.disabled)return;
+          g.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+          b.classList.add('on'); pk[g.dataset.g]=b.dataset.v;
+          var ok=pk['1']&&pk['2']; if($('#closeBtn'))$('#closeBtn').disabled=!ok;
+          if(ok){ var r=gradeOf(pk['1'],pk['2']); toast('결과 '+pk['1']+' · 소통 '+pk['2']+' → 최종 '+r.g+' · 종결하면 관리대장에 기록됩니다'); }
+        };
+      });
+    });
+    if($('#closeBtn'))$('#closeBtn').onclick=actClose;
+    if($('#aStart'))$('#aStart').onclick=actStart;
+    if($('#aNego'))$('#aNego').onclick=function(){
+      var t=T[CUR];
+      $('#dueT').textContent='지연 미리 알리기 · dw://'+CUR;
+      $('#dueW').innerHTML='기한 변경에는 요청자 확인이 필요합니다. 수락 시 새 완료 예정일로 기한이 재확정되고, 거절 시 기존 기한 <b>'+t.due+'</b>이 유지됩니다. 확인 전까지는 기존 기한 기준으로 지연이 산정됩니다.';
+      $('#du0').value=t.due+' (확정된 기한)';
+      $('#du2L').innerHTML='지연 사유 <span style="color:var(--signal)">필수</span>';
+      $('#du1L').innerHTML='새 완료 예정일 <span style="color:var(--signal)">필수</span>';
+      $('#du3W').style.display='';
+      $('#du2').value=''; $('#du3').value=''; $('#du1').value=addD(t.due,7);
+      $('#dugo').textContent='요청자에게 알리기';
+      DUEMODE='nego'; op('m-due');
+    };
+    if($('#aNegoY'))$('#aNegoY').onclick=actNegoY;
+    if($('#aNegoN'))$('#aNegoN').onclick=actNegoN;
+    if($('#aRes'))$('#aRes').onclick=actResolve;
+    if($('#aReopen'))$('#aReopen').onclick=actReopen;
+  }
+
+
+  // ================= 상태 전이 =================
+  var CUR=null;                       // 현재 열린 요청번호
+  var DUEMODE='fix';                  // m-due 모달 용도: fix=접수단계 조정 / nego=지연 미리 알리기
+  var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
+  var SCR={intake:'요청하기',mine:'내 요청',cc:'회람 중인 요청',work:'내 업무',find:'전체 요청',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
+  function eun(s){ // 은/는 조사
+    var c=s.charCodeAt(s.length-1);
+    if(c<0xAC00||c>0xD7A3) return s+'는';
+    return s+(((c-0xAC00)%28)?'은':'는');
+  }
+  function ga(s){ // 이/가 조사
+    var c=s.charCodeAt(s.length-1);
+    if(c<0xAC00||c>0xD7A3) return s+'가';
+    return s+(((c-0xAC00)%28)?'이':'가');
+  }
+  function today(){var n=new Date(),p=function(x){return('0'+x).slice(-2)};return n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())}
+  function addD(d,n){var x=new Date(d);x.setDate(x.getDate()+n);var p=function(v){return('0'+v).slice(-2)};return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate())}
+  function now(){var n=new Date();var p=function(x){return('0'+x).slice(-2)};
+    return p(n.getMonth()+1)+'-'+p(n.getDate())+' '+p(n.getHours())+':'+p(n.getMinutes())}
+  // 기한이 지났는데 아직 완료가 아니면 자동으로 지연 처리한다.
+  // 미리 알린 건(t.notified)과 구분해서 기록 — 서비스레벨 지표로 쓴다(평가 등급과는 무관).
+  // 지연 판정 기준 — 등급 산정과 서비스레벨 집계가 같은 기준을 쓴다.
+  //  · 사전신고로 기한이 밀린 건 (dueOrig < due)
+  //  · 기한이 그냥 지나 자동 지연된 건 (slipAuto)
+  function isLate(t){ return !!((t.dueOrig && t.due && t.due>t.dueOrig) || t.slipAuto); }
+  function autoSlip(){
+    var td=today();
+    Object.keys(T).forEach(function(n){
+      var t=T[n];
+      if(t.due && td>t.due && (t.state==='open'||t.state==='prog'||t.state==='nego')){
+        t.state='slip'; t.slipAuto=true;
+        t.ev.push({t:'sys',at:now(),x:'기한 '+t.due+' 경과 · 완료되지 않아 자동 지연 처리'+(t.notified?' · 지연 미리 알림 있음':' · 사전 알림 없음')+' · 요청자·담당자·팀장 메일 발송'});
+      }
+    });
+  }
+  function refresh(){ autoSlip(); ownPick(); reqPick(); renderWork(); renderMine(); renderCC(); renderLedger(); renderRule(); renderMaster(); renderDash(); counts(); save(); if($('#sq')) render(); tr(); }
+
+  function actDue(){
+    var t=T[CUR], nd=$('#du1').value, why=$('#du2').value.trim();
+    if(!nd||!why){ toast('조정 기한과 사유는 필수입니다'); return; }
+    var fr=t.due;
+    t.ev.push({t:'due',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,fr:fr,to:nd,why:why});
+    t.due=nd; t.dueOrig=nd;
+    cl('m-due');
+    toast(ga(ROLE[cur].nm)+' 기한을 '+fr+'에서 '+nd+'로 변경 · 요청자 메일 발송');
+    openT(CUR); refresh();
+  }
+  // 지연 미리 알리기 — 진행 중 기한 변경은 이것 하나뿐이고, 요청자 동의를 받아야 한다.
+  //  수락: 새 완료 예정일로 기한 재확정
+  //  거절: 기존 기한 유지 → 못 지키면 지연이지만 미리 알렸으므로 B
+  //  아무 말 없이 기한을 넘기면 자동 지연 D
+  //  확인 전까지는 기존 기한 기준으로 지연이 산정된다(무응답으로 무한정 늦출 수 없게).
+  function actNego(){
+    var t=T[CUR], nd=$('#du1').value, why=$('#du2').value.trim(), ct=$('#du3').value.trim();
+    if(!why){ toast('지연 사유를 적어주세요'); return; }
+    if(!ct){ toast('대책을 적어주세요 — 요청자 업무 영향을 줄일 방안'); return; }
+    if(!nd){ toast('새 완료 예정일을 골라주세요'); return; }
+    if(nd<=t.due){ toast('새 완료 예정일은 현재 기한('+t.due+') 이후여야 합니다'); return; }
+    t.state='nego'; t.nego={to:nd,why:why,ct:ct}; t.notified=true;   // 미리 알림 기록
+    t.ev.push({t:'nego',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,fr:t.due,to:nd,why:why,ct:ct});
+    cl('m-due');
+    toast('지연 알림 발송 · 요청자 확인 대기 · 확인 전까지 기존 기한 '+t.due+' 적용');
+    openT(CUR); refresh();
+  }
+  function actNegoY(){
+    var t=T[CUR], n=t.nego||{};
+    var fr=t.due;
+    t.due=n.to; t.dueOrig=n.to;   // 확인된 기한으로 재확정
+    t.state='prog'; t.nego=null;
+    t.ev.push({t:'sys',at:now(),x:'요청자 '+ROLE[cur].nm+' 새 기한 수락 → 기한 '+fr+' → '+n.to+' 재확정 · 담당자 메일 발송'});
+    toast('새 기한 수락 · '+n.to+' 재확정');
+    openT(CUR); refresh();
+  }
+  function actNegoN(){
+    var t=T[CUR], n=t.nego||{}, v=$('#ctx')?$('#ctx').value.trim():'';
+    if(!v){ toast('거절 사유를 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#ctx'))$('#ctx').focus(); return; }
+    t.state='prog'; t.nego=null;
+    t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'rq',x:v});
+    t.ev.push({t:'sys',at:now(),x:'요청자 새 기한 거절 ('+n.to+' 제안) → 기존 기한 '+t.due+' 유지 · 미완료 시 지연 처리 · 담당자 메일 발송'});
+    toast('거절 · 기한 '+t.due+' 유지 · 담당자 메일 발송');
+    openT(CUR); refresh();
+  }
+  // 접수 → 진행. 담당자가 요청을 확인하고 기한을 확정하는 시점.
+  function actStart(){
+    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
+    t.state='prog'; t.fixedAt=now();
+    if(v) t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'ow',x:v});
+    t.ev.push({t:'sys',at:now(),x:'담당자 '+ROLE[cur].nm+' 요청 확인 → 진행 · 기한 '+t.due+' 확정 · 이후 기한 변경은 요청자 동의가 필요합니다 · 요청자 메일 발송'});
+    toast('진행 시작 · 기한 '+t.due+' 확정 · 요청자 메일 발송');
+    openT(CUR); refresh();
+  }
+  // 완료 — 상태 전환만. 결과 설명은 의견으로 따로 남긴다.
+  function actResolve(){
+    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
+    if(v) t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'ow',x:v});
+    // 기한이 지난 뒤 완료된 건은 지연으로 기록한다.
+    // autoSlip은 화면이 열릴 때만 도는 탓에, 그 사이에 완료되면 지연이 누락될 수 있다.
+    if(t.due && today()>t.due && !t.slipAuto){
+      t.slipAuto=true;
+      t.ev.push({t:'sys',at:now(),x:'기한 '+t.due+' 경과 후 완료'+(t.notified?' · 지연 미리 알림 있음':' · 사전 알림 없음')+' · 지연 기록'});
+    }
+    t.state='done'; t.resolved=now();
+    t.ev.push({t:'res',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp});
+    toast('완료 · 요청자에게 확인 요청 메일 발송 · 요청자가 확인해야 종결됩니다');
+    openT(CUR); refresh();
+  }
+  // ---- 결과 평가 루브릭 ----
+  // 결과와 소통을 각각 5점 척도로. 형용사가 아니라 요청자가 실제로 겪은 사실을 기준으로 삼는다.
+  // 요청대로 처리했는지 대안으로 처리했는지는 수단일 뿐이므로 묻지 않는다 — 문제가 풀렸는지만 본다.
+  var RES_OPT=[
+    ['A','요청한 것이 그대로 해결됨 · 추가로 할 일 없음'],
+    ['B','해결됨 · 사소한 보완이 남았지만 업무에 지장 없음'],
+    ['C','부분 해결 · 나머지는 직접 처리하거나 다시 요청해야 함'],
+    ['D','해결되지 않음 · 요청 전과 달라진 것이 없음']
+  ];
+  var COM_OPT=[
+    ['A','묻기 전에 먼저 · 주요 시점마다 진행 상황이 공유됨'],
+    ['B','물으면 바로 · 회신이 즉시 옴'],
+    ['C','재촉해야 옴 · 여러 번 확인해야 회신이 옴'],
+    ['D','회신 없음 · 진행 상황을 알 수 없었음']
+  ];
+  // 최종 = 결과와 소통의 평균 (A4 B3 C2 D1)
+  var GV={A:4,B:3,C:2,D:1};
+  function gradeOf(res,com){
+    var a=GV[res], b=GV[com];
+    if(!a||!b) return {avg:0,g:'D'};
+    var avg=(a+b)/2;
+    return {avg:avg, g: avg>=3.5?'A' : avg>=2.5?'B' : avg>=1.5?'C' : 'D'};
+  }
+  function grade(t){
+    // 평가는 요청자가 고르는 두 가지 — 결과와 소통. 지연은 평가에 넣지 않는다.
+    // 지연은 사실로만 기록해 관리대장·서비스레벨 지표에 쓴다(등급을 깎지 않음).
+    var late = isLate(t);
+    var lateFact = !late ? '기한 준수'
+                 : t.notified ? '지연 · 미리 알림 있음'
+                 : '지연 · 사전 알림 없음';
+    var r=gradeOf(pk['1'],pk['2']);
+    return {late:late, lateFact:lateFact, notified:!!t.notified,
+            fl:pk['1'], cm:pk['2'], g:r.g};
+  }
+  function actClose(){
+    var t=T[CUR];
+    t.ev2=grade(t); t.state='closed';
+    t.closedDate=today();          // 월별 종결 추이 집계용
+    if(!t.resolved) t.resolved=now();
+    t.ev.push({t:'sys',at:now(),x:'요청자 '+ROLE[cur].nm+' 완료 확인 → 종결 · 결과 '+t.ev2.fl+' · 소통 '+t.ev2.cm+' · 최종 '+t.ev2.g+' · 기록 '+t.ev2.lateFact+' · 관리대장 적재 · 담당자 메일 발송'});
+    toast('종결 · 최종 '+t.ev2.g+' · 관리대장 자동 반영');
+    openT(CUR); refresh();
+  }
+  function actReopen(){
+    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
+    if(!v){ toast('무엇이 부족한지 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#ctx'))$('#ctx').focus(); return; }
+    t.state='prog'; t.resolved=null; t.reopened=(t.reopened||0)+1;
+    t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'rq',x:v});
+    t.ev.push({t:'sys',at:now(),x:'요청자 재요청 → 진행 상태로 복귀 · 담당자 메일 발송'});
+    toast('재요청 · 진행 상태로 복귀');
+    openT(CUR); refresh();
+  }
+  // 회람 — 요청자가 아니어도 팔로업하고 싶으면 등록. 이후 모든 진행에 메일 수신.
+  // 평가·종결 권한은 없다(그건 요청자 몫).
+  function actJoin(){
+    var t=T[CUR], m=ROLE[cur];
+    if(t.rq.nm===m.nm){ toast('요청자는 이미 모든 알림을 받습니다'); return; }
+    if(t.jn.some(function(x){return x.nm===m.nm})){ toast('이미 회람 중입니다'); return; }
+    var v=$('#ctx')?$('#ctx').value.trim():'';
+    t.jn.push({nm:m.nm,org:m.dp});
+    t.ev.push({t:'joiner',at:now(),who:m.nm,org:m.dp,x:v});
+    toast('회람 등록 · 이후 의견·상태 변경·종결까지 메일 수신 · 회람 '+t.jn.length+'명');
+    openT(CUR); refresh();
+  }
+  // 의견 등록 — 상태는 바꾸지 않는다. 요청 데이터(ev)에 적재되어 양쪽 화면·저장소에 반영된다.
+  function actComment(){
+    var t=T[CUR]; if(!t) return;
+    var ta=$('#ctx'); if(!ta) return;
+    var v=ta.value.trim();
+    if(!v){ toast('의견 내용을 적어주세요'); ta.focus(); return; }
+    t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:(cur==='req'?'rq':'ow'),x:v});
+    ta.value='';
+    toast('의견 등록 · 요청자·담당자·회람자 메일 발송 · 상태는 그대로');
+    openT(CUR); refresh();
+  }
+
+  // ================= 요청 상세 렌더 =================
+  function esc2(s){return String(s==null?'':s).replace(/[&<>]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
+  function lnk(s){return esc2(s).replace(/dw:\/\/([\w가-힣]+-\d+)/g,'<a class="tl" data-o="$1">dw://$1</a>')}
+
+  function evHtml(e,t){
+    var w='<div class="evt">'+e.at.replace(' ','<br>')+'</div>';
+    if(e.t==='sys') return '<div class="ev">'+w+'<div><div class="evw">시스템 <span class="rl">자동</span></div><div class="evx">'+lnk(e.x)+'</div></div></div>';
+    if(e.t==='plan'){
+      var p=t.plan;
+      return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-commit">계획</span></div>'+
+        '<div class="bx cm"><dl class="f"><dt>무엇을</dt><dd>'+esc2(p.w)+'</dd></dl>'+
+        '<dl class="f"><dt>언제까지</dt><dd><b>'+esc2(p.d)+'</b></dd></dl>'+
+        '<dl class="f"><dt>어떻게</dt><dd>'+esc2(p.h)+'</dd></dl>'+
+        '<div class="ft" style="color:var(--good)">계획 마감 준수 · 요청자 메일 발송</div></div></div></div>';
+    }
+    if(e.t==='joiner') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl">회람</span></div>'+
+      (e.x?'<div class="evx">'+esc2(e.x)+'</div>':'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">회람 등록 · 이후 진행사항 메일 수신</div></div></div>';
+    if(e.t==='due') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-commit">기한 조정</span></div>'+
+      '<div class="bx cm"><div class="evx"><b>'+esc2(e.who)+'</b>'+(ga(e.who).slice(-1))+' 기한을 <b>'+esc2(e.fr)+'</b>에서 <b>'+esc2(e.to)+'</b>로 변경했습니다</div>'+
+      '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+      '<div class="ft" style="color:var(--good)">기한 확정 마감 전 조정 · 요청자 메일 발송</div></div></div></div>';
+    if(e.t==='nego') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">지연 미리 알림</span></div>'+
+      '<div class="bx sl"><dl class="f"><dt>지연 사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+      (e.ct?'<dl class="f"><dt>대책</dt><dd>'+esc2(e.ct)+'</dd></dl>':'')+
+      '<dl class="f"><dt>새 완료 예정일</dt><dd><b>'+esc2(e.to)+'</b> <span style="color:var(--muted)">(기존 '+esc2(e.fr)+')</span></dd></dl>'+
+      '<div class="ft" style="color:var(--signal)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div></div></div></div>';
+    if(e.t==='res') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-resolved">완료 처리</span></div>'+
+      (e.x?'<div class="evx">'+lnk(e.x)+'</div>':'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자 확인 대기 · 종결 권한은 요청자에게 있습니다</div></div></div>';
+    return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl '+(e.r||'')+'">'+(e.r==='ow'?'담당자':'요청자')+'</span></div><div class="evx">'+lnk(e.x)+'</div></div></div>';
+  }
+
+
+  function evalBlk(t){
+    var done = t.state==='closed';
+    var e=t.ev2||{};
+    var g=function(id,lb,desc,opts,sel){
+      return '<div class="gg"><div class="gl">'+lb+'</div><div class="gd2">'+desc+'</div>'+
+        '<div class="pk" data-g="'+id+'">'+
+        opts.map(function(o){return '<button data-v="'+o[0]+'"'+(done&&sel===o[0]?' class="on"':'')+(done?' disabled':'')+'>'+o[0]+'</button>'}).join('')+
+        '</div><div class="gk">'+opts.map(function(o){return '<b>'+o[0]+'</b> — '+o[1]}).join('<br>')+'</div></div>';
+    };
+    return '<div class="ch2" style="border-top:1px solid var(--line)"><h3>결과 평가</h3>'+
+      (done?'<span class="nt">종결 '+esc2(t.resolved)+' · 결과 '+esc2(e.fl||'—')+' · 소통 '+esc2(e.cm||'—')+' · 최종 '+esc2(e.g||'—')+(e.lateFact?' · '+esc2(e.lateFact):'')+'</span>'
+           :'<span class="nt">요청자가 결과를 평가하면 종결됩니다 · 최종 등급은 두 항목의 평균</span>')+'</div>'+
+      '<div class="cb"><div class="gr3">'+
+        g('1','결과','요청한 것이 실제로 해결되었는지',RES_OPT,e.fl)+
+        g('2','소통','진행 상황을 알 수 있었는지',COM_OPT,e.cm)+
+      '</div></div>';
+  }
+
+  function acts(t){
+    if(t.state==='closed') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">종결 · 읽기 전용 · 전체 요청에서 검색 가능</span></div>';
+    var req='',own='';
+    if(t.state==='open'){
+      req='<button class="btn" data-t2="담당자가 아직 요청을 확인하지 않았습니다" disabled>담당자 확인 대기</button>';
+      own='<button class="btn pri" id="aStart">확인 · 진행</button>'+
+          '<button class="btn" id="aDue">기한 조정</button>'+
+          '<button class="btn" id="hdX">이관</button>';
+    } else if(t.state==='nego'){
+      req='<button class="btn pri" id="aNegoY">새 기한 수락</button><button class="btn" id="aNegoN">거절</button>';
+      own='<button class="btn" data-t2="요청자 확인 대기 중 · 기존 기한 적용" disabled>요청자 확인 대기</button><button class="btn" id="hdX">이관</button>';
+    } else if(t.state==='prog'||t.state==='slip'){
+      req = t.state==='slip'
+        ? '<button class="btn" data-t2="기한이 지났습니다 · 담당자 처리 중" disabled>지연 중</button>'
+        : '<button class="btn" data-t2="담당자 진행 중입니다" disabled>진행 중</button>';
+      own='<button class="btn pri" id="aRes">완료</button>'+
+          '<button class="btn dn" id="aNego">지연 미리 알리기</button>'+
+          '<button class="btn" id="hdX">이관</button>';
+    } else if(t.state==='done'){
+      req='<button class="btn pri" id="closeBtn" disabled>완료 확인 · 종결</button><button class="btn" id="aReopen">재요청</button>';
+      own='<button class="btn" data-t2="완료 · 요청자 확인 대기 중" disabled>요청자 확인 대기</button>';
+    }
+    // 회람은 요청자 뷰에서, 남의 요청에만. 내 요청은 어차피 다 받으니 필요 없다.
+    var canJoin = t.rq.nm!==ROLE.req.nm && !t.jn.some(function(x){return x.nm===ROLE.req.nm});
+    req+='<span style="flex:1"></span>'+(canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':'');
+    own+='<span style="flex:1"></span>';
+    return '<div class="acts" data-r="req">'+req+'</div><div class="acts" data-r="own adm" style="display:none">'+own+'</div>';
+  }
+
+  function openT(no,noPush){
+    var t=T[no]; if(!t){toast('없는 요청번호입니다');return}
+    if(t.vis==='locked'){toast('dw://'+no+' 잠금 · 요청자·담당자·팀장만 조회 가능');return}
+    var from=noPush?null:$('.screen.on');
+    if(from){
+      var fid=from.id.replace('s-','');
+      // 접수 직후 [요청 보기]로 들어온 경우 — 빈 요청서로 되돌아가봐야 의미가 없으니 내 요청으로
+      if(fid==='intake') fid='mine';
+      var lbl = fid==='ticket' && CUR ? 'dw://'+CUR : SCR[fid];
+      if(!(fid==='ticket'&&CUR===no)) BACK.push({s:fid,label:lbl,no:fid==='ticket'?CUR:null});
+    }
+    CUR=no;
+    if(t.unseen&&cur==='own'){t.unseen=false;t.ev.push({t:'sys',at:now(),x:'담당자 최초 열람'});save();}
+    var si=ST[t.state].i;
+    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b> · '+esc2(t.rq.org)+'</span>'+(t.jn.length?'<span class="kv">회람 <b style="color:var(--primary)">'+t.jn.length+'명</b></span>':'')+
+      '<span class="kv">담당자 <b>'+esc2(t.as)+'</b> · '+esc2(t.asOrg)+'</span>'+
+      '<span class="kv">부서 <b>'+esc2(t.dept)+'</b></span>'+
+      Object.keys(t.attrs||{}).map(function(k){return '<span class="kv">'+esc2(k)+' <b>'+esc2(t.attrs[k])+'</b></span>'}).join('')+
+      '<span class="kv">접수 <b>'+esc2(t.open)+'</b></span>';
+    if(t.parent) meta+='<span class="kv" style="border-color:#F2C2BD;background:var(--signal-tint)">원 요청 <a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a></span>';
+    if(t.due) meta+='<span class="kv">기한 <b>'+esc2(t.due)+'</b>'+(t.dueOrig&&t.due!==t.dueOrig?' <span style="color:var(--amber)">(당초 '+esc2(t.dueOrig)+')</span>':'')+'</span>';
+    if(t.fixBy) meta+='<span class="kv" style="border-color:#EAD4AE;background:var(--amber-tint)">기한 확정 마감 <b style="color:var(--amber)">'+esc2(t.fixBy)+'</b></span>';
+    if(t.want) meta+='<span class="kv">희망 완료일 <b>'+esc2(t.want)+'</b></span>';
+    if(t.att) meta+='<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>';
+
+    var flow=FLOW.map(function(s,i){
+      return '<span class="st '+(i<si?'done':i===si?'now':'')+'">'+s+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
+    }).join('');
+
+    var bk = BACK.length ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
+    var head=bk+'<div class="th"><div style="display:flex;justify-content:space-between;gap:11px;flex-wrap:wrap;align-items:flex-start">'+
+      '<div><div class="tid"><span class="s">dw://</span>'+esc2(t.no)+'</div><div class="tt">'+esc2(t.title)+'</div></div>'+
+      '<span style="display:flex;gap:5px;align-items:center"><span class="lock" style="border-style:dashed">공개</span>'+
+      (t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="tm">'+meta+'</div></div>';
+
+    var body='<div class="tb"><div class="flow">'+flow+'</div><div class="thr">'+
+      '<div class="ev"><div class="evt">'+t.open.replace(' ','<br>')+'</div><div>'+
+        '<div class="evw">'+esc2(t.rq.nm)+' <span class="org">'+esc2(t.rq.org)+'</span> <span class="rl rq">요청자</span></div>'+
+        '<div class="split" style="margin-top:6px">'+
+          '<div><label class="fl2">현재 상황</label><div class="qt">'+esc2(t.asis)+'</div></div>'+
+          '<div><label class="fl2">요청 사항</label><div class="qt">'+esc2(t.tobe)+'</div></div>'+
+        '</div></div></div>'+
+      t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
+
+    if(t.state!=='closed'){
+      body+='<div class="cmb"><div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
+        '<textarea id="ctx" placeholder="의견을 남기면 요청자·담당자·회람자 전원에게 메일이 갑니다"></textarea>'+
+        '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
+        '<button class="atc" data-t2="파일 선택">+ 첨부</button>'+
+        '<span class="nt2">공개 · 종결 후에도 검색됩니다</span></div></div></div></div>';
+    }
+    // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
+    if(t.state==='closed' || (t.state==='done'&&cur==='req')) body+=evalBlk(t);
+    body+=acts(t)+'</div>';
+
+    $('#s-ticket').innerHTML=head+body;
+    wire(); setRole(cur, true); show('ticket'); tr();
+  }
+
+  if($('#hm'))$('#hm').onchange=function(){
+    var l=$('#hm').value==='l';
+    $('#hn').style.display=l?'none':'block';$('#hl').style.display=l?'block':'none';
+    $('#hgo').textContent=l?'팀장 이관':'이관 제안';
+    $('#hgo').dataset.t=l?'팀장 이관 · 즉시 책임 이전 · 요청자 통보':'이관 제안 발송 · 수락 전까지 책임 유지 · 요청자 통보';
+  };
+
+
+  // ================= 언어 전환 (KO / EN) =================
+  // 코드에 박힌 한국어는 그대로 두고, 렌더가 끝난 뒤 DOM을 훑어 사전으로 바꾼다.
+  // 화면을 다시 그리면 항상 한국어가 나오므로 tr()을 렌더 뒤에 다시 부른다.
+  // 원문은 보관해 두었다가 KO로 되돌릴 때 복원한다.
+  var LANG='ko';
+  var DICT={
+    '데모':'DEMO','뒤로':'Back',
+    '1월':'Jan','2월':'Feb','3월':'Mar','4월':'Apr','5월':'May','6월':'Jun',
+    '7월':'Jul','8월':'Aug','9월':'Sep','10월':'Oct','11월':'Nov','12월':'Dec',
+    '접수':'Received','종결':'Closed',
+    '· 입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'· Requests are stored in this browser · no backend',
+    '입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'Requests are stored in this browser · no backend',
+    '건':'','명':'','전체':'All','미열람':'Unread',
+    '요청자로 보기':'View as requester','담당자로 보기':'View as assignee','관리자로 보기':'View as admin',
+    '전체 요청':'All requests','내 요청':'My requests','회람 중인 요청':'Following','내 업무':'My work',
+    '대시보드':'Dashboard','관리대장':'Register','담당자 관리':'Assignee management','기준정보':'Master data','부서':'Department','분류축':'Category axis','배정축':'Routing axis','분류':'Category','요청하기':'New request','＋요청하기':'＋ New request',
+    '요청 상세':'Request',
+    '접수':'Received','진행':'In progress','지연':'Overdue','완료':'Completed','종결':'Closed',
+    '종결 대기':'Awaiting closure','미열람':'Unread','공개':'Public',
+    '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester',
+    '분야 전체':'All areas','전체 부서':'All departments','전체 기간':'All time',
+    '최근 7일':'Last 7 days','최근 30일':'Last 30 days','최근 90일':'Last 90 days','최근 1년':'Last year','직접 지정':'Custom range',
+    '요청이 없습니다':'No requests','배정된 요청이 없습니다':'No requests assigned',
+    '조건에 맞는 요청이 없습니다':'No requests match','해당 요청이 없습니다':'No requests in this state',
+    '회람 중인 요청이 없습니다':'Not following any requests',
+    '쉐어드서비스에 접수된 모든 요청':'All requests submitted to shared services',
+    '내가 접수한 요청':'Requests you submitted','나에게 배정된 요청':'Requests assigned to you',
+    '내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다':'Others requests you follow · updates arrive by email',
+    '요청번호, 제목, 내용':'Request no., title, content',
+    '제목·본문·완료 결과 전체 검색':'Searches title, body and comments',
+    '번호 일치 — 바로가기':'Exact number match',
+    '분야':'Area','공간 유형':'Space type','업무 유형':'Work type','제목':'Title',
+    '현재 상황':'Current situation','요청 사항':'What you need','요청 기한':'Requested by','첨부':'Attachment','선택':'Select',
+    '한 줄로 요약해주세요':'Summarize in one line',
+    '지금 무엇이 문제인지 적어주세요':'Describe the problem',
+    '어떻게 되기를 원하는지 적어주세요':'Describe the outcome you want',
+    '파일 선택 또는 끌어놓기':'Choose a file or drag it here',
+    '요청 접수':'Submit request','담당자가 조정할 수 있음':'The assignee may adjust this',
+    '접수되었습니다':'Request received','담당자':'Assignee','요청자':'Requester','회람':'Following',
+    '기한 확정 마감':'Deadline confirmation due','내 요청 목록':'My requests','요청 보기':'View request',
+    '의견 등록':'Post comment','+ 첨부':'+ Attach','공개 · 종결 후에도 검색됩니다':'Public · searchable after closure',
+    '의견을 남기면 요청자·담당자·회람자 전원에게 메일이 갑니다':'Comments email the requester, assignee and followers',
+    '확인 · 진행':'Confirm and start','기한 조정':'Adjust deadline','이관':'Reassign',
+    '지연 미리 알리기':'Report delay early','재요청':'Reopen','완료 확인 · 종결':'Confirm and close',
+    '회람 받기':'Follow','담당자 확인 대기':'Awaiting assignee','진행 중':'In progress',
+    '요청자 확인 대기':'Awaiting requester','새 기한 수락':'Accept new date','거절':'Decline','지연 중':'Overdue',
+    '종결 · 읽기 전용 · 전체 요청에서 검색 가능':'Closed · read only · searchable in All requests',
+    '시스템':'System','자동':'auto','원 요청':'Parent request',
+    '결과 평가':'Evaluation','결과':'Outcome','소통':'Communication',
+    '요청한 것이 실제로 해결되었는지':'Whether the request was actually resolved',
+    '진행 상황을 알 수 있었는지':'Whether you could tell what was happening',
+    '요청자가 결과를 평가하면 종결됩니다 · 최종 등급은 두 항목의 평균':'The requester evaluates to close · final grade is the average of the two',
+    '요청번호':'No.','서비스':'Service','요청내용':'Request','접수일자':'Received','기한':'Due',
+    '진행 상태':'Status','평가':'Grade','요청에서 자동 생성':'Generated from request data',
+    '엑셀 내려받기':'Export to Excel','반복 요청 상위':'Most repeated requests',
+    '업무 유형별 접수 집계 · 자동':'Counted by work type','반복 요청 내용':'Pattern','누적 처리시간':'Total time','판단':'Assessment',
+    '전체 부서 기준':'All departments','부서별 처리 현황':'By department',
+    '요청 데이터 기준 자동 산출':'Calculated from request data',
+    '월별 접수 · 종결 건수':'Requests received and closed by month','최근 6개월':'Last 6 months',
+    '부서':'Department','기한 준수율':'On-time rate','지연율':'Overdue rate','평균 등급':'Avg. grade',
+    '선택 기간 기준':'For the selected period','요청자 확인 완료 기준':'Requester-confirmed',
+    '현재 기한':'Current deadline','새 기한':'New deadline','사유':'Reason','필수':'required',
+    '지연 사유':'Reason for delay','대책':'Mitigation','새 완료 예정일':'New completion date',
+    '요청자에게 그대로 공개됩니다':'Shown to the requester as written',
+    '요청자 업무 영향을 줄일 방안':'How you will limit the impact',
+    '취소':'Cancel','닫기':'Close','요청자에게 알리기':'Notify requester',
+    '조정하고 요청자에게 알리기':'Adjust and notify requester',
+    '방식':'Method','수신 담당자':'Recipient','수신':'Recipient','이관 제안':'Propose reassign','팀장 이관':'Escalate to lead',
+    '소속 팀장':'Team lead','인사 API 자동 조회':'Looked up via HR API','이메일 또는 성명 검색':'Search by email or name',
+    '인사 API 재직 검증 후 발송':'Sent after HR API verification'
+  };
+  // ── 데이터 값 번역표 (가안 — 현업 확인 후 확정 필요) ──
+  // 분야·자산·공간유형·업무유형은 조직이 쓰는 고유 명칭이라 임의 번역이 위험하다.
+  // 아래는 초안일 뿐이며, 각 부서가 실제로 쓰는 영문 표기를 받아 채워야 한다.
+  // 백엔드 연동 시에는 코드가 아니라 해당 마스터 테이블의 name_en 컬럼이 이 자리를 대신한다.
+  var DATA_DICT={
+    // 분야
+    '공간기획':'Workplace Planning','총무':'General Affairs','시설':'Facilities','자산':'Asset Management',
+    '인사쉐어드':'HR Shared','회계기획쉐어드':'Accounting Shared','재무쉐어드':'Finance Shared','IT쉐어드':'IT Shared',
+    // 자산
+    '본관':'Main Building','신관':'New Building','S빌딩':'S Building','유로프라자':'Euro Plaza',
+    '잠실선착장':'Jamsil Dock','마곡연구소':'Magok R&D Center','용인경영개발원':'Yongin Management Center',
+    '힐리언스 선마을':'Healience Seonmaeul','기타(공장)':'Other (Plant)','기타(영업소)':'Other (Sales office)',
+    '기타(임대)':'Other (Leased)','기타':'Other',
+    // 공간 유형
+    '사무-업무공간':'Office — Work area','사무-공용공간':'Office — Shared area','세미나/공연':'Seminar / Performance',
+    '호스피탈리티-객실':'Hospitality — Guest room','호스피탈리티-기타':'Hospitality — Other','호스피탈리티-BOH':'Hospitality — BOH',
+    'F&B':'F&B','라운지':'Lounge','야외':'Outdoor','가구':'Furniture','사이니지':'Signage',
+    // 업무 유형
+    '단순문의(길이, 면적, 층고 등)':'Inquiry (dimensions, area, ceiling height)','레이아웃 변경':'Layout change',
+    '인테리어 설계':'Interior design','인테리어 시공':'Interior construction','VMD 연출':'VMD styling'
+  };
+  var NODES=[];
+  function tr(){
+    if(LANG!=='en') return;
+    var w=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), n;
+    while(n=w.nextNode()){ (function(){
+      var k=n.nodeValue.trim(); if(!k) return;
+      if(n.parentNode && n.parentNode.tagName==='OPTION'){
+        // 사전에 없는 값은 그대로 둔다(임의 번역 금지)
+        if(DICT[k]===undefined && DATA_DICT[k]===undefined) return;
+      }
+      var to=DICT[k]!==undefined?DICT[k]:DATA_DICT[k], m2;
+      if(to===undefined && (m2=k.match(/^(.+?)\s+(\d+)$/)) && DICT[m2[1]]!==undefined) to=DICT[m2[1]]+' '+m2[2];
+      if(to!==undefined && to!==null){ NODES.push({n:n, ko:n.nodeValue}); n.nodeValue=n.nodeValue.replace(k, to); }
+    })(); }
+    $$('input[placeholder],textarea[placeholder]').forEach(function(el){
+      var k=(el.placeholder||'').trim();
+      if(k && DICT[k] && !el.dataset.ko){ el.dataset.ko=el.placeholder; el.placeholder=DICT[k]; }
+    });
+  }
+  function setLang(l){
+    LANG=l;
+    if($('#langBtn')) $('#langBtn').textContent = l==='ko' ? 'EN' : '한국어';
+    document.documentElement.lang=l;
+    // 영문에서는 국문 제목을 숨기고 영문 하나만 — 같은 말을 두 번 쓰지 않는다
+    var k1=$('#brandKo'), k2=$('#brandEn');
+    if(k1&&k2){
+      k1.style.display = l==='en' ? 'none' : '';
+      k2.className = l==='en' ? 'lk1' : 'lk2';   // 영문일 땐 영문이 제목이 된다
+    }
+    if(l==='ko'){
+      NODES.forEach(function(x){ try{ x.n.nodeValue=x.ko }catch(e){} }); NODES=[];
+      $$('[data-ko]').forEach(function(el){ el.placeholder=el.dataset.ko; delete el.dataset.ko; });
+    } else { NODES=[]; tr(); }
+    try{ localStorage.setItem(LS+'-lang', l) }catch(e){}
+  }
+  if($('#langBtn')) $('#langBtn').onclick=function(){ setLang(LANG==='ko'?'en':'ko') };
+
+  // ================= 초기화 =================
+  // 위쪽 var 선언(empty 등)이 모두 평가된 뒤 실행되어야 한다.
+  refresh();          // ownPick() 포함 — ME(담당자 본인) 확정 후 렌더
+  setRole('req');
+  try{ var _l=localStorage.getItem(LS+'-lang'); if(_l) setLang(_l); }catch(e){}
+})();
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
