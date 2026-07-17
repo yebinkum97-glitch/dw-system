@@ -1103,7 +1103,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // 기준정보 시드 버전 — 코드의 AXES/RULES/TEAM/GROUPS 기본값을 바꾸면 이 숫자를 올린다.
   // 저장본이 이보다 낮으면 기준정보만 코드값으로 갱신한다(입력한 요청 T·SEQ는 보존).
   // 이게 없으면 한 번이라도 열어본 브라우저는 옛 기준정보에 묶여 새 부서·축이 영영 안 열린다.
-  var SEED=3;
+  var SEED=4;
   var T={}, SEQ=1000, _SAVED_RULES=null, _SAVED_MAX=null, _SD=null, _SA=null, _SW=null, _SG=null, _RESEED=false;
   try{
     var _s=JSON.parse(localStorage.getItem(LS)||'null');
@@ -1363,12 +1363,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // ITSM 사용자정보(2026-07-09) 기준 실제 쉐어드 조직. 현재는 공간기획만 하위 분류·담당 매핑이 있고
   // 나머지는 이름만 등록된 상태(선택 시 "준비 중" 안내).
   var DEPT=['공간기획','총무','시설','자산','인사쉐어드','회계기획쉐어드','재무쉐어드','IT쉐어드'];
-  // ── 자산 = 사업장 ──
-  // 일일업무일지 워크북의 "자산별 탭" 하나가 자산 하나다. 탭 이름을 그대로 쓴다.
+  // ── 총무 자산 = 사업장 ──
+  // 총무 일일업무일지 워크북의 "자산별 탭" 하나가 자산 하나다. 탭 이름을 그대로 쓴다.
   // 동(본관·신관·S빌딩·비워크)과 층은 축으로 두지 않는다 — 축이 늘면 입력만 늘고,
   // 어차피 삼성동 본사에만 있는 개념이라 다른 사업장에선 빈칸이 된다. 제목·요청사항에 적는다.
-  var ASSETS=['삼성동 본사','대전사옥','경남사옥','유로프라자','힐리언스',
-              '용인 DMD','용인 연구소','마곡연구소','시지메드텍 성수','시지메드텍 의정부','기타'];
+  // ※ 총무 전용이다. 공간기획은 동 단위로 공간을 보므로 자기 자산 목록을 따로 쓴다.
+  var ASSETS_GA=['삼성동 본사','대전사옥','경남사옥','유로프라자','힐리언스',
+                 '용인 DMD','용인 연구소','마곡연구소','시지메드텍 성수','시지메드텍 의정부','기타'];
 
   // ── 부서별 분류축 (AXES) ──
   // 부서마다 요청을 나누는 축이 다르다. 공간기획은 "공간 유형"이 축이지만
@@ -1378,9 +1379,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // 축은 부서 관리자가 [기준정보]에서 직접 추가·수정·삭제한다.
   var AXES={
     '공간기획':[
-      // 자산 = 사업장. 일일업무일지의 자산별 탭 하나 = 값 하나.
-      // 동(본관·신관·S빌딩)·층은 축으로 두지 않는다 — 제목/요청사항에 적는다.
-      {n:'자산', a:false, o:ASSETS},
+      // 공간기획의 자산은 건드리지 않는다 — 이 팀은 동(본관·신관·S빌딩) 단위로 공간을 본다.
+      // 총무 일일업무일지의 자산별 탭(사업장 단위)은 총무 축에만 쓴다.
+      {n:'자산', a:false, o:['본관','신관','S빌딩','유로프라자','잠실선착장','마곡연구소','용인경영개발원','힐리언스 선마을','기타(공장)','기타(영업소)','기타(임대)','기타']},
       {n:'공간 유형', a:true,  o:['사무-업무공간','사무-공용공간','세미나/공연','호스피탈리티-객실','호스피탈리티-기타','호스피탈리티-BOH','F&B','라운지','야외','가구','사이니지']},
       {n:'업무 유형', a:false, o:['단순문의(길이, 면적, 층고 등)','레이아웃 변경','인테리어 설계','인테리어 시공','VMD 연출','기타']}
     ],
@@ -1391,7 +1392,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     //            '교대근무'도 D열의 한 값이라 근무조(A·B·C조)가 여기에 붙는다
     //   ※ 층은 축으로 두지 않는다 — 제목·요청사항에 적는다
     '총무':[
-      {n:'자산', a:false, o:ASSETS},
+      {n:'자산', a:false, o:ASSETS_GA},
       {n:'업무유형', a:false, o:['입주사 요청·민원','일반 관리 업무','공사관리(빌딩+입주사)',
                                  '외주용역관리(점검·유지보수)','법정검사','기타']},
       {n:'분류', a:true, o:['관리·행정','전기','기계·소방','설비·위생','건축·영선','음향','배차',
@@ -2762,12 +2763,15 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '공간기획':'Workplace Planning','총무':'General Affairs','시설':'Facilities','자산':'Asset Management',
     '인사쉐어드':'HR Shared','회계기획쉐어드':'Accounting Shared','재무쉐어드':'Finance Shared','IT쉐어드':'IT Shared',
     // 자산
-    // 자산 = 사업장 (일일업무일지 자산별 탭)
+    // 공간기획 자산 — 동 단위
+    '본관':'Main Building','신관':'New Building','S빌딩':'S Building','유로프라자':'Euro Plaza',
+    '잠실선착장':'Jamsil Dock','마곡연구소':'Magok R&D Center','용인경영개발원':'Yongin Management Center',
+    '힐리언스 선마을':'Healience Seonmaeul','기타(공장)':'Other (Plant)','기타(영업소)':'Other (Sales office)',
+    '기타(임대)':'Other (Leased)','기타':'Other',
+    // 총무 자산 — 사업장 단위 (일일업무일지 자산별 탭)
     '삼성동 본사':'Samseong-dong HQ','대전사옥':'Daejeon Office','경남사옥':'Gyeongnam Office',
-    '유로프라자':'Euro Plaza','힐리언스':'Healience','마곡연구소':'Magok R&D Center',
-    '용인 연구소':'Yongin R&D Center',
+    '힐리언스':'Healience','용인 연구소':'Yongin R&D Center',
     // 용인 DMD · 시지메드텍 성수/의정부 — 고유명이라 임의 번역하지 않는다(공식 영문 표기를 받아 채울 자리)
-    '기타':'Other',
     // 공간 유형
     '사무-업무공간':'Office — Work area','사무-공용공간':'Office — Shared area','세미나/공연':'Seminar / Performance',
     '호스피탈리티-객실':'Hospitality — Guest room','호스피탈리티-기타':'Hospitality — Other','호스피탈리티-BOH':'Hospitality — BOH',
