@@ -170,8 +170,9 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 
 .main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1100px;margin:0 auto}
 
-/* 전역 검색 — 헤더에 상주. 어느 화면에서든 전체를 찾는다. */
-.gs{position:relative;flex:1;max-width:440px;min-width:0;margin-left:6px}
+/* 전역 검색 — 헤더에 상주. 브라우저 검색창처럼 치고 [검색]하면 결과 페이지로 간다. */
+.gs{flex:1;max-width:480px;min-width:0;margin-left:6px;display:flex;gap:6px;align-items:center}
+.gsw{position:relative;flex:1;min-width:0}
 .gs input[type=text]{
   width:100%;border:1px solid var(--line-2);border-radius:var(--r-field);background:var(--surface-2);
   padding:8px 30px 8px 54px;font-family:var(--sans);font-size:13px;color:var(--ink);
@@ -182,26 +183,9 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .gsx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:20px;height:20px;
      border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;color:var(--faint)}
 .gsx:hover{background:var(--line);color:var(--ink)}
-.gsres{
-  position:absolute;top:44px;left:0;right:0;background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--r-card);box-shadow:var(--ele-md);display:none;z-index:60;overflow:hidden;max-height:70vh;overflow-y:auto;
-}
-.gsres.on{display:block}
-.gsh2{padding:9px 14px;font-size:10.5px;font-weight:800;color:var(--faint);letter-spacing:.04em;
-      background:var(--surface-2);border-bottom:1px solid var(--line)}
-.gsi{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
-.gsi:last-child{border-bottom:none}
-.gsi:hover{background:var(--primary-tint)}
-.gsh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
-.gst{font-size:13px;font-weight:700;color:var(--ink);line-height:1.45;letter-spacing:-.012em}
-.gsm{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:4px;
-     font-family:var(--mono);font-size:10.5px;color:var(--faint)}
-.gsn{color:var(--primary-ink);font-weight:700}
-.gsx2{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
-.gsnone{padding:12px 14px;font-size:12px;color:var(--faint);text-align:center}
-.gsall{display:block;width:100%;padding:11px 14px;font-size:12.5px;font-weight:700;
-       color:var(--primary-ink);background:var(--surface-2);border:none;border-top:1px solid var(--line);text-align:center}
-.gsall:hover{background:var(--primary-tint)}
+.gsgo{flex:none;padding:8px 14px;font-size:12.5px;font-weight:700;white-space:nowrap;
+      border:1px solid var(--line-2);border-radius:var(--r-field);background:var(--surface);color:var(--ink-2)}
+.gsgo:hover{border-color:var(--primary);color:var(--primary-ink);background:var(--primary-tint)}
 /* 페이지 나누기 */
 .pgw{display:flex;gap:5px;align-items:center;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .pgw button{min-width:32px;height:32px;padding:0 9px;border:1px solid var(--line-2);background:#fff;
@@ -357,7 +341,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .btn:disabled{opacity:.42;cursor:not-allowed}
 
 .pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--primary-tint);color:var(--primary-ink);border:1px solid #f0c99a;margin-left:4px;vertical-align:1px}
-.deriv b{color:var(--ink)}
 
 .nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
 .nyx b{color:var(--ink)}
@@ -483,7 +466,6 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .cmb .atc:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 
 .pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--primary-tint);color:var(--primary-ink);border:1px solid #f0c99a;margin-left:4px;vertical-align:1px}
-.deriv b{color:var(--ink)}
 
 .nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
 .nyx b{color:var(--ink)}
@@ -503,27 +485,9 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .casc select{max-width:none;width:auto;min-width:118px;flex:0 1 auto}
 .casc select:disabled{background:var(--surface-2);color:var(--faint);cursor:not-allowed}
 .casc .cs{color:var(--line-2);font-size:12px;flex:none}
-.deriv{margin-top:7px;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
-.deriv .sep2{margin:0 6px;color:var(--line-2)}
 
-/* search results */
+/* search results — 검색어가 걸린 대목을 요청 카드 안에 발췌해 보여준다 */
 mark{background:#FDECC8;color:var(--ink);border-radius:2px;padding:0 1px}
-/* 요청 검색 — dw:// 는 요청의 고유 주소 체계. 번호를 넣으면 그 요청으로 바로 간다. */
-.sbig{position:relative;margin-bottom:12px}
-/* 뒤에 오는 input[type=text] 규칙에 덮이지 않도록 선택자를 강하게 */
-.sbig input[type=text]{width:100%;border:1px solid var(--line-2);border-radius:7px;background:#fff;padding:11px 13px 11px 60px;font-family:var(--sans);font-size:15px;color:var(--ink)}
-.sbig input[type=text]:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
-.sbig .sch{
-  position:absolute;left:13px;top:50%;transform:translateY(-50%);
-  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink);pointer-events:none;
-}
-.res{border-bottom:1px solid var(--line);padding:13px 15px}
-.res:last-child{border-bottom:none}
-.res:hover{background:var(--surface-2);cursor:pointer}
-.resh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.rest{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.45}
-.resm{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;font-family:var(--mono);font-size:10.5px;color:var(--faint);align-items:center}
-.resm .sep{color:var(--line-2)}
 .ans{margin-top:8px;border-left:2px solid var(--good);background:var(--good-tint);padding:7px 10px;border-radius:0 4px 4px 0}
 .ansl{font-size:9.5px;font-weight:800;color:var(--good);letter-spacing:.05em}
 .ansx{font-size:12px;color:var(--ink-2);margin-top:2px;line-height:1.5}
@@ -642,6 +606,9 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
 .prh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
 .prt{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.45}
 .prm{font-size:10.5px;color:var(--faint);margin-top:4px;font-family:var(--mono)}
+/* 검색 결과 발췌 — 제목에 없는 말로 걸렸을 때 '왜 나왔는지'를 보여준다 */
+.prs{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;
+     border-top:1px dashed var(--line);padding-top:6px}
 .hp{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .hp.w{background:var(--signal-tint);border-color:#f0bcc1;color:var(--signal)}
 
@@ -728,7 +695,6 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
      주 행동(요청하기)은 남기고 이름표를 아바타만 남긴다. */
   .top{gap:6px;padding:8px 10px;height:auto;flex-wrap:wrap}
   .gs{order:9;flex-basis:100%;max-width:none;margin:2px 0 0}
-  .gsres{top:42px}
   .mark{gap:8px}
   .me .dp,.me .nm{display:none}
   .me{padding:2px}
@@ -770,7 +736,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
   /* 입력 — 16px 미만이면 포커스 시 자동 확대(iOS). 가독성에도 유리 */
   input[type=text],input[type=date],select,textarea,
-  .sbig input[type=text],.rv select,.rv input[type=text],
+  .rv select,.rv input[type=text],
   .cmb textarea,.split textarea,input.ti{font-size:16px}
   .fk{padding-top:0}
 
@@ -811,8 +777,8 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   .rsw button{min-height:30px;padding:4px 11px}
   .chip{padding:6px 10px}
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
-  .res{padding:15px}
   .tl{padding:2px 0;display:inline-block}
+  .gsgo{min-height:42px}
 }
 
 /* ── 탭 반응성 — 300ms 지연·더블탭 확대 제거, 탭 피드백 ──
@@ -823,7 +789,7 @@ button,a,select,label.fl,[onclick],
 .pk button,.rsw button,.ex button,.bk,.lang,.bell,.me,.att,.cmb .atc{
   touch-action:manipulation;
 }
-button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.dp{
+button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   -webkit-tap-highlight-color:rgba(0,113,227,.16);
 }
 
@@ -840,7 +806,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   .bell{width:40px;height:40px}
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
   .tl{display:inline-block;padding:3px 0}
-  .res{padding:15px}
+  .gsgo{min-height:42px}
 }
 
 /* 노치·홈바 대응 */
@@ -884,13 +850,15 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 <rect width="160" height="28" fill="white"/>
 </clipPath>
 </defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn">Shared Service Request System</span></span></div>
-  <!-- 전역 검색 — 요청 찾기는 화면이 아니라 도구다. 어느 화면에서든 전체를 찾는다. -->
-  <div class="gs">
-    <span class="gsp">dw://</span>
-    <input type="text" id="gsq" placeholder="요청번호 · 제목 · 내용으로 전체 검색" autocomplete="off">
-    <button class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
-    <div class="gsres" id="gsres"></div>
-  </div>
+  <!-- 전역 검색 — 브라우저 검색창처럼. 치고 [검색]하면 결과 페이지로 간다. -->
+  <form class="gs" id="gsf">
+    <div class="gsw">
+      <span class="gsp">dw://</span>
+      <input type="text" id="gsq" placeholder="요청번호 · 제목 · 내용으로 전체 검색" autocomplete="off">
+      <button type="button" class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
+    </div>
+    <button type="submit" class="gsgo" id="gsgo">검색</button>
+  </form>
   <div class="topr" style="position:relative">
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
     <button class="me" id="meBtn" aria-haspopup="true">
@@ -1357,7 +1325,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   var ME=null;      // 담당자 본인
   var YOU=null;     // 요청자 본인
 
-  // 요청자 데모 계정 — 로그인 연동 시 삭제. 회람·다중 요청자 동작 확인용.
+  // 요청자 데모 계정 — 로그인 연동 시 삭제. 다중 요청자 동작 확인용.
   var REQS=['요청자 A','요청자 B','요청자 C'];
   function reqPick(){
     var sel=$('#reqAs'); if(!sel) return;
@@ -1421,7 +1389,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     });
     $$('.rsw button').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
     // 상태 이름이 역할별로 다르므로(완료 / 종결 대기) 목록을 다시 그린다
-    renderWork(); renderMine(); renderCC(); counts();
+    renderWork(); renderMine(); counts();
     $$('[data-r]').forEach(function(el){
       if(el.classList.contains('rsw')||el.parentNode.classList.contains('rsw'))return;
       el.style.display = el.dataset.r.split(' ').indexOf(r)>=0 ? '' : 'none';
@@ -1460,7 +1428,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var fx=addD(today(),1)+' 18:00';
     T[no]={no:no,title:ti,state:'open',vis:'public',
       dept:d0, attrs:attrs,
-      rq:{nm:ROLE.req.nm,org:ROLE.req.dp},jn:[],
+      rq:{nm:ROLE.req.nm,org:ROLE.req.dp},
       as:r.nm, asOrg:(TEAMORG[d0]||d0),
       open:now(),openDate:today(),due:want,dueOrig:want,fixBy:fx,want:want,unseen:true,
       asis:asis,tobe:tobe,
@@ -1503,9 +1471,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     return {no:n, t:t.title, av:attrVals(t), st:stl(t.state), stc:ST[t.state].c,
       state:t.state, rq:t.rq.nm, dept:t.dept||'공간기획', openDate:t.openDate,
       o:t.as, d:t.open.split(' ')[0], cm:t.ev.filter(function(e){return e.t==='cm'}).length,
-      jn:1+t.jn.length, lock:t.vis==='locked',
-      // 본문 검색은 현재상황·요청사항 + 의견 전체를 훑는다(완료 결과도 의견으로 남으므로).
-      b:t.asis+' '+t.tobe+' '+t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' '),
+      lock:t.vis==='locked',
+      b:bodyOf(t),
       // 담당자의 마지막 의견 — '완료 결과'가 아니라 여러 의견 중 최근 것일 뿐이므로 그렇게 라벨링한다
       a:(function(){
         if(t.state!=='closed'&&t.state!=='done') return '';
@@ -1544,14 +1511,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
 
   // ── 검색 결과 화면 ──
-  // 드롭다운은 '바로 그 요청으로 뛰기'용이고, 결과가 여럿이면 페이지에서 훑어야 한다.
-  // 좁은 드롭다운 안에서 스크롤로 다 해결하게 두면 안 된다.
+  // 결과는 페이지로 펼친다. 좁은 드롭다운 안에서 스크롤로 다 해결하게 두면 안 된다.
   var SQ='', SPG=1;
   function openSearch(q){
     SQ=q; SPG=1;
-    if($('#gsres')) $('#gsres').classList.remove('on');
     if($('#gsq')) $('#gsq').blur();
-    BACK=[]; renderSearch(); show('search');
+    BACK=[]; renderSearch(); show('search'); window.scrollTo(0,0);
   }
   function searchHits(q){
     if(!q) return [];
@@ -1573,7 +1538,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '<div class="head"><div><h1>검색 결과</h1>'+
         '<div class="sub">‘'+esc2(SQ)+'’ · '+tot+'건</div></div></div>'+
       '<div class="card"><div class="cb">'+
-        (tot?pageRows.map(function(x){return row(T[x.no],'req')}).join(''):empty('일치하는 요청이 없습니다'))+
+        (tot?pageRows.map(function(x){return row(T[x.no],'req',SQ)}).join(''):empty('일치하는 요청이 없습니다'))+
       '</div></div>'+
       pager(tot, SPG, null);
     wirePager(el, function(p){ SPG=p; renderSearch(); window.scrollTo(0,0); });
@@ -1596,43 +1561,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var st=Math.max(0,i-30),e=Math.min(b2.length,i+q.length+60);
     return (st>0?'…':'')+b2.slice(st,e)+(e<b2.length?'…':'');
   }
-  var GSMAX=6;   // 드롭다운은 '바로 그 요청으로 뛰기'용. 훑는 건 검색 결과 화면에서.
-  function gsRender(){
-    var box=$('#gsres'); if(!box) return;
-    var q=($('#gsq').value||'').trim();
-    if($('#gsx')) $('#gsx').style.display = q ? 'flex' : 'none';
-    if(!q){ box.classList.remove('on'); box.innerHTML=''; return; }
-    var num=q.replace(/^dw:\/\//,'');
-    var db=DB();
-    var direct=db.filter(function(x){return x.no===num||x.no.split('-')[1]===num});
-    var r=db.filter(function(x){
-      if(direct.length&&x.no===direct[0].no) return false;
-      var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
-      return hay.indexOf(q.toLowerCase())>=0;
-    });
-    var all=direct.concat(r);
-    var rows=all.slice(0,GSMAX).map(function(x,i){
-      if(x.lock) return '<div class="gsi" data-no="'+x.no+'"><div class="gst" style="color:var(--faint)">'+esc(x.t)+'</div>'+
-        '<div class="gsm"><span class="gsn">dw://'+x.no+'</span><span class="sep">·</span>당사자만 조회 가능</div></div>';
-      var sn=snip(x.b,q);
-      return '<div class="gsi" data-no="'+x.no+'">'+
-        '<div class="gsh"><div class="gst">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
-        '<div class="gsm"><span class="gsn">dw://'+x.no+'</span>'+
-          (i===0&&direct.length?'<span class="sep">·</span><b style="color:var(--primary-ink)">번호 일치</b>':'')+
-          '<span class="sep">·</span>'+esc(x.dept)+'<span class="sep">·</span>담당 '+esc(x.o)+'</div>'+
-        (sn?'<div class="gsx2">'+hl(sn,q)+'</div>':'')+
-      '</div>';
-    }).join('');
-    box.innerHTML = all.length
-      ? '<div class="gsh2">결과 '+all.length+'건</div>'+rows+
-        '<button class="gsall" id="gsall">‘'+esc(q)+'’ 전체 결과 '+all.length+'건 보기</button>'
-      : '<div class="gsnone">일치하는 요청이 없습니다</div>';
-    if($('#gsall')) $('#gsall').onclick=function(){ openSearch(q); };
-    box.classList.add('on');
-    $$('.gsi',box).forEach(function(el){ el.onclick=function(){
-      $('#gsq').value=''; gsRender(); openT(el.dataset.no);
-    };});
-    tr();
+  // 검색 대상 본문 — 현재상황·요청사항 + 의견 전체(완료 결과도 의견으로 남는다)
+  function bodyOf(t){
+    return t.asis+' '+t.tobe+' '+t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' ');
   }
 
   // ---- 공간기획 요청 축 (실제 데이터) ----
@@ -1813,24 +1744,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
           '<option value="">선택</option>'+x.o.map(function(v){return '<option>'+esc2(v)+'</option>'}).join('')+
         '</select></div></div>';
     }).join('');
-    $$('.axs',g).forEach(function(s){ s.onchange=deriv });
-    deriv();
-  }
-  // 배정축 값이 정해지면 담당자를 미리 보여준다
-  function deriv(){
-    var d=$('#s0').value, ax=assignAxis(d);
-    if(!$('#deriv')) return;
-    var all=$$('.axs').every(function(s){return s.value});
-    var av=ax ? ($$('.axs').filter(function(s){return s.dataset.n===ax.n})[0]||{}).value : null;
-    if(all && av){
-      var r=assign(d,av);
-      $('#dvOwn').innerHTML = r.pending
-        ? '담당 <b>미배정</b> · <span style="color:var(--signal)">'+esc2(r.why)+'</span>'
-        : '담당 <b style="color:var(--good)">'+esc2(r.nm)+'</b>'+
-          (isGroup(d,r.nm)?' <span style="color:var(--primary-ink)">근무조 · '+esc2(membersOf(d,r.nm).join('·'))+' 전원</span>':'')+
-          ' · 업무 '+r.load+'건';
-      $('#deriv').style.display='block';
-    } else $('#deriv').style.display='none';
   }
   function deptSwitch(){ renderAxes(); }
 
@@ -1849,10 +1762,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
 
   // ================= 목록 렌더 =================
-  function row(t, forRole){
+  // q를 주면 검색 결과용 — 제목의 일치 부분을 표시하고 본문에서 걸린 대목을 발췌해 붙인다.
+  // 제목에 없는 말로 걸린 건은 왜 나왔는지 보여주지 않으면 결과를 신뢰할 수 없다.
+  function row(t, forRole, q){
     var s=ST[t.state], m=[];
     m.push('dw://'+t.no); if(attrVals(t).length) m.push(attrVals(t).join(' · '));
-    m.push(forRole==='own' ? '요청자 '+t.rq.nm+(t.jn.length?' · 회람 '+t.jn.length+'명':'') : '담당 '+t.as+' · '+t.asOrg);
+    m.push(forRole==='own' ? '요청자 '+t.rq.nm : '담당 '+t.as+' · '+t.asOrg);
     if(t.parent) m.push('원 요청 dw://'+t.parent);
     if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--primary-ink)">'+t.fixBy+'</b>');
     // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
@@ -1865,9 +1780,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
     else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
     else if(t.state==='done'||t.state==='nego') cls+=' wait';
+    var sn=q?snip(bodyOf(t),q):'';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
-      '<div class="prh"><div class="prt">'+esc2(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="prh"><div class="prt">'+(q?hl(t.title,q):esc2(t.title))+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prm">'+m.join(' · ')+'</div>'+
+      (sn?'<div class="prs">'+hl(sn,q)+'</div>':'')+
     '</div>';
   }
   function byNo(list){return list.map(function(n){return T[n]})}
@@ -1942,13 +1859,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
      '<div class="filt" id="wFilt" style="margin-bottom:12px">'+
        '<select id="wScope" class="fsel">'+
          '<option value="mine"'+(WSC==='mine'?' selected':'')+'>내 업무</option>'+
-         '<option value="dept"'+(WSC==='dept'?' selected':'')+'>'+esc2(myDept||'우리 부서')+' 전체</option>'+
+         '<option value="dept"'+(WSC==='dept'?' selected':'')+'>전체 요청</option>'+
        '</select>'+
        periodSel('w')+finBox('wFin',WFIN)+
        (unass?'<span class="warn2">미배정 '+unass+'건</span>':'')+
      '</div>'+
-     '<div class="card"><div class="ch2"><h3>'+(WSC==='dept'?esc2(ro(myDept||''))+' 들어온 요청':'나에게 배정된 요청')+'</h3>'+
-       '<span class="nt">'+tot+'건</span></div><div class="cb">'+
+     '<div class="card"><div class="cb">'+
        (tot?pg.map(function(t){return row(t,'own')}).join(''):empty(WSC==='dept'?'부서에 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>'+
      pager(tot, WPG, null);
     if($('#wScope')) $('#wScope').onchange=function(){WSC=this.value;WPG=1;renderWork()};
@@ -1957,7 +1873,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     wirePeriod(); wire(); tr();
   }
 
-  var MSC='mine', MD2='all', MFIN=false, MPG=1;
+  var MD2='all', MFIN=false, MPG=1;
   // 끝난 요청은 기본으로 숨긴다 — 내 요청의 목적은 '지금 어떻게 되고 있나'다.
   // 종결이 쌓이면 살아있는 요청이 묻힌다. 필요하면 체크 하나로 되살린다.
   function isFin(t){ return t.state==='closed'||t.state==='cancel'||t.state==='reject' }
@@ -1966,37 +1882,24 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
   function renderMine(){
     var me=ROLE.req.nm;
-    var base=allT().filter(function(t){
-      var mine=t.rq.nm===me, cc=t.jn.some(function(j){return j.nm===me});
-      return MSC==='cc' ? (cc&&!mine) : mine;
-    });
-    var own=byPeriod(base);
+    var own=byPeriod(allT().filter(function(t){ return t.rq.nm===me }));
     if(MD2!=='all') own=own.filter(function(t){return (t.dept||'공간기획')===MD2});
     if(!MFIN) own=own.filter(function(t){return !isFin(t)});
-    var none = MSC==='cc' ? '회람 중인 요청이 없습니다' : '요청이 없습니다';
     var tot=own.length, last=Math.max(1,Math.ceil(tot/PAGE)); if(MPG>last) MPG=last;
     var pg=own.slice((MPG-1)*PAGE, MPG*PAGE);
     $('#s-mine').innerHTML=
      '<div class="head"><div><h1>내 요청</h1></div></div>'+
      '<div class="filt" id="mFilt" style="margin-bottom:12px">'+
-       '<select id="mScope" class="fsel">'+
-         '<option value="mine"'+(MSC==='mine'?' selected':'')+'>내 요청</option>'+
-         '<option value="cc"'+(MSC==='cc'?' selected':'')+'>회람 중인 요청</option>'+
-       '</select>'+
        periodSel('m')+deptFilt('mDept',MD2)+finBox('mFin',MFIN)+
      '</div>'+
      '<div class="card"><div class="cb">'+
-       (tot?pg.map(function(t){return row(t,'req')}).join(''):empty(none))+'</div></div>'+
+       (tot?pg.map(function(t){return row(t,'req')}).join(''):empty('요청이 없습니다'))+'</div></div>'+
      pager(tot, MPG, null);
-    if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;MPG=1;renderMine()};
     if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;MPG=1;renderMine()};
     if($('#mFin'))   $('#mFin').onchange=function(){MFIN=this.checked;MPG=1;renderMine()};
     wirePager($('#s-mine'), function(p2){ MPG=p2; renderMine(); window.scrollTo(0,0); });
     wirePeriod(); wire(); tr();
   }
-
-  // 회람 전용 화면은 없앴다 — [내 요청]의 '구분' 필터로 흡수.
-  function renderCC(){}
 
   // 등급 색상 (관리대장·대시보드 공용)
   function gc(v){return v==='A'?'ga':v==='B'?'gc':v==='C'?'gc':v==='D'?'gd':''}
@@ -2551,7 +2454,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       DUEMODE='fix'; op('m-due');
     };
     if($('#dugo'))$('#dugo').onclick=function(){ (DUEMODE==='nego'?actNego:actDue)(); };
-    if($('#joinBtn'))$('#joinBtn').onclick=actJoin;
     if($('#csend'))$('#csend').onclick=actComment;
     if($('#rcl'))$('#rcl').onclick=function(){toast('제안 취소 · dw://공간-2452 담당 유지')};
     if($('#esc'))$('#esc').onclick=function(){toast('팀장 이관 · 거절 불가 · 요청자 통보')};
@@ -2620,7 +2522,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     ds.onchange=fillWho; fillWho();
   }
   var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
-  var SCR={intake:'요청하기',mine:'내 요청',search:'검색 결과',work:'내 업무',find:'요청 찾기',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
+  var SCR={intake:'요청하기',mine:'내 요청',search:'검색 결과',work:'내 업무',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function eun(s){ // 은/는 조사
     var c=s.charCodeAt(s.length-1);
     if(c<0xAC00||c>0xD7A3) return s+'는';
@@ -2657,7 +2559,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       }
     });
   }
-  function refresh(){ autoSlip(); ownPick(); reqPick(); renderWork(); renderMine(); renderCC(); renderLedger(); renderRule(); renderMaster(); renderDash(); counts(); save(); tr(); }
+  function refresh(){ autoSlip(); ownPick(); reqPick(); renderWork(); renderMine(); renderLedger(); renderRule(); renderMaster(); renderDash(); counts(); save(); tr(); }
 
   function actDue(){
     var t=T[CUR], nd=$('#du1').value, why=$('#du2').value.trim();
@@ -2786,17 +2688,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     toast('재요청 · 진행 상태로 복귀');
     openT(CUR); refresh();
   }
-  // 회람 — 요청자가 아니어도 팔로업하고 싶으면 등록. 이후 모든 진행에 메일 수신.
-  // 평가·종결 권한은 없다(그건 요청자 몫).
-  function actJoin(){
-    var t=T[CUR], m=ROLE[cur];
-    if(t.rq.nm===m.nm){ toast('요청자는 이미 모든 알림을 받습니다'); return; }
-    if(t.jn.some(function(x){return x.nm===m.nm})){ toast('이미 회람 중입니다'); return; }
-    t.jn.push({nm:m.nm,org:m.dp});
-    t.ev.push({t:'joiner',at:now(),who:m.nm,org:m.dp});
-    toast('회람 등록 · 이후 의견·상태 변경·종결까지 메일 수신 · 회람 '+t.jn.length+'명');
-    openT(CUR); refresh();
-  }
   // 의견 등록 — 상태는 바꾸지 않는다. 요청 데이터(ev)에 적재되어 양쪽 화면·저장소에 반영된다.
   function actComment(){
     var t=T[CUR]; if(!t) return;
@@ -2805,7 +2696,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(!v){ toast('의견 내용을 적어주세요'); ta.focus(); return; }
     t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:(cur==='req'?'rq':'ow'),x:v});
     ta.value='';
-    toast('의견 등록 · 요청자·담당자·회람자 메일 발송 · 상태는 그대로');
+    toast('의견 등록 · 요청자·담당자 메일 발송 · 상태는 그대로');
     openT(CUR); refresh();
   }
   // item 1 — 요청자 요청 취소/회수. 완료·종결 전까지 가능하며 사유는 담당자에게 전달된다.
@@ -2862,10 +2753,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         '<dl class="f"><dt>어떻게</dt><dd>'+esc2(p.h)+'</dd></dl>'+
         '<div class="ft" style="color:var(--good)">계획 마감 준수 · 요청자 메일 발송</div></div>');
     }
-
-    if(e.t==='joiner')
-      return W(evH(e.who,e.org,'','회람','',e.at),
-        '<span style="color:var(--muted)">회람 등록 · 이후 진행사항을 메일로 받습니다</span>');
 
     if(e.t==='due')
       return W(evH(e.who,e.org,'ow','담당자','<span class="badge b-commit">기한 조정</span>',e.at),
@@ -2966,9 +2853,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     // ── 요청자 ──
     var r;
     if(!mineReq){
-      var canJoin=!t.jn.some(function(x){return x.nm===ROLE.req.nm});
-      r=note('내가 낸 요청이 아닙니다 · 읽기 전용')+sp+
-        (canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':note('회람 중'));
+      r=note('내가 낸 요청이 아닙니다 · 읽기 전용');
     } else {
       var rn='', rb='';
       if(t.state==='open'){
@@ -3037,7 +2922,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var si=ST[t.state].i;
     // 분류·사람 — 낮은 강조로 한 줄
     var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b>'+(t.rq.org?' · '+esc2(t.rq.org):'')+'</span>'+
-      (t.jn.length?'<span class="kv">회람 <b style="color:var(--primary-ink)">'+t.jn.length+'명</b></span>':'')+
       '<span class="kv">담당자 <b>'+esc2(t.as)+'</b>'+
         (isGroup(t.dept,t.as)?' <span style="color:var(--primary-ink);font-weight:600">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':'')+
         ' · '+esc2(t.asOrg)+'</span>'+
@@ -3121,7 +3005,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'Requests are stored in this browser · no backend',
     '건':'','명':'','전체':'All','미열람':'Unread',
     '요청자로 보기':'View as requester','담당자로 보기':'View as assignee','관리자로 보기':'View as admin',
-    '요청 찾기':'Find a request','전체 요청':'All requests','내 요청':'My requests','회람 중인 요청':'Following','내 업무':'My work',
+    '전체 요청':'All requests','내 요청':'My requests','내 업무':'My work','검색 결과':'Search results',
     '대시보드':'Dashboard','관리대장':'Register','담당자 관리':'Assignee management','기준정보':'Master data','부서':'Department','분류축':'Category axis','배정축':'Routing axis','분류':'Category','요청하기':'New request','＋요청하기':'＋ New request',
     '요청 상세':'Request',
     '접수':'Received','진행':'In progress','지연':'Overdue','완료':'Completed','종결':'Closed',
@@ -3131,14 +3015,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '최근 7일':'Last 7 days','최근 30일':'Last 30 days','최근 90일':'Last 90 days','최근 1년':'Last year','직접 지정':'Custom range',
     '요청이 없습니다':'No requests','배정된 요청이 없습니다':'No requests assigned',
     '조건에 맞는 요청이 없습니다':'No requests match','해당 요청이 없습니다':'No requests in this state',
-    '회람 중인 요청이 없습니다':'Not following any requests',
     '쉐어드서비스에 접수된 모든 요청':'All requests submitted to shared services',
     '요청 번호·제목·내용으로 찾습니다':'Search by request no., title or content',
     '쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용':'Search every request submitted to shared services · read only',
     '언어':'Language','한국어':'한국어',
-    '내 요청':'My requests','회람 중인 요청':'Following',
-    '내가 접수한 요청':'Requests you submitted','나에게 배정된 요청':'Requests assigned to you',
-    '내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다':'Others requests you follow · updates arrive by email',
     '요청번호, 제목, 내용':'Request no., title, content',
     '제목·본문·의견 전체 검색':'Searches title, body and comments',
     '최근 담당자 의견':'Latest assignee comment',
@@ -3153,13 +3033,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '어떻게 되기를 원하는지 적어주세요':'Describe the outcome you want',
     '파일 선택 또는 끌어놓기':'Choose a file or drag it here',
     '요청 접수':'Submit request','담당자가 조정할 수 있음':'The assignee may adjust this',
-    '접수되었습니다':'Request received','담당자':'Assignee','요청자':'Requester','회람':'Following',
+    '접수되었습니다':'Request received','담당자':'Assignee','요청자':'Requester',
     '기한 확정 마감':'Deadline confirmation due','내 요청 목록':'My requests','요청 보기':'View request',
     '의견 등록':'Post comment','+ 첨부':'+ Attach','공개 · 종결 후에도 검색됩니다':'Public · searchable after closure',
-    '의견을 남기면 요청자·담당자·회람자 전원에게 메일이 갑니다':'Comments email the requester, assignee and followers',
     '확인 · 진행':'Confirm and start','기한 조정':'Adjust deadline','이관':'Reassign',
     '지연 미리 알리기':'Report delay early','재요청':'Reopen','완료 확인 · 종결':'Confirm and close',
-    '회람 받기':'Follow','담당자 확인 대기':'Awaiting assignee','진행 중':'In progress',
+    '담당자 확인 대기':'Awaiting assignee','진행 중':'In progress',
     '요청자 확인 대기':'Awaiting requester','새 기한 수락':'Accept new date','거절':'Decline','지연 중':'Overdue',
     '종결 · 읽기 전용 · 전체 요청에서 검색 가능':'Closed · read only · searchable in All requests',
     '시스템':'System','자동':'auto','원 요청':'Parent request',
@@ -3247,19 +3126,20 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     } else { NODES=[]; tr(); }
     try{ localStorage.setItem(LS+'-lang', l) }catch(e){}
   }
-  // 햄버거 — 사이드바 접기. 폰에서는 서랍처럼 열린다.
-  // 전역 검색 배선
+  // 전역 검색 배선 — 브라우저 검색창과 같게. 치는 동안은 아무 일도 없고,
+  // Enter(폼 제출) 또는 [검색]을 눌러야 결과 페이지로 간다.
+  function gsClear(){ if($('#gsx')) $('#gsx').style.display = ($('#gsq').value||'').trim() ? 'flex' : 'none'; }
+  if($('#gsf')) $('#gsf').onsubmit=function(e){
+    e.preventDefault();
+    var v=($('#gsq').value||'').trim();
+    if(!v){ toast('검색어를 입력해주세요'); $('#gsq').focus(); return; }
+    openSearch(v);
+  };
   if($('#gsq')){
-    $('#gsq').oninput=gsRender;
-    $('#gsq').onclick=function(e){ e.stopPropagation(); if(this.value.trim()) gsRender(); };
-    $('#gsq').onkeydown=function(e){
-      if(e.key==='Escape'){ this.value=''; gsRender(); this.blur(); }
-      if(e.key==='Enter'){ var v=this.value.trim(); if(v) openSearch(v); }
-    };
+    $('#gsq').oninput=gsClear;
+    $('#gsq').onkeydown=function(e){ if(e.key==='Escape'){ this.value=''; gsClear(); this.blur(); } };
   }
-  if($('#gsx')) $('#gsx').onclick=function(){ $('#gsq').value=''; gsRender(); $('#gsq').focus(); };
-  document.addEventListener('click',function(){ if($('#gsres')) $('#gsres').classList.remove('on'); });
-  if($('#gsres')) $('#gsres').onclick=function(e){ e.stopPropagation(); };
+  if($('#gsx')) $('#gsx').onclick=function(){ $('#gsq').value=''; gsClear(); $('#gsq').focus(); };
 
   var isPhone=function(){ return matchMedia('(max-width:900px)').matches };
   if(isPhone()) $('.shell').classList.add('fold');   // 폰은 서랍이 기본으로 닫혀 있다
