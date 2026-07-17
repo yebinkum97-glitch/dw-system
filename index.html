@@ -554,6 +554,8 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
      color:var(--muted);cursor:pointer;user-select:none}
 .ckb:hover{color:var(--ink-2)}
 .ckb input{width:14px;height:14px;accent-color:var(--primary);cursor:pointer;margin:0}
+.warn2{align-self:center;font-size:11.5px;font-weight:700;color:var(--signal);
+       background:var(--signal-tint);border:1px solid #f0bcc1;border-radius:var(--r-pill);padding:3px 9px}
 select.fsel, input.fsel[type=date]{
   width:auto;min-width:110px;height:32px;line-height:normal;font-size:12.5px;font-weight:600;padding:0 9px;
   border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff;
@@ -1718,6 +1720,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
   // 이 사람이 그 요청의 담당자인가 — 조 배정이면 조원도 담당자다
   function isMine(t,me){ return t.as===me || membersOf(t.dept,t.as).indexOf(me)>=0 }
+  // 내가 속한 부서 — 팀원 명부에서 역산한다. 인사 API 연동 시 로그인 사용자의 조직이 이 자리를 대신한다.
+  function deptOf(me){
+    var f=null; DEPT.forEach(function(d){ if((TEAM[d]||[]).indexOf(me)>=0) f=d; }); return f;
+  }
 
   // ── 부서별 배정 규칙 (RULES) ──
   //   RULES[부서][배정축 값] = [1순위, 2순위, 3순위]
@@ -1853,7 +1859,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
     var cls='pr';
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
-    else if(t.state==='slip'||t.unseen) cls+=' urg';
+    else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
     else if(t.state==='done'||t.state==='nego') cls+=' wait';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt">'+esc2(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
@@ -1911,19 +1917,37 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
   }
 
-  var WFIN=false, WPG=1;
+  var WFIN=false, WPG=1, WSC='mine';
   function renderWork(){
-    // 나(ME)에게 배정된 요청. 근무조에 배정된 건은 그 조원 전원의 업무다.
-    var mine=byPeriod(allT().filter(function(t){return isMine(t,ME)}));
+    // 내 업무 = 나(또는 내 근무조)에게 배정된 것.
+    // '우리 부서 전체'가 필요한 이유: 담당자 미지정 값으로 들어온 요청(t.as='미배정')은
+    // isMine 이 false라 누구의 내 업무에도 안 뜬다. 아무도 모르는 채 기한을 넘긴다.
+    // 부서 전체를 볼 수 있어야 그걸 발견해서 이관·배정으로 넘길 수 있다.
+    // (남의 업무에 손대는 건 acts() 가 이미 읽기 전용으로 막는다)
+    var myDept=deptOf(ME);
+    var base = WSC==='dept'
+      ? allT().filter(function(t){ return (t.dept||'공간기획')===myDept })
+      : allT().filter(function(t){ return isMine(t,ME) });
+    var mine=byPeriod(base);
     if(!WFIN) mine=mine.filter(function(t){return !isFin(t)});
     var tot=mine.length, last=Math.max(1,Math.ceil(tot/PAGE)); if(WPG>last) WPG=last;
     var pg=mine.slice((WPG-1)*PAGE, WPG*PAGE);
+    var unass = WSC==='dept' ? mine.filter(function(t){return t.as==='미배정'}).length : 0;
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
-     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+finBox('wFin',WFIN)+'</div>'+
-     '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+tot+'건</span></div><div class="cb">'+
-       (tot?pg.map(function(t){return row(t,'own')}).join(''):empty('배정된 요청이 없습니다'))+'</div></div>'+
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+
+       '<select id="wScope" class="fsel">'+
+         '<option value="mine"'+(WSC==='mine'?' selected':'')+'>내 업무</option>'+
+         '<option value="dept"'+(WSC==='dept'?' selected':'')+'>'+esc2(myDept||'우리 부서')+' 전체</option>'+
+       '</select>'+
+       periodSel('w')+finBox('wFin',WFIN)+
+       (unass?'<span class="warn2">미배정 '+unass+'건</span>':'')+
+     '</div>'+
+     '<div class="card"><div class="ch2"><h3>'+(WSC==='dept'?esc2(ro(myDept||''))+' 들어온 요청':'나에게 배정된 요청')+'</h3>'+
+       '<span class="nt">'+tot+'건</span></div><div class="cb">'+
+       (tot?pg.map(function(t){return row(t,'own')}).join(''):empty(WSC==='dept'?'부서에 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>'+
      pager(tot, WPG, null);
+    if($('#wScope')) $('#wScope').onchange=function(){WSC=this.value;WPG=1;renderWork()};
     if($('#wFin')) $('#wFin').onchange=function(){WFIN=this.checked;WPG=1;renderWork()};
     wirePager($('#s-work'), function(p2){ WPG=p2; renderWork(); window.scrollTo(0,0); });
     wirePeriod(); wire(); tr();
@@ -2587,6 +2611,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var c=s.charCodeAt(s.length-1);
     if(c<0xAC00||c>0xD7A3) return s+'는';
     return s+(((c-0xAC00)%28)?'은':'는');
+  }
+  function ro(s2){ // 으로/로 조사
+    var c=s2.charCodeAt(s2.length-1);
+    if(c<0xAC00||c>0xD7A3) return s2+'로';
+    var j=(c-0xAC00)%28;
+    return s2+((j===0||j===8)?'로':'으로');   // 받침 없음 또는 ㄹ 받침이면 '로'
   }
   function ga(s){ // 이/가 조사
     var c=s.charCodeAt(s.length-1);
