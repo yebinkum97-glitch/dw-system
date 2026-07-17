@@ -5,27 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>통합 쉐어드 요청 관리 — Daewoong Shared Service Request System</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
+<!-- {fonts.sans} Pretendard · {fonts.sans-en} Poppins — 대웅 디자인 시스템 지정 폰트 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.14/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/poppins@5.0.14/700.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/700.css">
 <style>
-/* ── Design tokens — Apple (open-design/design-systems/apple/DESIGN.md) ──
-   중립 삼원색(#ffffff · #f5f5f7 · #1d1d1f)이 뼈대, 파랑은 액션·링크에만.
-   Apple에는 semantic 팔레트가 정의돼 있지 않아 상태색은 SF 시스템 컬러의
-   광량을 낮춘 값으로 보완했다(밝은 배경 위 텍스트 대비 확보). */
+/* ── Design tokens — 대웅제약 디자인 시스템 (design-system/design.md) ──
+   이 시스템은 대웅 사내 도구인데 애플 토큰(#0071e3 등)을 그대로 쓰고 있었다.
+   폴더에 공식 CI 기반 디자인 시스템이 있으므로 그쪽으로 재기반한다.
+
+   CI 시그니처는 둘뿐이다 — DW Orange(젊음·활동력·약동감) · DW Dark Gray(안정·신뢰·성장).
+   흰 바탕이 원칙({colors.canvas}). 그래서 지배색은 흰색+Dark Gray로 두고,
+   Orange는 '지금 움직여야 할 것'에만 날카롭게 쓴다.
+
+   ★ DS가 명시한 함정: 흰색 on DW Orange = 2.72:1 → WCAG AA 미달.
+     주황은 텍스트 색으로도 못 쓴다(흰 바탕 위 2.72:1).
+     그래서 아래 두 토큰을 계산해서 정했다(design.md todo 1.1 / 1.5 결정):
+       --on-primary  #241400  주황 위 텍스트  6.56:1 ✓ (흰색 2.72 ✗ · DW Gray 2.56 ✗)
+       --primary-ink #a15c00  흰 바탕 위 주황 텍스트  5.19:1 ✓ (원색 2.72 ✗)
+
+   ★ DS todo 1.4 "warning — DW Orange와 분리할지 결정 필요" → 분리한다.
+     밝은 주황과 amber는 색상이 이웃이라 나란히 두면 구분이 안 된다. amber 폐기.
+     상태색은 '누구를 기다리는가'로 재정의 — 이게 이 시스템의 본래 개념이다.
+       담당자 기다림 = Dark Gray(내부 처리 중) · 요청자 기다림 = Orange(고객이 움직여야)
+       지연·반려 = Red · 종결 = 옅은 회색 */
 :root{
-  --paper:#f5f5f7; --surface:#ffffff; --surface-2:#fafafc;
-  --ink:#1d1d1f; --ink-2:#424245; --muted:#6e6e73; --faint:#86868b;
-  --line:#d2d2d7; --line-2:#c7c7cc; --line-3:#86868b;
-  --primary:#0071e3; --primary-2:#0077ed; --primary-tint:#e8f2fe; --link:#0066cc;
-  --signal:#d70015; --signal-tint:#ffe9e7;
-  --amber:#a15c00; --amber-tint:#fff4e5;
-  --good:#248a3d; --good-tint:#e8f7ec;
-  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Pretendard Variable",Pretendard,"Apple SD Gothic Neo",sans-serif;
-  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard Variable",Pretendard,"Apple SD Gothic Neo",sans-serif;
-  /* radius 계층 — 하나로 통일하지 않는다(필드 / 카드 / 캡슐) */
-  --r-field:8px; --r-card:18px; --r-pill:980px;
+  /* CI */
+  --dw:#e98300;                    /* {colors.primary}  DW Orange */
+  --dw-gray:#565a5c;               /* {colors.dark-gray} DW Dark Gray — 흰 텍스트 6.97:1 ✓ */
+  --surface:#ffffff;               /* {colors.canvas} */
+  --paper:#f8f8f8;                 /* {colors.secondary} — 사이트 측정 15회 */
+  --surface-2:#f8f8f8;
+
+  /* text — DS todo 1.3 미정. Dark Gray를 축으로 명도만 나눈다(임의 색상 추가 금지) */
+  --ink:#1a1a1a; --ink-2:#3f4345; --muted:#565a5c;
+  /* --faint 는 캡션·메타에 쓰인다. #8a8f91은 흰 3.27 / soft 3.08 / tint 2.92 로 전부 AA 미달이었다.
+     세 배경 모두에서 4.5:1을 넘는 최솟값이 #686d6f (5.24 / 4.94 / 4.69) — 계산해서 잡았다. */
+  --faint:#686d6f;
+  --line:#e4e5e6; --line-2:#d2d4d5; --line-3:#8a8f91;
+
+  /* action — 주황은 '칠하는 색'이지 '쓰는 색'이 아니다 */
+  --primary:#e98300;               /* fill 전용 */
+  --primary-2:#d47700;             /* hover (DS todo 1.1 미정 → 앱 레벨 결정) */
+  --primary-ink:#a15c00;           /* 흰 바탕 위 주황 '텍스트' 5.19:1 ✓ */
+  --primary-tint:#fdf1e3;
+  --on-primary:#241400;            /* 주황 위 텍스트 6.56:1 ✓ */
+  --link:#a15c00;
+
+  /* semantic — DS todo 1.4 미정. CI 밖이라 앱 레벨 결정이며 주황과 안 겹치게 둔다 */
+  --signal:#c1121f; --signal-tint:#fdeaec;
+  --good:#1f7a4c; --good-tint:#e9f5ef;
+
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  /* {fonts.sans} Pretendard — DS 지정. 애플 시스템 폰트를 앞에 두지 않는다 */
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+  /* {fonts.sans-en} Poppins — 라틴/숫자만 잡고 한글은 Pretendard로 떨어진다 */
+  --display:"Poppins","Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
+
+  /* {rounded} xs4 · sm6 · md12 · pill999 */
+  --r-field:6px; --r-card:12px; --r-pill:999px;
+  /* {elevation} — 대각선 그림자가 이 시스템의 서명이다(보통은 y축만 쓴다) */
+  --ele-sm:4px 4px 12px 0 rgba(0,0,0,.15);
+  --ele-md:4px 4px 20px 0 rgba(0,0,0,.15);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -34,17 +77,17 @@ button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;backgrou
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:3px}
 .mono{font-family:var(--mono);font-variant-ligatures:none}
 
-.strip{background:#0C1420;color:#8E9BAC;font-size:11px;padding:5px 18px;letter-spacing:.01em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.strip b{color:#C7D2E0;font-weight:700}
+.strip{background:#2f3334;color:#a9adaf;font-size:11px;padding:5px 18px;letter-spacing:.01em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.strip b{color:#e6e7e8;font-weight:700}
 .rsw{margin-left:auto;display:flex;align-items:center;gap:3px}
-.rsw button{border:1px solid #2C3A4C;border-radius:4px;padding:2px 9px;font-size:11px;font-weight:700;color:#8E9BAC;background:transparent}
-.rsw button:hover{border-color:#4A5A70;color:#C7D2E0}
-.rsw button.on{background:#C7D2E0;border-color:#C7D2E0;color:#0C1420}
+.rsw button{border:1px solid #4a4e50;border-radius:4px;padding:2px 9px;font-size:11px;font-weight:700;color:#8E9BAC;background:transparent}
+.rsw button:hover{border-color:#6d7173;color:#e6e7e8}
+.rsw button.on{background:#e6e7e8;border-color:#e6e7e8;color:#2f3334}
 .rsw select{
-  width:auto;background:transparent;border:1px solid #2C3A4C;border-radius:4px;
-  padding:2px 5px;font-size:11px;font-weight:700;color:#C7D2E0;margin-left:5px;font-family:inherit;
+  width:auto;background:transparent;border:1px solid #4a4e50;border-radius:4px;
+  padding:2px 5px;font-size:11px;font-weight:700;color:#e6e7e8;margin-left:5px;font-family:inherit;
 }
-.rsw select option{color:#0C1420}
+.rsw select option{color:#2f3334}
 
 /* topbar */
 .top{
@@ -74,13 +117,13 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 }
 .me{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 4px;border-radius:6px}
 .me:hover{background:var(--surface-2)}
-.av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
 .me .nm{font-size:12.5px;font-weight:700;line-height:1.2}
 .me .dp{font-size:10.5px;color:var(--muted);line-height:1.2}
 
 .drop{
   position:absolute;top:46px;right:0;width:330px;background:#fff;border:1px solid var(--line);
-  border-radius:8px;box-shadow:0 12px 32px rgba(12,20,32,.16);display:none;z-index:40;overflow:hidden;
+  border-radius:8px;box-shadow:var(--ele-md);display:none;z-index:40;overflow:hidden;
 }
 .drop.on{display:block}
 .drop-h{padding:11px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800;background:var(--surface-2)}
@@ -106,9 +149,9 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
   border-bottom:2px solid transparent;flex:none;
 }
 .nb:hover{color:var(--ink);background:var(--surface-2)}
-.nb.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600;background:transparent}
+.nb.on{color:var(--ink);border-bottom-color:var(--primary);border-bottom-width:2.5px;font-weight:700;background:transparent}
 .nb .c{font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:0 6px;min-width:20px;text-align:center}
-.nb.on .c{background:var(--primary-tint);border-color:#BBD2EE;color:var(--primary)}
+.nb.on .c{background:var(--primary-tint);border-color:#f0c99a;color:var(--primary-ink)}
 .nb .c.hot{background:var(--signal);border-color:var(--signal);color:#fff}
 .railf{display:none}
 
@@ -129,16 +172,20 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .cb{padding:15px}
 
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap;border:1px solid transparent;letter-spacing:-.01em}
-.b-open{background:var(--surface-2);color:var(--ink-2);border-color:var(--line-2)}
-.b-commit,.b-prog{background:var(--primary-tint);color:var(--primary);border-color:#BBD2EE}
-.b-wait,.b-verify{background:var(--amber-tint);color:var(--amber);border-color:#EAD4AE}
-.b-slip{background:var(--signal-tint);color:var(--signal);border-color:#F2C2BD}
-.b-resolved{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
-.b-closed{background:var(--surface-2);color:var(--muted);border-color:var(--line)}
+/* 상태 배지 = "지금 누구를 기다리는가"
+   담당자 기다림 → DW Dark Gray (내부에서 처리 중, 차분하게)
+   요청자 기다림 → DW Orange (고객이 움직여야 끝난다, 눈에 띄게)
+   지연·반려 → Red · 종결 → 옅은 회색 */
+.b-open{background:var(--surface-2);color:var(--muted);border-color:var(--line-2)}
+.b-commit,.b-prog{background:#eceded;color:var(--dw-gray);border-color:#d2d4d5}
+.b-wait,.b-verify{background:var(--primary-tint);color:var(--primary-ink);border-color:#f0c99a;font-weight:700}
+.b-slip{background:var(--signal-tint);color:var(--signal);border-color:#f0bcc1}
+.b-resolved{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
+.b-closed{background:var(--surface-2);color:var(--faint);border-color:var(--line)}
 
 .tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2);white-space:nowrap}
-.tag.p1{background:var(--primary-tint);color:var(--primary);border-color:#BBD2EE}
-.tag.p2{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.tag.p1{background:var(--primary-tint);color:var(--primary-ink);border-color:#f0c99a}
+.tag.p2{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
 .tag.off{opacity:.5}
 
 /* clock */
@@ -147,7 +194,7 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .cbar{height:24px;border:1px solid var(--line-2);border-radius:4px;background:#fff;display:flex;overflow:hidden}
 .seg{height:100%}
 .s-run{background:var(--primary)}
-.s-hold{background:repeating-linear-gradient(45deg,#E6D6B2,#E6D6B2 4px,#F7EEDB 4px,#F7EEDB 8px);border-left:1px dashed var(--amber);border-right:1px dashed var(--amber)}
+.s-hold{background:repeating-linear-gradient(45deg,#E6D6B2,#E6D6B2 4px,#F7EEDB 4px,#F7EEDB 8px);border-left:1px dashed var(--primary-ink);border-right:1px dashed var(--primary-ink)}
 .cl{display:flex;justify-content:space-between;margin-top:5px;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
 .lg{display:flex;gap:13px;margin-top:8px;font-size:11px;color:var(--ink-2);flex-wrap:wrap}
 .lg i{font-style:normal;display:inline-flex;align-items:center;gap:5px}
@@ -155,7 +202,7 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 
 /* ticket */
 .th{background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:7px 7px 0 0;padding:15px}
-.tid{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:-.03em;color:var(--primary)}
+.tid{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:-.03em;color:var(--primary-ink)}
 .tid .s{color:var(--faint)}
 .tt{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.012em;margin-top:5px;line-height:1.19}
 .tm{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}
@@ -165,8 +212,8 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 
 .flow{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:7px}
 .st{font-size:11px;font-weight:700;padding:4px 9px;border:1px solid var(--line-2);border-radius:20px;color:var(--muted);background:#fff;white-space:nowrap}
-.st.done{background:var(--primary);border-color:var(--primary);color:#fff}
-.st.now{background:#fff;border-color:var(--primary);border-width:2px;color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.st.done{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.st.now{background:#fff;border-color:var(--primary-ink);border-width:2px;color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
 .aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
 
 .thr{padding:4px 15px 14px}
@@ -176,13 +223,13 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .evw{font-size:12.5px;font-weight:800;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .evw .org{font-size:11px;font-weight:600;color:var(--muted)}
 .rl{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2)}
-.rl.rq{color:var(--primary);border-color:#BBD2EE;background:var(--primary-tint)}
-.rl.ow{color:var(--good);border-color:#B7DCC9;background:var(--good-tint)}
+.rl.rq{color:var(--primary-ink);border-color:#f0c99a;background:var(--primary-tint)}
+.rl.ow{color:var(--good);border-color:#b9dcc9;background:var(--good-tint)}
 .evx{font-size:13px;color:var(--ink-2)}
 .bx{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin-top:7px;background:var(--surface-2)}
-.bx.cm{border-color:#BBD2EE;background:var(--primary-tint)}
-.bx.sl{border-color:#F2C2BD;background:var(--signal-tint)}
-.bx.hd{border-color:#EAD4AE;background:var(--amber-tint)}
+.bx.cm{border-color:#f0c99a;background:var(--primary-tint)}
+.bx.sl{border-color:#f0bcc1;background:var(--signal-tint)}
+.bx.hd{border-color:#f0c99a;background:var(--primary-tint)}
 .f{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:12.5px;padding:2px 0}
 .f dt{font-weight:800;color:var(--muted);font-size:11px;padding-top:1px}
 .ft{font-size:11px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(0,0,0,.07);font-weight:700}
@@ -191,13 +238,13 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .ei{border:1px solid var(--line);border-radius:5px;padding:11px}
 .ei .lb{font-size:10.5px;font-weight:800;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .ei .by{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--faint)}
-.ei .by.au{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.ei .by.au{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
 .ei .vl{font-size:19px;font-weight:800;letter-spacing:-.03em;margin-top:5px}
 .ei .wy{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.45}
 .pk{display:flex;gap:4px;margin-top:7px}
 .pk button{flex:1;border:1px solid var(--line-2);border-radius:4px;padding:5px 0;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
-.pk button:hover{border-color:var(--primary);color:var(--primary)}
-.pk button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.pk button:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
+.pk button.on{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
 
 /* 결과 평가 */
 .gr3{display:grid;grid-template-columns:1fr 1fr;gap:13px}
@@ -208,14 +255,14 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .gg .pk{gap:3px;margin-top:6px}
 .gg .pk button{flex:none;width:30px;padding:3px 0;font-size:11.5px;font-family:var(--mono);font-weight:700}
 .gg .pk button:disabled{opacity:1}
-.gg .pk button.on:disabled{background:var(--primary);border-color:var(--primary);color:#fff}
+.gg .pk button.on:disabled{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
 .gk{margin-top:7px;font-size:10.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:6px}
 .gk b{color:var(--ink-2);font-weight:700;font-family:var(--mono)}
 
 .acts{display:flex;gap:7px;padding:12px 15px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap;border-radius:0 0 7px 7px}
 .btn{border:1px solid var(--line-2);background:#fff;border-radius:var(--r-field);padding:7px 13px;font-size:13px;font-weight:500;color:var(--ink);letter-spacing:-.016em}
 .btn:hover{border-color:var(--ink-2)}
-.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+.btn.pri{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary);font-weight:700}
 .btn.pri:hover{background:var(--primary-2)}
 .btn.dn{background:var(--signal);border-color:var(--signal);color:#fff;font-weight:600}
 .btn.sm{padding:4px 10px;font-size:11.5px}
@@ -229,7 +276,7 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 @media(prefers-reduced-motion:reduce){.btn.lg:hover{transform:none}}
 .btn:disabled{opacity:.42;cursor:not-allowed}
 
-.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--amber-tint);color:var(--amber);border:1px solid #EAD4AE;margin-left:4px;vertical-align:1px}
+.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--primary-tint);color:var(--primary-ink);border:1px solid #f0c99a;margin-left:4px;vertical-align:1px}
 .deriv b{color:var(--ink)}
 
 .nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
@@ -239,24 +286,24 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 /* intake */
 .chan{display:flex;gap:5px;margin-bottom:11px;flex-wrap:wrap}
 .chan button{border:1px solid var(--line-2);border-radius:20px;padding:4px 11px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
-.chan button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chan button.on{background:var(--dw-gray);border-color:var(--dw-gray);color:#fff}
 textarea{width:100%;border:1px solid var(--line-3);border-radius:var(--r-field);padding:12px;font-family:inherit;font-size:14px;line-height:1.6;resize:vertical;min-height:88px;color:var(--ink)}
-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+textarea:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
 .hint{font-size:11px;color:var(--faint);margin-top:6px}
 .ex{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
 .ex button{border:1px dashed var(--line-2);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--muted);background:#fff}
-.ex button:hover{border-style:solid;border-color:var(--primary);color:var(--primary)}
+.ex button:hover{border-style:solid;border-color:var(--primary-ink);color:var(--primary-ink)}
 .pipe{margin-top:15px;display:none}
 .pipe.on{display:block}
 .ps{display:grid;grid-template-columns:24px 1fr;gap:11px;padding:9px 0;opacity:0;transform:translateX(-5px);transition:.3s ease}
 .ps.in{opacity:1;transform:none}
 .pi{width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--faint)}
-.ps.in .pi{background:var(--primary);border-color:var(--primary);color:#fff}
+.ps.in .pi{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
 .pn{font-size:12.5px;font-weight:800}
 .pd{font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-top:2px;word-break:break-all}
 .mp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
 .ml{border:1px solid var(--line);border-radius:5px;background:var(--surface-2);padding:10px}
-.ml .to{font-size:9.5px;font-weight:800;color:var(--primary);letter-spacing:.05em;margin-bottom:5px}
+.ml .to{font-size:9.5px;font-weight:800;color:var(--primary-ink);letter-spacing:.05em;margin-bottom:5px}
 .ml .sj{font-size:11.5px;font-weight:700;margin-bottom:4px}
 .ml ul{list-style:none;font-size:11px;color:var(--muted);line-height:1.7}
 .ml li::before{content:"·";margin-right:4px;color:var(--line-2)}
@@ -279,17 +326,17 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .chipbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:5px}
 .chip{
   display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
-  padding:4px 9px;border-radius:5px;background:var(--primary-tint);color:var(--primary);border:1px solid #BBD2EE;
+  padding:4px 9px;border-radius:5px;background:var(--primary-tint);color:var(--primary-ink);border:1px solid #f0c99a;
 }
 .chip .x{font-family:var(--mono);font-size:9.5px;opacity:.7;font-weight:400}
-.chip.own{background:var(--good-tint);color:var(--good);border-color:#B7DCC9}
+.chip.own{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
 .fl2 .auto{margin-left:2px}
 .chipbar .to{color:var(--faint);font-size:11px;font-family:var(--mono)}
 .chip.gh{background:#fff;color:var(--muted);border-color:var(--line-2);border-style:dashed}
-.chip.gh:hover{border-style:solid;color:var(--primary);border-color:var(--primary);cursor:pointer}
+.chip.gh:hover{border-style:solid;color:var(--primary-ink);border-color:var(--primary-ink);cursor:pointer}
 .conf{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:2px}
 .att{border:1px dashed var(--line-2);border-radius:5px;padding:11px;text-align:center;font-size:11.5px;color:var(--faint);margin-top:4px}
-.att:hover{border-color:var(--primary);color:var(--primary);cursor:pointer}
+.att:hover{border-color:var(--primary-ink);color:var(--primary-ink);cursor:pointer}
 
 .side{position:sticky;top:68px}
 .dp{border:1px solid var(--line);border-radius:5px;padding:10px;margin-bottom:7px;background:#fff}
@@ -299,8 +346,8 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .dpm{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:4px}
 .dpa{margin-top:7px;display:flex;gap:5px}
 .mini{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--muted)}
-.mini:hover{border-color:var(--primary);color:var(--primary)}
-.mini.p{background:var(--primary);border-color:var(--primary);color:#fff}
+.mini:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
+.mini.p{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
 
 /* screening — radar field grid */
 .rg2{display:grid;grid-template-columns:118px 1fr;border-top:1px solid var(--line)}
@@ -313,11 +360,11 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .rv{padding:8px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;min-height:38px}
 .rv select,.rv input[type=text]{max-width:280px;padding:5px 8px;font-size:12.5px}
 .rv .ro{color:var(--ink-2);font-family:var(--mono);font-size:12px}
-.auto{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--good-tint);color:var(--good);border:1px solid #B7DCC9;white-space:nowrap}
+.auto{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--good-tint);color:var(--good);border:1px solid #b9dcc9;white-space:nowrap}
 .qt{background:var(--surface-2);border-left:2px solid var(--line-2);padding:8px 11px;font-size:12.5px;color:var(--ink-2);border-radius:0 4px 4px 0;line-height:1.55}
 
 .bk{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;background:#fff;margin-bottom:11px}
-.bk:hover{border-color:var(--primary);color:var(--primary)}
+.bk:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 .bk .a{font-size:12px;line-height:1}
 
 .tl{color:var(--link);font-weight:500;text-decoration:none;cursor:pointer}
@@ -346,16 +393,16 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 /* comment box */
 .cmb{border-top:2px solid var(--line-2);padding:14px 15px;background:var(--surface)}
 .cmb .row{display:flex;gap:9px;align-items:flex-start}
-.cmb .av2{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:2px}
+.cmb .av2{width:26px;height:26px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:2px}
 .cmb .fld{flex:1}
 .cmb textarea{width:100%;min-height:62px;border:1px solid var(--line-2);border-radius:6px;background:#fff;padding:9px 11px;font-family:inherit;font-size:13px;line-height:1.6;color:var(--ink);resize:vertical}
-.cmb textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.cmb textarea:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
 .cmb .bar2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
 .cmb .nt2{font-size:11px;color:var(--faint);margin-left:auto;font-family:var(--mono)}
 .cmb .atc{font-size:11.5px;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px;padding:4px 9px;background:#fff}
-.cmb .atc:hover{border-color:var(--primary);color:var(--primary)}
+.cmb .atc:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 
-.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--amber-tint);color:var(--amber);border:1px solid #EAD4AE;margin-left:4px;vertical-align:1px}
+.pill2{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--primary-tint);color:var(--primary-ink);border:1px solid #f0c99a;margin-left:4px;vertical-align:1px}
 .deriv b{color:var(--ink)}
 
 .nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
@@ -385,10 +432,10 @@ mark{background:#FDECC8;color:var(--ink);border-radius:2px;padding:0 1px}
 .sbig{position:relative;margin-bottom:12px}
 /* 뒤에 오는 input[type=text] 규칙에 덮이지 않도록 선택자를 강하게 */
 .sbig input[type=text]{width:100%;border:1px solid var(--line-2);border-radius:7px;background:#fff;padding:11px 13px 11px 60px;font-family:var(--sans);font-size:15px;color:var(--ink)}
-.sbig input[type=text]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+.sbig input[type=text]:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
 .sbig .sch{
   position:absolute;left:13px;top:50%;transform:translateY(-50%);
-  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary);pointer-events:none;
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink);pointer-events:none;
 }
 .res{border-bottom:1px solid var(--line);padding:13px 15px}
 .res:last-child{border-bottom:none}
@@ -408,14 +455,14 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
 th{text-align:left;font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.04em;padding:8px 11px;border-bottom:1px solid var(--line-2);background:var(--surface-2)}
 td{padding:9px 11px;border-bottom:1px solid var(--line);color:var(--ink-2)}
 tbody tr:hover{background:var(--surface-2)}
-td.tc{font-family:var(--mono);font-size:11px;color:var(--primary);font-weight:700}
+td.tc{font-family:var(--mono);font-size:11px;color:var(--primary-ink);font-weight:700}
 td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .gr{font-family:var(--mono);font-weight:700}
-.ga{color:var(--good)} .gc{color:var(--amber)} .gd{color:var(--signal)}
+.ga{color:var(--good)} .gc{color:var(--primary-ink)} .gd{color:var(--signal)}
 
 .filt{display:flex;gap:5px;flex-wrap:wrap}
 .filt button{border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
-.filt button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.filt button.on{background:var(--dw-gray);border-color:var(--dw-gray);color:#fff}
 
 /* ── 기준정보 — 분류축 · 값 관리 ──
    칩에 버튼을 욱여넣으면 '배정축 배지'와 '배정축 지정 버튼'이 구분이 안 된다.
@@ -425,7 +472,7 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
   border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:6px;
 }
 .mrow:last-child{margin-bottom:0}
-.mrow.is{border-color:#B7DCC9;background:var(--good-tint)}
+.mrow.is{border-color:#b9dcc9;background:var(--good-tint)}
 .mrow .nm{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
 .mrow .meta{font-size:11px;color:var(--faint);font-family:var(--mono)}
 .mrow .sp{flex:1}
@@ -438,7 +485,7 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
   border:1px solid var(--line-2);background:#fff;border-radius:6px;height:28px;padding:0 9px;
   display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:var(--muted);
 }
-.mact button:hover{border-color:var(--primary);color:var(--primary)}
+.mact button:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 .mact button.dn:hover{border-color:var(--signal);color:var(--signal);background:var(--signal-tint)}
 
 /* 값 칩 — 중립. 색은 의미가 있을 때만 쓴다(사용 중 = 파랑) */
@@ -449,15 +496,15 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 }
 .vchip .vn{font-weight:600;color:var(--ink);font-size:12.5px;padding:2px 0;border-radius:4px}
 button.vn{border:none;background:none}
-button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
+button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underline-offset:2px}
 .vchip .vu{font-size:10px;color:var(--faint);font-family:var(--mono)}
-.vchip .vu.on{color:var(--primary);font-weight:700}
+.vchip .vu.on{color:var(--primary-ink);font-weight:700}
 .vchip button{
   border:1px solid transparent;background:transparent;border-radius:5px;width:24px;height:24px;
   display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--faint);flex:none;
 }
 .vchip button:hover{background:var(--surface-2);border-color:var(--line-2);color:var(--ink)}
-.vchip button.dn:hover{background:var(--signal-tint);border-color:#F2C2BD;color:var(--signal)}
+.vchip button.dn:hover{background:var(--signal-tint);border-color:#f0bcc1;color:var(--signal)}
 .maddrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .maddrow input{max-width:260px;font-size:13px;padding:7px 10px}
 .maddrow .hint{margin:0}
@@ -481,7 +528,7 @@ button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-of
 .prt{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.45}
 .prm{font-size:10.5px;color:var(--faint);margin-top:4px;font-family:var(--mono)}
 .hp{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.hp.w{background:var(--signal-tint);border-color:#F2C2BD;color:var(--signal)}
+.hp.w{background:var(--signal-tint);border-color:#f0bcc1;color:var(--signal)}
 
 /* kpi */
 .kp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px}
@@ -491,7 +538,7 @@ button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-of
 .k .kn{font-size:10px;color:var(--faint);margin-top:2px;line-height:1.45}
 .bar{height:4px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px}
 .bar i{display:block;height:100%;background:var(--primary);border-radius:3px}
-.bar i.lo{background:var(--signal)} .bar i.md{background:var(--amber)}
+.bar i.lo{background:var(--signal)} .bar i.md{background:var(--primary-ink)}
 
 /* catalog */
 .cat{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -508,7 +555,7 @@ button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-of
 /* modal */
 .mk{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;background:rgba(12,20,32,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
 .mk.on{display:flex}
-.md{background:#fff;border-radius:var(--r-card);max-width:500px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.18);max-height:90vh;overflow:auto}
+.md{background:#fff;border-radius:var(--r-card);max-width:500px;width:100%;box-shadow:var(--ele-md);max-height:90vh;overflow:auto}
 .mdh{padding:14px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .mdh h3{font-size:14.5px;font-weight:800;letter-spacing:-.02em}
 .mdb{padding:17px}
@@ -516,11 +563,11 @@ button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-of
 label.fl{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:11px 0 4px}
 label.fl:first-child{margin-top:0}
 input[type=text],input[type=date],select{width:100%;border:1px solid var(--line-3);border-radius:var(--r-field);padding:8px 10px;font-family:inherit;font-size:13px;color:var(--ink);background:#fff}
-input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
-.wb{background:var(--signal-tint);border:1px solid #F2C2BD;border-radius:5px;padding:9px 11px;font-size:11.5px;color:#8A2318;line-height:1.5}
+input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
+.wb{background:var(--signal-tint);border:1px solid #f0bcc1;border-radius:5px;padding:9px 11px;font-size:11.5px;color:#8A2318;line-height:1.5}
 .wb b{font-weight:800}
 
-.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,70px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transition:.3s ease;z-index:60;max-width:90vw}
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,70px);background:var(--dw-gray);color:#fff;padding:11px 18px;border-radius:12px;font-size:12.5px;font-weight:600;box-shadow:var(--ele-md);opacity:0;transition:.3s ease;z-index:60;max-width:90vw}
 .toast.on{transform:translate(-50%,0);opacity:1}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -824,7 +871,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         <thead><tr><th>코드</th><th>업무 유형</th><th>정의</th><th>계획</th><th>기본 기한</th><th>에스컬레이션</th><th>생성</th></tr></thead>
         <tbody>
           <tr><td class="tc">SAF</td><td><b>안전·보안</b></td><td>인명·자산에 즉시 위험</td><td class="d" style="color:var(--signal)">2시간</td><td class="d">24시간</td><td class="d" style="color:var(--signal)">팀장 + 실장</td><td class="d">요청자</td></tr>
-          <tr><td class="tc">OUT</td><td><b>장애·중단</b></td><td>업무가 지금 멈춰 있음</td><td class="d" style="color:var(--signal)">4시간</td><td class="d">24시간</td><td class="d" style="color:var(--amber)">팀장</td><td class="d">요청자</td></tr>
+          <tr><td class="tc">OUT</td><td><b>장애·중단</b></td><td>업무가 지금 멈춰 있음</td><td class="d" style="color:var(--signal)">4시간</td><td class="d">24시간</td><td class="d" style="color:var(--primary-ink)">팀장</td><td class="d">요청자</td></tr>
           <tr><td class="tc">DEF</td><td><b>고장·수리</b></td><td>작동하나 결함</td><td class="d">익일 18시</td><td class="d">3일</td><td class="d">—</td><td class="d">요청자</td></tr>
           <tr><td class="tc">REQ</td><td><b>신규 요청</b></td><td>없던 것을 제공</td><td class="d">익일 18시</td><td class="d">계획 등록 시 확정</td><td class="d">—</td><td class="d">요청자</td></tr>
           <tr><td class="tc">CHG</td><td><b>변경 요청</b></td><td>기존 것을 변경</td><td class="d">익일 18시</td><td class="d">계획 등록 시 확정</td><td class="d">—</td><td class="d">요청자</td></tr>
@@ -1126,7 +1173,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   var ST={
     open  :{l:'접수',      c:'b-open',   i:0},   // 담당자 미확인 — 공은 담당자에게
     prog  :{l:'진행',      c:'b-prog',   i:1},
-    nego  :{l:'지연 알림 · 요청자 확인 대기', c:'b-slip', i:1},
+    // 요청자 확인 대기 = 요청자 차례라 주황. (예전엔 빨강이었는데 지연'예고'는 아직 사고가 아니다)
+    nego  :{l:'지연 알림 · 요청자 확인 대기', c:'b-wait', i:1},
     slip  :{l:'지연',      c:'b-slip',   i:1},
     done  :{l:'완료', c:'b-verify', i:2},
     closed:{l:'종결',      c:'b-closed', i:3},
@@ -1283,10 +1331,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     refresh();
     var p=$('#pipe');
     $('#pipeBody').innerHTML='<div class="bx cm" style="margin-top:0">'+
-      '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--primary);letter-spacing:-.03em">dw://'+esc2(no)+'</div>'+
+      '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--primary-ink);letter-spacing:-.03em">dw://'+esc2(no)+'</div>'+
       '<div style="font-size:13px;font-weight:700;margin-top:3px">접수되었습니다</div>'+
       '<dl class="f" style="margin-top:9px"><dt>담당자</dt><dd>'+esc2(asLabel(d0,r.nm))+' · '+esc2(TEAMORG[d0]||d0)+
-        (isGroup(d0,r.nm)?'<br><span style="color:var(--primary);font-size:11px">근무조 — 조원 전원에게 메일이 갑니다</span>':'')+'</dd></dl>'+
+        (isGroup(d0,r.nm)?'<br><span style="color:var(--primary-ink);font-size:11px">근무조 — 조원 전원에게 메일이 갑니다</span>':'')+'</dd></dl>'+
       '<dl class="f"><dt>요청 기한</dt><dd>'+esc2(want)+' · 담당자가 조정할 수 있음</dd></dl>'+
       '<dl class="f"><dt>기한 확정 마감</dt><dd>'+esc2(fx)+' · 이후 변경은 요청자 확인 필요</dd></dl>'+
       '<div style="margin-top:11px;display:flex;gap:6px">'+
@@ -1374,7 +1422,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var num=q.replace(/^dw:\/\//,'');
     var _db=byPeriod(DB());
     var direct=q?_db.filter(function(x){return x.no===num||x.no.split('-')[1]===num}):[];
-    $('#hit').innerHTML = direct.length ? '<div class="card" style="margin-bottom:12px;border-color:var(--primary)"><div class="res" data-no="'+direct[0].no+'"><div class="resh"><div class="rest">'+esc(direct[0].t)+'</div><span class="badge '+direct[0].stc+'">'+direct[0].st+'</span></div><div class="resm"><span style="color:var(--primary);font-weight:700">dw://'+direct[0].no+'</span><span class="sep">·</span><span>번호 일치 — 바로가기</span></div></div></div>' : '';
+    $('#hit').innerHTML = direct.length ? '<div class="card" style="margin-bottom:12px;border-color:var(--primary-ink)"><div class="res" data-no="'+direct[0].no+'"><div class="resh"><div class="rest">'+esc(direct[0].t)+'</div><span class="badge '+direct[0].stc+'">'+direct[0].st+'</span></div><div class="resm"><span style="color:var(--primary-ink);font-weight:700">dw://'+direct[0].no+'</span><span class="sep">·</span><span>번호 일치 — 바로가기</span></div></div></div>' : '';
 
     findFilt(_db);
     var r = q ? _db.filter(function(x){
@@ -1388,9 +1436,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     $('#rl').innerHTML = r.map(function(x){
       if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
       var s=snip(x.b,q), m=[];
-      m.push('<span style="color:var(--primary);font-weight:700">dw://'+x.no+'</span>');
+      m.push('<span style="color:var(--primary-ink);font-weight:700">dw://'+x.no+'</span>');
       x.av.forEach(function(v){m.push(esc(v))}); m.push(esc(x.o)); m.push(x.d); m.push('의견 '+x.cm);
-      if(x.jn>1) m.push('<span style="color:var(--primary)">회람 '+(x.jn-1)+'명</span>');
+      if(x.jn>1) m.push('<span style="color:var(--primary-ink)">회람 '+(x.jn-1)+'명</span>');
       return '<div class="res" data-no="'+x.no+'">'+
         '<div class="resh"><div class="rest">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
         '<div class="resm">'+m.join('<span class="sep">·</span>')+'</div>'+
@@ -1591,7 +1639,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       $('#dvOwn').innerHTML = r.pending
         ? '담당 <b>미배정</b> · <span style="color:var(--signal)">'+esc2(r.why)+'</span>'
         : '담당 <b style="color:var(--good)">'+esc2(r.nm)+'</b>'+
-          (isGroup(d,r.nm)?' <span style="color:var(--primary)">근무조 · '+esc2(membersOf(d,r.nm).join('·'))+' 전원</span>':'')+
+          (isGroup(d,r.nm)?' <span style="color:var(--primary-ink)">근무조 · '+esc2(membersOf(d,r.nm).join('·'))+' 전원</span>':'')+
           ' · 업무 '+r.load+'건';
       $('#deriv').style.display='block';
     } else $('#deriv').style.display='none';
@@ -1619,14 +1667,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     m.push('dw://'+t.no); if(attrVals(t).length) m.push(attrVals(t).join(' · '));
     m.push(forRole==='own' ? '요청자 '+t.rq.nm+(t.jn.length?' · 회람 '+t.jn.length+'명':'') : '담당 '+t.as+' · '+t.asOrg);
     if(t.parent) m.push('원 요청 dw://'+t.parent);
-    if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--amber)">'+t.fixBy+'</b>');
+    if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--primary-ink)">'+t.fixBy+'</b>');
     if(t.state==='closed') m.push('종결 '+t.resolved+(t.ev2?' · 평가 '+t.ev2.g:''));
     else if(t.state==='done') m.push('완료 '+t.resolved+' · 요청자 확인 대기');
     else if(t.due) m.push('기한 '+t.due);
     // 지연이 가장 급한 신호 — 미열람·완료보다 위
     var bd = (t.state==='slip')?'border-color:var(--signal);border-width:2px'
            : t.unseen?'border-color:var(--signal);border-width:2px'
-           : (t.state==='done'||t.state==='nego')?'border-color:var(--amber);border-width:2px':'';
+           : (t.state==='done'||t.state==='nego')?'border-color:var(--primary-ink);border-width:2px':'';
     // 카드 전체가 클릭 대상 — 전체 요청 화면과 동일하게
     return '<div class="pr" data-o="'+t.no+'" style="cursor:pointer;'+bd+'">'+
       '<div class="prh"><div class="prt">'+esc2(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
@@ -1995,7 +2043,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       DEPT.map(function(d){
         var c=Object.keys(T).filter(function(n){return T[n].dept===d}).length;
         var rd=deptReady(d);
-        return '<span class="vchip"'+(rd?' style="border-color:#B7DCC9;background:var(--good-tint)"':' style="border-style:dashed"')+'>'+
+        return '<span class="vchip"'+(rd?' style="border-color:#b9dcc9;background:var(--good-tint)"':' style="border-style:dashed"')+'>'+
           '<span class="vn"'+(rd?'':' style="color:var(--muted)"')+'>'+esc2(d)+'</span>'+
           '<span class="vu'+(rd&&c?' on':'')+'" style="padding-right:6px">'+(rd?'요청 '+c:'준비 중')+'</span></span>';
       }).join('')+'</div>'+
@@ -2022,7 +2070,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       (names.length?names.map(function(g){
         var m=G[g], c=load(g);
         return '<div class="mrow" style="align-items:flex-start;flex-wrap:wrap">'+
-          '<span class="axbadge" style="background:var(--primary)">근무조</span>'+
+          '<span class="axbadge" style="background:var(--primary);color:var(--on-primary)">근무조</span>'+
           '<span class="nm">'+esc2(g)+'</span>'+
           '<span class="meta">조원 '+m.length+'명'+(c?' · 업무 '+c:'')+'</span>'+
           '<span class="sp"></span>'+
@@ -2182,8 +2230,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
           return Object.keys(R).some(function(k){return R[k].indexOf(g)>=0});
         });
         var orphan=!used&&c>0;
-        return '<span class="chip'+(orphan?'"  style="background:var(--signal-tint);color:var(--signal);border-color:#F2C2BD':(used?'':' gh'))+'">'+esc2(n)+
-          (gs.length?'<span class="x" style="color:var(--primary)">'+esc2(gs.join('·'))+'</span>':'')+
+        return '<span class="chip'+(orphan?'"  style="background:var(--signal-tint);color:var(--signal);border-color:#f0bcc1':(used?'':' gh'))+'">'+esc2(n)+
+          (gs.length?'<span class="x" style="color:var(--primary-ink)">'+esc2(gs.join('·'))+'</span>':'')+
           '<span class="x">'+(orphan?'업무 '+c+' · 이관 필요':(used?'업무 '+nOpen(n):'미지정'))+'</span></span>';
       }).join(''):'<span class="hint">'+esc2(RD)+' 팀원이 없습니다 — 인사 API 연동 시 자동으로 채워집니다</span>')+'</div>'+
       '<div class="hint" style="margin-top:9px">퇴사자는 인사 API에서 빠지면 이 명부에서 사라집니다. '+
@@ -2601,10 +2649,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(e.t==='negoN') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">새 기한 거절</span></div>'+
       '<div class="bx hd"><div class="evx">제안된 <b>'+esc2(e.to)+'</b>을(를) 거절 · 기존 기한 <b>'+esc2(e.keep)+'</b> 유지</div>'+
       '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--amber)">담당자 메일 발송 · 미완료 시 지연 처리</div></div></div></div>';
+      '<div class="ft" style="color:var(--primary-ink)">담당자 메일 발송 · 미완료 시 지연 처리</div></div></div></div>';
     if(e.t==='reopen') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">재요청</span></div>'+
       '<div class="bx hd"><dl class="f"><dt>부족한 점</dt><dd>'+esc2(e.why)+'</dd></dl>'+
-      '<div class="ft" style="color:var(--amber)">진행 상태로 복귀 · 담당자 메일 발송</div></div></div></div>';
+      '<div class="ft" style="color:var(--primary-ink)">진행 상태로 복귀 · 담당자 메일 발송</div></div></div></div>';
     if(e.t==='reject') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">반려</span></div>'+
       '<div class="bx sl"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
       '<dl class="f"><dt>설명</dt><dd>'+esc2(e.ex)+'</dd></dl>'+
@@ -2738,16 +2786,16 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     CUR=no;
     if(t.unseen&&cur==='own'){t.unseen=false;t.ev.push({t:'sys',at:now(),x:'담당자 최초 열람'});save();}
     var si=ST[t.state].i;
-    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b> · '+esc2(t.rq.org)+'</span>'+(t.jn.length?'<span class="kv">회람 <b style="color:var(--primary)">'+t.jn.length+'명</b></span>':'')+
+    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b> · '+esc2(t.rq.org)+'</span>'+(t.jn.length?'<span class="kv">회람 <b style="color:var(--primary-ink)">'+t.jn.length+'명</b></span>':'')+
       '<span class="kv">담당자 <b>'+esc2(t.as)+'</b>'+
-        (isGroup(t.dept,t.as)?' <span style="color:var(--primary);font-weight:600">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':'')+
+        (isGroup(t.dept,t.as)?' <span style="color:var(--primary-ink);font-weight:600">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':'')+
         ' · '+esc2(t.asOrg)+'</span>'+
       '<span class="kv">부서 <b>'+esc2(t.dept)+'</b></span>'+
       Object.keys(t.attrs||{}).map(function(k){return '<span class="kv">'+esc2(k)+' <b>'+esc2(t.attrs[k])+'</b></span>'}).join('')+
       '<span class="kv">접수 <b>'+esc2(t.open)+'</b></span>';
-    if(t.parent) meta+='<span class="kv" style="border-color:#F2C2BD;background:var(--signal-tint)">원 요청 <a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a></span>';
-    if(t.due) meta+='<span class="kv">기한 <b>'+esc2(t.due)+'</b>'+(t.dueOrig&&t.due!==t.dueOrig?' <span style="color:var(--amber)">(당초 '+esc2(t.dueOrig)+')</span>':'')+'</span>';
-    if(t.fixBy) meta+='<span class="kv" style="border-color:#EAD4AE;background:var(--amber-tint)">기한 확정 마감 <b style="color:var(--amber)">'+esc2(t.fixBy)+'</b></span>';
+    if(t.parent) meta+='<span class="kv" style="border-color:#f0bcc1;background:var(--signal-tint)">원 요청 <a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a></span>';
+    if(t.due) meta+='<span class="kv">기한 <b>'+esc2(t.due)+'</b>'+(t.dueOrig&&t.due!==t.dueOrig?' <span style="color:var(--primary-ink)">(당초 '+esc2(t.dueOrig)+')</span>':'')+'</span>';
+    if(t.fixBy) meta+='<span class="kv" style="border-color:#f0c99a;background:var(--primary-tint)">기한 확정 마감 <b style="color:var(--primary-ink)">'+esc2(t.fixBy)+'</b></span>';
     if(t.want) meta+='<span class="kv">희망 완료일 <b>'+esc2(t.want)+'</b></span>';
     if(t.att) meta+='<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>';
 
