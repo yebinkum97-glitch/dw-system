@@ -1262,7 +1262,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   <!-- DASH -->
   <section class="screen" id="s-dash">
-    <div class="head"><div><h1>대시보드</h1><div class="sub" id="dashSub">전체 부서 기준</div></div>
+    <!-- 부제 없음 — 무슨 기준으로 보고 있는지는 바로 옆 필터가 이미 말한다 -->
+    <div class="head"><div><h1>대시보드</h1></div>
       <div class="filt" id="dashBar" style="align-items:center"></div></div>
     <div class="kp" id="kpi"></div>
 
@@ -2035,7 +2036,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
   function deptFilt(id,cur2){
-    return '<select id="'+id+'" class="fsel"><option value="all">부서 전체</option>'+
+    // '전체 부서' — '전체 기간'과 같은 어순. 예전엔 여기만 '부서 전체'라 대시보드의
+    // '전체 부서'와 두 말이 됐고, 사전에 둘 다 넣어 덮어두고 있었다.
+    return '<select id="'+id+'" class="fsel"><option value="all">전체 부서</option>'+
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
   }
 
@@ -2131,8 +2134,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var all=byPeriod(allT());
     if($('#ledBar')){
       $('#ledBar').innerHTML=periodSel('l')+
-        '<select id="ledDept" style="width:auto;min-width:118px;font-size:12px;font-weight:700;padding:4px 7px">'+
-          '<option value="all">부서 전체</option>'+
+        '<select id="ledDept" class="fsel">'+
+          '<option value="all">전체 부서</option>'+
           DEPT.map(function(x){return '<option value="'+x+'"'+(LD===x?' selected':'')+'>'+x+'</option>'}).join('')+
         '</select>'+
         '<button class="btn sm" style="border-radius:5px;margin-left:6px">엑셀 내려받기</button>';
@@ -2367,7 +2370,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // 부서 선택기 — 실제로는 로그인 사용자의 권한(scope)이 목록을 결정한다.
   // 부서 관리자면 자기 부서만, 마스터면 전체. 지금은 데모라 전부 보인다.
   function deptSel(id,cur){
-    return '<select id="'+id+'" style="width:auto;min-width:132px;font-size:12px;font-weight:700;padding:4px 7px">'+
+    return '<select id="'+id+'" class="fsel">'+
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur===x?' selected':'')+'>'+esc2(x)+(deptReady(x)?'':' (준비 중)')+'</option>'}).join('')+
       '</select>';
   }
@@ -2569,7 +2572,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var all=byPeriod(allT());
     if($('#dashBar')){
       $('#dashBar').innerHTML=periodSel('d')+
-        '<select id="dashDept" style="width:auto;min-width:132px;font-size:12px;font-weight:700;padding:4px 7px">'+
+        '<select id="dashDept" class="fsel">'+
           '<option value="all">전체 부서</option>'+
           DEPT.map(function(x){return '<option value="'+x+'"'+(DD===x?' selected':'')+'>'+x+'</option>'}).join('')+
         '</select>';
@@ -2577,7 +2580,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       wirePeriod();
     }
     var scoped = DD==='all' ? all : all.filter(function(t){return (t.dept||'공간기획')===DD});
-    if($('#dashSub')) $('#dashSub').textContent=(DD==='all'?'전체 부서':DD)+' 기준';
 
     var closed=scoped.filter(function(t){return t.state==='closed'&&t.ev2});
     var onTime=closed.filter(function(t){return !t.ev2.late}).length;
@@ -3223,7 +3225,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '접수':'Received','진행':'In progress','지연':'Overdue','완료':'Completed','종결':'Closed',
     '종결 대기':'Awaiting closure','미열람':'Unread','공개':'Public',
     '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester',
-    '부서 전체':'All departments','전체 부서':'All departments','전체 기간':'All time',
+    '전체 부서':'All departments','전체 기간':'All time',
     '끝난 요청 포함':'Include finished','취소':'Cancelled','반려':'Rejected','오늘':'Today',
     '최근 7일':'Last 7 days','최근 30일':'Last 30 days','최근 90일':'Last 90 days','최근 1년':'Last year','직접 지정':'Custom range',
     '요청이 없습니다':'No requests','배정된 요청이 없습니다':'No requests assigned',
@@ -3264,7 +3266,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '진행 상태':'Status','평가':'Grade','요청에서 자동 생성':'Generated from request data',
     '엑셀 내려받기':'Export to Excel','반복 요청 상위':'Most repeated requests',
     '업무 유형별 접수 집계 · 자동':'Counted by work type','반복 요청 내용':'Pattern','누적 처리시간':'Total time','판단':'Assessment',
-    '전체 부서 기준':'All departments','부서별 처리 현황':'By department',
+    '부서별 처리 현황':'By department',
     '요청 데이터 기준 자동 산출':'Calculated from request data',
     '월별 접수 · 종결 건수':'Requests received and closed by month','최근 6개월':'Last 6 months',
     '부서':'Department','기한 준수율':'On-time rate','지연율':'Overdue rate','평균 등급':'Avg. grade',
