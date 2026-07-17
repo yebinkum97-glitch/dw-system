@@ -534,9 +534,15 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .idle-k{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--faint);
         background:var(--surface);border:1px solid var(--line);border-radius:var(--r-field);padding:7px 12px}
 /* 필터 드롭다운 — 상태 6개를 버튼으로 깔면 줄이 길어져서 셀렉트로 통일 */
-.fsel{width:auto;min-width:110px;font-size:12.5px;font-weight:600;padding:6px 9px;
-      border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff}
-.fsel:hover{border-color:var(--line-3)}
+/* select 와 input[type=date] 는 뒤쪽 전역 규칙(padding:8px 10px)에 덮이므로
+   선택자를 같은 수준으로 맞춰서 높이를 일치시킨다 */
+select.fsel, input.fsel[type=date]{
+  width:auto;min-width:110px;height:32px;line-height:normal;font-size:12.5px;font-weight:600;padding:0 9px;
+  border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff;
+}
+/* date 는 내부 스피너 때문에 같은 padding 이어도 2px 더 커진다 → 높이를 못 박아 맞춘다 */
+input.fsel[type=date]{min-width:0;font-family:var(--mono);font-weight:500}
+select.fsel:hover, input.fsel[type=date]:hover{border-color:var(--line-3)}
 .filt button{border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
 .filt button.on{background:var(--dw-gray);border-color:var(--dw-gray);color:#fff}
 
@@ -1481,16 +1487,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       })()};
   }).sort(newestFirst); }
 
-  // 상태 필터 그룹 — 목록(내 요청·내 업무)과 전역 검색이 공유한다
-  var FQ='all', FD='all';
-  var FGROUP={
-    all:   {l:'전체', f:function(){return true}},
-    open:  {l:'접수', f:function(x){return x.state==='open'}},
-    prog:  {l:'진행', f:function(x){return x.state==='prog'||x.state==='nego'}},
-    slip:  {l:'지연', f:function(x){return x.state==='slip'}},
-    done:  {l:null, f:function(x){return x.state==='done'}},   // 라벨은 stl()이 역할별로 결정
-    closed:{l:'종결', f:function(x){return x.state==='closed'}}
-  };
+
 
   // ── 전역 검색 ──
   // 요청 찾기는 화면이 아니라 도구다. 별도 탭으로 두면 "찾으려고 페이지를 옮기는"
@@ -1761,7 +1758,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     m.push(forRole==='own' ? '요청자 '+t.rq.nm+(t.jn.length?' · 회람 '+t.jn.length+'명':'') : '담당 '+t.as+' · '+t.asOrg);
     if(t.parent) m.push('원 요청 dw://'+t.parent);
     if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--primary-ink)">'+t.fixBy+'</b>');
-    if(t.state==='closed') m.push('종결 '+t.resolved+(t.ev2?' · 평가 '+t.ev2.g:''));
+    // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
+    if(t.state==='closed') m.push('종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:''));
     else if(t.state==='done') m.push('완료 '+t.resolved+' · 요청자 확인 대기');
     else if(t.due) m.push('기한 '+t.due);
     // 지연이 가장 급한 신호 — 미열람·완료보다 위
@@ -1794,15 +1792,16 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     return d>=addD(today(),-parseInt(PD.k,10));
   }
   function byPeriod(list){ return list.filter(inPeriod) }
+  // 기간 — 다른 필터와 같은 .fsel 을 쓴다(예전엔 인라인 스타일이라 혼자 달라 보였다)
   function periodSel(id){
-    return '<select class="pdsel" data-pd="'+id+'" style="width:auto;min-width:112px;font-size:12px;font-weight:700;padding:4px 7px">'+
-      PDOPT.map(function(o){return '<option value="'+o[0]+'"'+(PD.k===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'+
+    return '<select class="pdsel fsel" data-pd="'+id+'">'+
+      PDOPT.map(function(o){return '<option value="'+o[0]+'"'+(PD.k===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
+      '</select>'+
       (PD.k==='custom'
-        ? '<input type="date" class="pdfrom" value="'+PD.from+'" style="width:auto;font-size:12px;padding:4px 6px">'+
+        ? '<input type="date" class="pdfrom fsel" value="'+PD.from+'">'+
           '<span style="color:var(--faint);font-size:11px">~</span>'+
-          '<input type="date" class="pdto" value="'+PD.to+'" style="width:auto;font-size:12px;padding:4px 6px">'
-        : '')+
-      '<span style="width:1px;height:18px;background:var(--line-2);flex:none;margin:0 3px"></span>';
+          '<input type="date" class="pdto fsel" value="'+PD.to+'">'
+        : '');
   }
   function wirePeriod(){
     $$('.pdsel').forEach(function(s){ s.onchange=function(){ PD.k=s.value; refresh(); }; });
@@ -1811,7 +1810,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
 
   // 내 요청 / 내 업무 상태 필터 — 전체 요청과 같은 그룹을 쓴다
-  var MQ='all', WQ='all';
   // 목록별 검색어 — 종결 건이 쌓이면 목록만으로는 못 찾는다
   var MS='', WS='', CS='';
   function hay(t){
@@ -1833,14 +1831,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(el.value){ el.focus(); try{ el.setSelectionRange(el.value.length,el.value.length) }catch(e){} }
   }
   var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
-  // 상태가 6개라 버튼으로 깔면 줄이 길어지고 폰에서 두 줄로 접힌다 → 드롭다운.
-  function stateSel(id,cur2){
-    return '<select id="'+id+'" class="fsel">'+
-      Object.keys(FGROUP).map(function(k){
-        var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
-        return '<option value="'+k+'"'+(cur2===k?' selected':'')+'>'+lb+'</option>';
-      }).join('')+'</select>';
-  }
   function deptFilt(id,cur2){
     return '<select id="'+id+'" class="fsel"><option value="all">부서 전체</option>'+
       DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
@@ -1850,14 +1840,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     // 나(ME)에게 배정된 요청. 근무조에 배정된 건은 그 조원 전원의 업무다.
     // 로그인 연동 시 ME는 로그인 사용자로 대체된다.
     var mine=byPeriod(allT().filter(function(t){return isMine(t,ME)}));
-    var list=bySearch(mine.filter(FGROUP[WQ].f), WS);
+    var list=bySearch(mine, WS);
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
      searchBox('wq',WS)+
-     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateSel('wState',WQ)+'</div>'+
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+'</div>'+
      '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
        (list.length?list.map(function(t){return row(t,'own')}).join(''):empty(mine.length?'해당 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>';
-    if($('#wState')) $('#wState').onchange=function(){WQ=this.value;renderWork()};
+
     if($('#wq')) $('#wq').oninput=function(){WS=this.value;renderWork()};
     wirePeriod(); wire(); tr(); keepFocus('wq');
   }
@@ -1874,7 +1864,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     });
     var own=byPeriod(base);
     if(MD2!=='all') own=own.filter(function(t){return (t.dept||'공간기획')===MD2});
-    var list=bySearch(own.filter(FGROUP[MQ].f), MS);
+    var list=bySearch(own, MS);
     var none = MSC==='cc' ? '회람 중인 요청이 없습니다' : '요청이 없습니다';
     $('#s-mine').innerHTML=
      '<div class="head"><div><h1>내 요청</h1></div></div>'+
@@ -1884,13 +1874,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
          '<option value="mine"'+(MSC==='mine'?' selected':'')+'>내가 낸 요청</option>'+
          '<option value="cc"'+(MSC==='cc'?' selected':'')+'>회람 중인 요청</option>'+
        '</select>'+
-       periodSel('m')+deptFilt('mDept',MD2)+stateSel('mState',MQ)+
+       periodSel('m')+deptFilt('mDept',MD2)+
      '</div>'+
      '<div class="card"><div class="cb">'+
        (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':none))+'</div></div>';
     if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;renderMine()};
     if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;renderMine()};
-    if($('#mState')) $('#mState').onchange=function(){MQ=this.value;renderMine()};
+
     if($('#mq')) $('#mq').oninput=function(){MS=this.value;renderMine()};
     wirePeriod(); wire(); tr(); keepFocus('mq');
   }
