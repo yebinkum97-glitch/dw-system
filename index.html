@@ -333,6 +333,15 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 }
 .seclab .n{font-size:10.5px;font-weight:500;color:var(--faint);letter-spacing:0}
 .acts .seclab{width:100%;margin-bottom:2px}
+/* 상태 설명 — 예전엔 disabled 버튼으로 상태를 보여줬다. 눌리지도 않는 걸 버튼처럼 둘 이유가 없다. */
+.ronote{font-size:12px;color:var(--muted);letter-spacing:-.01em;align-self:center;line-height:1.5}
+.acts .sp{flex:1}
+/* 지연 알림 횟수 — 버튼 라벨에 (0/3)을 붙이면 길어져서 배지로 뺀다 */
+.cnt2{
+  font-family:var(--mono);font-size:10px;font-weight:700;color:var(--faint);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:0 5px;margin-left:5px;
+}
+.btn:disabled .cnt2{opacity:.6}
 
 /* comment box */
 .cmb{border-top:2px solid var(--line-2);padding:14px 15px;background:var(--surface)}
@@ -438,7 +447,9 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
   display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:#fff;
   border-radius:8px;padding:4px 4px 4px 10px;font-size:12.5px;
 }
-.vchip .vn{font-weight:600;color:var(--ink)}
+.vchip .vn{font-weight:600;color:var(--ink);font-size:12.5px;padding:2px 0;border-radius:4px}
+button.vn{border:none;background:none}
+button.vn:hover{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
 .vchip .vu{font-size:10px;color:var(--faint);font-family:var(--mono)}
 .vchip .vu.on{color:var(--primary);font-weight:700}
 .vchip button{
@@ -598,6 +609,9 @@ input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0
   .acts{gap:6px}
   .acts .btn{flex:1 1 calc(50% - 3px);text-align:center;justify-content:center}
   .acts .btn.lg{flex:1 1 100%}
+  /* 폰에서는 좌우 배치가 의미 없다 — 상태는 한 줄 통으로, 버튼은 아래에 */
+  .acts .sp{display:none}
+  .ronote{flex-basis:100%;font-size:12.5px;margin-bottom:2px}
 
   .toast{left:12px;right:12px;bottom:12px;transform:translateY(70px);max-width:none}
   .toast.on{transform:translateY(0)}
@@ -1372,7 +1386,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     $('#rcount').textContent = (q ? '결과 '+r.length+'건' : '전체 '+r.length+'건')+fl;
     if(!r.length){ $('#rl').innerHTML=empty(_db.length?'조건에 맞는 요청이 없습니다':'요청이 없습니다'); wire(); tr(); return; }
     $('#rl').innerHTML = r.map(function(x){
-      if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">🔒 잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
+      if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
       var s=snip(x.b,q), m=[];
       m.push('<span style="color:var(--primary);font-weight:700">dw://'+x.no+'</span>');
       x.av.forEach(function(v){m.push(esc(v))}); m.push(esc(x.o)); m.push(x.d); m.push('의견 '+x.cm);
@@ -1844,9 +1858,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '<div class="vwrap">'+
         (items.length?items.map(function(v){
           var c=usedByAttr(opt.axis,v);
-          return '<span class="vchip"><span class="vn">'+esc2(v)+'</span>'+
+          // 이름을 눌러 바로 이름 변경 — 연필 아이콘을 따로 두지 않는다(칩마다 버튼 2개는 과하다)
+          return '<span class="vchip"><button class="vn mEdit" data-v="'+esc2(v)+'" title="눌러서 이름 변경">'+esc2(v)+'</button>'+
             (c?'<span class="vu on">사용 '+c+'</span>':'<span class="vu">미사용</span>')+
-            '<button class="mEdit" data-v="'+esc2(v)+'" title="이름 변경" aria-label="이름 변경">✎︎</button>'+
             '<button class="mDel dn" data-v="'+esc2(v)+'" title="삭제" aria-label="삭제">×</button></span>';
         }).join(''):'<span class="hint">값이 없습니다 — 값을 넣어야 요청 폼에 나옵니다</span>')+
       '</div>'+
@@ -2255,7 +2269,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       if(p.s==='ticket'&&p.no) openT(p.no,true);
       else { CUR=null; show(p.s); }
     };
-    if($('#hdX'))$('#hdX').onclick=function(){if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR;fillReassign();op('m-hd')};
+    // 이관은 담당자 바·관리자 바 양쪽에 있으므로 클래스로 묶어 바인딩한다(id는 하나만 잡힌다)
+    $$('.aHd').forEach(function(b){ b.onclick=function(){
+      if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR; fillReassign(); op('m-hd');
+    };});
     if($('#aRej'))$('#aRej').onclick=function(){ if($('#rejT'))$('#rejT').textContent='반려 · dw://'+CUR; if($('#rej1'))$('#rej1').value=''; if($('#rej2'))$('#rej2').value=''; op('m-rej'); };
     if($('#rejgo'))$('#rejgo').onclick=actReject;
     if($('#aCancel'))$('#aCancel').onclick=function(){ if($('#canT'))$('#canT').textContent='요청 취소·회수 · dw://'+CUR; if($('#can1'))$('#can1').value=''; op('m-cancel'); };
@@ -2619,46 +2636,92 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '</div></div>';
   }
 
+  // ── 요청 처리 버튼 ──
+  // 권한 원칙: 내 요청 / 내 업무만 처리한다. 전체 요청에서 남의 건은 읽기 전용이다.
+  //   요청자 → 자기가 낸 요청만 (t.rq.nm === 나)
+  //   담당자 → 자기(또는 자기 근무조)에게 배정된 업무만 (isMine)
+  //   관리자 → 티켓에서는 읽기 전용. 이관만 가능(일괄 이관은 [담당자 관리]에)
+  // 화면이 아니라 소유권으로 판단한다 — 같은 요청이 어디서 열렸냐에 따라 버튼이 달라지면 그게 더 헷갈린다.
+  //
+  // 배치 원칙: 상태 설명은 왼쪽, 버튼은 오른쪽, 주 버튼(pri)이 가장 오른쪽.
+  //   예전엔 disabled 버튼으로 상태를 표시했는데, 눌리지도 않는 걸 버튼처럼 보이게 둘 이유가 없다 → 글로 뺐다.
   function acts(t){
-    if(t.state==='closed') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">종결 · 읽기 전용 · 전체 요청에서 검색 가능</span></div>';
-    if(t.state==='cancel') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">취소된 요청 · 읽기 전용 · 다시 필요하면 [요청하기]로 새로 접수하세요</span></div>';
-    if(t.state==='reject') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">반려된 요청 · 읽기 전용 · 사유·설명 확인 후 수정하여 다시 요청하세요</span></div>';
-    var req='',own='',canCancel=false;
-    if(t.state==='open'){
-      req='<button class="btn" data-t2="담당자가 아직 요청을 확인하지 않았습니다" disabled>담당자 확인 대기</button>';
-      canCancel=true;
-      own='<button class="btn pri" id="aStart">확인 · 진행</button>'+
-          '<button class="btn" id="aDue">기한 조정</button>'+
-          '<button class="btn" id="aRej">반려</button>'+
-          '<button class="btn" id="hdX">이관</button>';
-    } else if(t.state==='nego'){
-      // item 4 — 수락/거절 버튼은 위 [지연 미리 알림] 카드 안으로 이동. 여기서는 안내만.
-      req='<span style="font-size:12px;color:var(--muted)">위 <b>지연 미리 알림</b> 카드에서 새 기한을 수락하거나 거절하세요</span>';
-      own='<button class="btn" data-t2="요청자 확인 대기 중 · 기존 기한 적용" disabled>요청자 확인 대기</button><button class="btn" id="hdX">이관</button>';
-    } else if(t.state==='prog'||t.state==='slip'){
-      req = t.state==='slip'
-        ? '<button class="btn" data-t2="기한이 지났습니다 · 담당자 처리 중" disabled>지연 중</button>'
-        : '<button class="btn" data-t2="담당자 진행 중입니다" disabled>진행 중</button>';
-      // item 5 — 지연 미리 알리기는 최대 3회. 소진되면 비활성.
-      var nc=t.negoCount||0, capped=nc>=3;
-      // 반려는 [확인·진행] 전(접수 상태)에만 — 진행 시작 후엔 이관 등으로 처리
-      own='<button class="btn pri" id="aRes">완료</button>'+
-          '<button class="btn dn" id="aNego"'+(capped?' disabled data-t2="지연 알림 3회 소진 · 팀장 이관을 검토하세요"':'')+'>지연 미리 알리기 ('+nc+'/3)</button>'+
-          '<button class="btn" id="hdX">이관</button>';
-    } else if(t.state==='done'){
-      req='<button class="btn pri" id="closeBtn" disabled>완료 확인 · 종결</button><button class="btn" id="aReopen">재요청</button>';
-      own='<button class="btn" data-t2="완료 · 요청자 확인 대기 중" disabled>요청자 확인 대기</button>';
+    var lab='<div class="seclab">요청 처리 <span class="n">상태를 바꿉니다 · 사유가 필요한 것은 창이 뜹니다</span></div>';
+    var note=function(m){ return m?'<span class="ronote">'+m+'</span>':'' };
+    var sp='<span class="sp"></span>';
+    var wrap=function(r,o,a){
+      return '<div class="acts" data-r="req">'+lab+r+'</div>'+
+             '<div class="acts" data-r="own" style="display:none">'+lab+o+'</div>'+
+             '<div class="acts" data-r="adm" style="display:none">'+lab+a+'</div>';
+    };
+
+    // 종료된 요청 — 누구에게나 읽기 전용
+    if(t.state==='closed'||t.state==='cancel'||t.state==='reject'){
+      var m = t.state==='closed' ? '종결 · 읽기 전용 · 전체 요청에서 검색 가능'
+            : t.state==='cancel' ? '취소된 요청 · 읽기 전용 · 다시 필요하면 [요청하기]로 새로 접수하세요'
+            :                      '반려된 요청 · 읽기 전용 · 사유·설명 확인 후 수정하여 다시 요청하세요';
+      return wrap(note(m),note(m),note(m));
     }
-    // item 1 — 요청 취소/회수: 요청자, 완료·종결 전까지 언제든
-    if(canCancel) req='<button class="btn" id="aCancel">요청 취소</button>'+req;
-    // 회람은 요청자 뷰에서, 남의 요청에만. 내 요청은 어차피 다 받으니 필요 없다.
-    var canJoin = t.rq.nm!==ROLE.req.nm && !t.jn.some(function(x){return x.nm===ROLE.req.nm});
-    req+='<span style="flex:1"></span>'+(canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':'');
-    own+='<span style="flex:1"></span>';
-    // 의견란과 확실히 구분 — 여기 버튼은 '상태를 바꾸는' 것들이고, 사유가 필요하면 각자 창을 띄운다
-    var lab='<div class="seclab">⚙ 요청 처리 <span class="n">상태를 바꿉니다 · 사유가 필요한 것은 창이 뜹니다</span></div>';
-    return '<div class="acts" data-r="req">'+lab+req+'</div>'+
-           '<div class="acts" data-r="own adm" style="display:none">'+lab+own+'</div>';
+
+    var mineReq = t.rq.nm===ROLE.req.nm;   // 내가 낸 요청인가
+    var mineOwn = isMine(t,ME);            // 나(또는 내 근무조)에게 배정된 업무인가
+
+    // ── 요청자 ──
+    var r;
+    if(!mineReq){
+      var canJoin=!t.jn.some(function(x){return x.nm===ROLE.req.nm});
+      r=note('내가 낸 요청이 아닙니다 · 읽기 전용')+sp+
+        (canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':note('회람 중'));
+    } else {
+      var rn='', rb='';
+      if(t.state==='open'){
+        rn='담당자 확인 대기 — 아직 확인 전이라 취소할 수 있습니다';
+        rb='<button class="btn" id="aCancel">요청 취소</button>';
+      } else if(t.state==='nego'){
+        rn='위 [지연 미리 알림] 카드에서 새 기한을 수락하거나 거절하세요';
+      } else if(t.state==='prog'){
+        rn='담당자 진행 중 — 기한 '+esc2(t.due);
+      } else if(t.state==='slip'){
+        rn='기한이 지났습니다 · 담당자 처리 중';
+      } else if(t.state==='done'){
+        rn='결과를 확인하고 아래에서 평가해주세요';
+        rb='<button class="btn" id="aReopen">재요청</button>'+
+           '<button class="btn pri" id="closeBtn" disabled>완료 확인 · 종결</button>';
+      }
+      r=note(rn)+sp+rb;
+    }
+
+    // ── 담당자 ──
+    var o;
+    if(!mineOwn){
+      o=note('나에게 배정된 업무가 아닙니다 · 읽기 전용 — 내 업무는 [내 업무]에서 처리합니다');
+    } else {
+      var on='', ob='';
+      if(t.state==='open'){
+        ob='<button class="btn aHd">이관</button>'+
+           '<button class="btn" id="aRej">반려</button>'+
+           '<button class="btn" id="aDue">기한 조정</button>'+
+           '<button class="btn pri" id="aStart">확인 · 진행</button>';
+      } else if(t.state==='nego'){
+        on='요청자 확인 대기 · 확인 전까지 기존 기한('+esc2(t.due)+') 적용';
+        ob='<button class="btn aHd">이관</button>';
+      } else if(t.state==='prog'||t.state==='slip'){
+        var nc=t.negoCount||0, capped=nc>=3;
+        on = t.state==='slip' ? '기한 초과 · 지연으로 기록됨' : '';
+        if(capped) on += (on?' · ':'')+'지연 알림 3회 소진 — 더 늦어지면 이관을 검토하세요';
+        ob='<button class="btn aHd">이관</button>'+
+           '<button class="btn" id="aNego"'+(capped?' disabled':'')+'>지연 미리 알리기 <span class="cnt2">'+nc+'/3</span></button>'+
+           '<button class="btn pri" id="aRes">완료</button>';
+      } else if(t.state==='done'){
+        on='완료 · 요청자 확인 대기 — 종결·평가는 요청자가 합니다';
+      }
+      o=note(on)+sp+ob;
+    }
+
+    // ── 관리자 ──
+    var a=note('관리자 · 읽기 전용 — 일괄 이관은 [담당자 관리]에서')+sp+'<button class="btn aHd">이관</button>';
+
+    return wrap(r,o,a);
   }
 
   function openT(no,noPush){
@@ -2714,7 +2777,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
     if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
       body+='<div class="cmb">'+
-        '<div class="seclab">💬 의견 <span class="n">이 요청에 대해 말을 남깁니다 · <b>상태는 바뀌지 않습니다</b> · 요청자·담당자·회람자 전원에게 메일</span></div>'+
+        '<div class="seclab">의견 <span class="n">이 요청에 대해 말을 남깁니다 · <b>상태는 바뀌지 않습니다</b> · 요청자·담당자·회람자 전원에게 메일</span></div>'+
         '<div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
         '<textarea id="ctx" placeholder="진행하면서 남길 의견을 적어주세요"></textarea>'+
         '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
@@ -2722,7 +2785,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         '<span class="nt2">공개 · 종결 후에도 검색됩니다</span></div></div></div></div>';
     }
     // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
-    if(t.state==='closed' || (t.state==='done'&&cur==='req')) body+=evalBlk(t);
+    // 남의 요청에는 평가 폼을 띄우지 않는다 — 종결된 건의 '결과'는 읽기 전용이라 그대로 보여준다.
+    if(t.state==='closed' || (t.state==='done'&&cur==='req'&&t.rq.nm===ROLE.req.nm)) body+=evalBlk(t);
     body+=acts(t)+'</div>';
 
     $('#s-ticket').innerHTML=head+body;
