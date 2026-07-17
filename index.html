@@ -632,7 +632,17 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
 .pr[data-o]:hover{background:var(--surface-2);border-color:var(--line-2)}
 .prh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
 .prt{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.45}
-.prm{font-size:10.5px;color:var(--faint);margin-top:4px;font-family:var(--mono)}
+/* 카드 아래 줄 — 왼쪽은 확인용 사실, 오른쪽은 지금 알아야 할 한 가지(기한·결과).
+   오른쪽을 세로로 정렬시켜 카드가 쌓였을 때 날짜가 한 열로 읽히게 한다. */
+.prb{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:5px;flex-wrap:wrap}
+.prm{font-size:10.5px;color:var(--faint);font-family:var(--mono);min-width:0;flex:1}
+/* 요청번호는 참조용이라 뒤로 뺐다. 색은 더 낮추지 않는다 — --faint 가 이미 AA 하한(5.24:1)이고
+   여기서 더 흐리면 안 보인다. 강조를 낮추는 건 색이 아니라 자리로 한다. */
+.prd{flex:none;font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.prd .dd{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--primary-ink);
+         background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:3px}
+.prd .dd.w{color:var(--signal);background:var(--signal-tint);border-color:#f0bcc1}
+.pr.fin .prd{color:var(--faint);font-weight:500}
 /* 검색 결과 발췌 — 제목에 없는 말로 걸렸을 때 '왜 나왔는지'를 보여준다 */
 .prs{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;
      border-top:1px dashed var(--line);padding-top:6px}
@@ -1542,10 +1552,16 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   // ── 검색 결과 화면 ──
   // 결과는 페이지로 펼친다. 좁은 드롭다운 안에서 스크롤로 다 해결하게 두면 안 된다.
-  var SQ='', SPG=1;
+  // 검색은 헤더에서 어느 화면에서든 걸리는데, 결과 화면은 사이드바에 없다.
+  // 요청자·담당자는 사이드바 자체가 없어서 [뒤로]가 없으면 나갈 방법이 아예 없다.
+  var SQ='', SPG=1, SBACK='mine';
   function openSearch(q){
     SQ=q; SPG=1;
     if($('#gsq')) $('#gsq').blur();
+    // 검색을 건 자리를 기억한다. 요청서·상세·검색결과에서 걸었으면 그 자리로
+    // 되돌리는 게 의미가 없으니(빈 요청서, 방금 떠난 상세, 자기 자신) 직전 목록을 유지한다.
+    var cs=$('.screen.on'), fid=cs?cs.id.replace('s-',''):'';
+    if(fid && fid!=='search' && fid!=='intake' && fid!=='ticket') SBACK=fid;
     BACK=[]; renderSearch(); show('search'); window.scrollTo(0,0);
   }
   function searchHits(q){
@@ -1565,12 +1581,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var last=Math.max(1,Math.ceil(tot/PAGE)); if(SPG>last) SPG=last;
     var pageRows=all.slice((SPG-1)*PAGE, SPG*PAGE);
     el.innerHTML=
+      '<button class="bk" id="bkSearch"><span class="a">←</span>'+esc2(SCR[SBACK]||'뒤로')+'</button>'+
       '<div class="head"><div><h1>검색 결과</h1>'+
         '<div class="sub">‘'+esc2(SQ)+'’ · '+tot+'건</div></div></div>'+
       '<div class="card"><div class="cb">'+
         (tot?pageRows.map(function(x){return row(T[x.no],'req',SQ)}).join(''):empty('일치하는 요청이 없습니다'))+
       '</div></div>'+
       pager(tot, SPG, null);
+    if($('#bkSearch')) $('#bkSearch').onclick=function(){ BACK=[]; CUR=null; show(SBACK); };
     wirePager(el, function(p){ SPG=p; renderSearch(); window.scrollTo(0,0); });
     wire(); tr();
   }
@@ -1791,23 +1809,40 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
 
 
+  // 남은 날 — '기한 2026-07-31'만 적어두면 급한지 아닌지가 안 읽힌다.
+  function dday(d2){
+    if(!d2) return '';
+    var n=Math.round((new Date(d2)-new Date(today()))/864e5);
+    return n===0?'오늘':n>0?'D-'+n:'D+'+(-n);
+  }
   // ================= 목록 렌더 =================
+  // 카드는 훑는 물건이다. 한 줄에 사실을 다 늘어놓고 같은 회색으로 칠하면 아무것도 안 읽힌다.
+  // 그래서 두 갈래로 나눈다.
+  //   왼쪽(prm) — 분류·사람·번호. 확인용이라 낮은 강조.
+  //   오른쪽(prd) — 기한 또는 결과. 이 요청에서 지금 알아야 할 한 가지라 강조하고 오른쪽에 세워
+  //                 카드가 쌓였을 때 날짜가 한 열로 정렬돼 보이게 한다.
+  // 기한 확정 마감(fixBy)은 뺐다 — 접수 직후에만 살아있는 시계인데 종결된 카드에까지
+  // 따라붙어 '기한'과 헷갈렸다. 담당자가 아직 안 봤다는 건 [미열람] 배지가 이미 말한다.
+  //
   // q를 주면 검색 결과용 — 제목의 일치 부분을 표시하고 본문에서 걸린 대목을 발췌해 붙인다.
-  // 제목에 없는 말로 걸린 건은 왜 나왔는지 보여주지 않으면 결과를 신뢰할 수 없다.
   // all=true 면 부서 전체를 보는 중 — 누구 업무인지가 카드마다 있어야 내 것과 남의 것이 구분된다.
   function row(t, forRole, q, all){
     var s=ST[t.state], m=[], own=forRole==='own'&&all&&isMine(t,ME);
-    m.push('dw://'+t.no); if(attrVals(t).length) m.push(attrVals(t).join(' · '));
+    if(attrVals(t).length) m.push(attrVals(t).join(' · '));
     if(forRole==='own'){
-      m.push('요청자 '+t.rq.nm);
+      m.push('요청자 '+esc2(t.rq.nm));
       if(all) m.push('담당 '+(own?'<b style="color:var(--good)">'+esc2(t.as)+'</b>':esc2(t.as)));
-    } else m.push('담당 '+t.as+' · '+t.asOrg);
-    if(t.parent) m.push('원 요청 dw://'+t.parent);
-    if(t.fixBy) m.push('기한 확정 마감 <b style="color:var(--primary-ink)">'+t.fixBy+'</b>');
+    } else m.push('담당 '+esc2(t.as));
+    if(t.parent) m.push('원 요청 dw://'+esc2(t.parent));
+    m.push('dw://'+esc2(t.no));
     // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
-    if(t.state==='closed') m.push('종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:''));
-    else if(t.state==='done') m.push('완료 '+t.resolved+' · 요청자 확인 대기');
-    else if(t.due) m.push('기한 '+t.due);
+    var r2='';
+    if(t.state==='closed') r2='종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:'');
+    else if(t.state==='done') r2='완료'+(t.resolved?' '+t.resolved:'')+' · 확인 대기';
+    // 취소·반려는 배지가 이미 말한다 — 오른쪽에 또 쓰면 같은 말을 두 번 하는 것이고,
+    // 이 둘은 기한이 의미를 잃은 상태라 날짜 열에 넣을 것도 없다.
+    else if(t.state!=='cancel' && t.state!=='reject' && t.due)
+      r2='기한 '+t.due+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
     // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
     //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
     var cls='pr';
@@ -1817,7 +1852,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var sn=q?snip(bodyOf(t),q):'';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt">'+(q?hl(t.title,q):esc2(t.title))+'</div><span style="display:flex;gap:4px">'+(own?'<span class="badge b-mine">내 업무</span>':'')+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="prm">'+m.join(' · ')+'</div>'+
+      '<div class="prb"><div class="prm">'+m.join(' · ')+'</div>'+
+        (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
       (sn?'<div class="prs">'+hl(sn,q)+'</div>':'')+
     '</div>';
   }
@@ -1908,11 +1944,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   }
 
   var MD2='all', MFIN=false, MPG=1;
-  // 끝난 요청은 기본으로 숨긴다 — 내 요청의 목적은 '지금 어떻게 되고 있나'다.
-  // 종결이 쌓이면 살아있는 요청이 묻힌다. 필요하면 체크 하나로 되살린다.
+  // 끝난 요청은 기본으로 숨긴다 — 목록의 목적은 '지금 어떻게 되고 있나'다.
+  // 종결은 무한히 쌓인다(모든 요청이 결국 종결된다). 기본으로 깔면 살아있는 요청이 묻힌다.
+  // 라벨은 '끝난 요청' — 종결만이 아니라 반려·취소까지 데려오므로 '종결 포함'은 거짓말이다.
   function isFin(t){ return t.state==='closed'||t.state==='cancel'||t.state==='reject' }
   function finBox(id,on){
-    return '<label class="ckb"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'>종결 포함</label>';
+    return '<label class="ckb"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'>끝난 요청 포함</label>';
   }
   function renderMine(){
     var me=ROLE.req.nm;
@@ -3046,6 +3083,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '종결 대기':'Awaiting closure','미열람':'Unread','공개':'Public',
     '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester',
     '부서 전체':'All departments','전체 부서':'All departments','전체 기간':'All time',
+    '끝난 요청 포함':'Include finished','취소':'Cancelled','반려':'Rejected','오늘':'Today',
     '최근 7일':'Last 7 days','최근 30일':'Last 30 days','최근 90일':'Last 90 days','최근 1년':'Last year','직접 지정':'Custom range',
     '요청이 없습니다':'No requests','배정된 요청이 없습니다':'No requests assigned',
     '조건에 맞는 요청이 없습니다':'No requests match','해당 요청이 없습니다':'No requests in this state',
