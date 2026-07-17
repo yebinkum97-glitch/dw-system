@@ -397,6 +397,59 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .filt button{border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
 .filt button.on{background:var(--ink);border-color:var(--ink);color:#fff}
 
+/* ── 기준정보 — 분류축 · 값 관리 ──
+   칩에 버튼을 욱여넣으면 '배정축 배지'와 '배정축 지정 버튼'이 구분이 안 된다.
+   축은 행(row)으로, 값은 칩으로 나누고 액션은 제대로 된 타깃을 준다. */
+.mrow{
+  display:flex;align-items:center;gap:9px;padding:9px 11px;
+  border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:6px;
+}
+.mrow:last-child{margin-bottom:0}
+.mrow.is{border-color:#B7DCC9;background:var(--good-tint)}
+.mrow .nm{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.mrow .meta{font-size:11px;color:var(--faint);font-family:var(--mono)}
+.mrow .sp{flex:1}
+.axbadge{
+  font-size:9.5px;font-weight:800;background:var(--good);color:#fff;
+  border-radius:4px;padding:2px 6px;flex:none;letter-spacing:.02em;
+}
+.mact{display:flex;gap:5px;flex:none}
+.mact button{
+  border:1px solid var(--line-2);background:#fff;border-radius:6px;height:28px;padding:0 9px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:var(--muted);
+}
+.mact button:hover{border-color:var(--primary);color:var(--primary)}
+.mact button.dn:hover{border-color:var(--signal);color:var(--signal);background:var(--signal-tint)}
+
+/* 값 칩 — 중립. 색은 의미가 있을 때만 쓴다(사용 중 = 파랑) */
+.vwrap{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.vchip{
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:#fff;
+  border-radius:8px;padding:4px 4px 4px 10px;font-size:12.5px;
+}
+.vchip .vn{font-weight:600;color:var(--ink)}
+.vchip .vu{font-size:10px;color:var(--faint);font-family:var(--mono)}
+.vchip .vu.on{color:var(--primary);font-weight:700}
+.vchip button{
+  border:1px solid transparent;background:transparent;border-radius:5px;width:24px;height:24px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--faint);flex:none;
+}
+.vchip button:hover{background:var(--surface-2);border-color:var(--line-2);color:var(--ink)}
+.vchip button.dn:hover{background:var(--signal-tint);border-color:#F2C2BD;color:var(--signal)}
+.maddrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.maddrow input{max-width:260px;font-size:13px;padding:7px 10px}
+.maddrow .hint{margin:0}
+
+@media(max-width:640px){
+  .mrow{flex-wrap:wrap;gap:7px}
+  .mrow .sp{display:none}
+  .mact{width:100%;gap:6px}
+  .mact button{flex:1;height:36px}
+  .maddrow input{max-width:none;width:100%}
+  .maddrow .btn{width:100%}
+  .maddrow .hint{width:100%}
+}
+
 /* pool */
 .pool{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .pr{border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:8px;background:#fff}
@@ -726,7 +779,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
     <div id="hit"></div>
     <div class="card">
-      <div class="ch2"><h3 id="rcount">결과</h3><span class="nt">제목·본문·완료 결과 전체 검색</span></div>
+      <div class="ch2"><h3 id="rcount">결과</h3><span class="nt">제목·본문·의견 전체 검색</span></div>
       <div id="rl"></div>
     </div>
   </section>
@@ -943,8 +996,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     <label class="fl">방식</label>
     <select id="hm"><option value="n">지명 — 수신자 수락 필요</option><option value="l">팀장 이관 — 수락 불필요</option></select>
     <div id="hn">
-      <label class="fl">수신 담당자 <span style="color:var(--signal)">필수</span></label><input type="text" placeholder="이메일 또는 성명 검색">
-      <div class="hint">인사 API 재직 검증 후 발송</div>
+      <label class="fl">수신 부서 <span style="color:var(--signal)">필수</span></label>
+      <select id="hdDept"></select>
+      <label class="fl">수신 담당자 <span style="color:var(--signal)">필수</span></label>
+      <select id="hdWho"></select>
+      <div class="hint">인사 API 연동 시 <b>전 부서 담당자 명부가 자동 조회</b>됩니다 · 부서 간 이관 가능(예: 공간기획 → 총무) · 재직 검증 후 발송</div>
     </div>
     <div id="hl" style="display:none">
       <label class="fl">수신</label>
@@ -953,6 +1009,28 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     <label class="fl">사유 <span style="color:var(--signal)">필수 · 공개됨</span></label><input type="text">
   </div>
   <div class="mdf"><button class="btn" data-c>취소</button><button class="btn pri" data-c id="hgo" data-t="이관 제안 발송 · 수락 전까지 책임 유지 · 요청자 통보">이관 제안</button></div>
+</div></div>
+
+<div class="mk" id="m-rej"><div class="md">
+  <div class="mdh"><h3 id="rejT">반려</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb">반려하면 요청이 요청자에게 되돌아갑니다 · 사유와 설명은 요청자에게 그대로 공개됩니다</div>
+    <label class="fl">반려 사유 <span style="color:var(--signal)">필수</span></label>
+    <select id="rej1"><option value="">선택</option><option>담당 영역·부서가 아님</option><option>정보 부족 — 추가 확인 필요</option><option>중복 요청</option><option>처리 불가</option><option>기타</option></select>
+    <label class="fl">설명 <span style="color:var(--signal)">필수</span></label>
+    <input type="text" id="rej2" placeholder="요청자가 이해할 수 있도록 구체적으로 적어주세요">
+  </div>
+  <div class="mdf"><button class="btn" data-c>닫기</button><button class="btn dn" id="rejgo">반려 · 요청자에게 알리기</button></div>
+</div></div>
+
+<div class="mk" id="m-cancel"><div class="md">
+  <div class="mdh"><h3 id="canT">요청 취소·회수</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb">취소하면 담당자에게 통보되고 요청이 종료됩니다 · 되돌리려면 새로 요청해야 합니다</div>
+    <label class="fl">취소 사유 <span style="color:var(--signal)">필수</span></label>
+    <input type="text" id="can1" placeholder="담당자에게 그대로 전달됩니다">
+  </div>
+  <div class="mdf"><button class="btn" data-c>닫기</button><button class="btn dn" id="cango">요청 취소</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -1002,7 +1080,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     nego  :{l:'지연 알림 · 요청자 확인 대기', c:'b-slip', i:1},
     slip  :{l:'지연',      c:'b-slip',   i:1},
     done  :{l:'완료', c:'b-verify', i:2},
-    closed:{l:'종결',      c:'b-closed', i:3}
+    closed:{l:'종결',      c:'b-closed', i:3},
+    reject:{l:'반려',      c:'b-slip',   i:1},   // 담당자 반려 — 사유·설명 필수
+    cancel:{l:'취소',      c:'b-closed', i:1}    // 요청자 취소/회수
   };
   var FLOW=['접수','진행','완료','종결'];
 
@@ -1176,7 +1256,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       jn:1+t.jn.length, lock:t.vis==='locked',
       // 본문 검색은 현재상황·요청사항 + 의견 전체를 훑는다(완료 결과도 의견으로 남으므로).
       b:t.asis+' '+t.tobe+' '+t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' '),
-      // 종결된 건은 담당자의 마지막 의견을 '완료 결과'로 노출
+      // 담당자의 마지막 의견 — '완료 결과'가 아니라 여러 의견 중 최근 것일 뿐이므로 그렇게 라벨링한다
       a:(function(){
         if(t.state!=='closed'&&t.state!=='done') return '';
         var c=t.ev.filter(function(e){return e.t==='cm'&&e.r==='ow'});
@@ -1252,7 +1332,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         '<div class="resh"><div class="rest">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
         '<div class="resm">'+m.join('<span class="sep">·</span>')+'</div>'+
         (s?'<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">'+hl(s,q)+'</div>':'')+
-        (x.a?'<div class="ans"><div class="ansl">완료 결과</div><div class="ansx">'+hl(x.a,q)+'</div></div>':'')+
+        (x.a?'<div class="ans"><div class="ansl">최근 담당자 의견</div><div class="ansx">'+hl(x.a,q)+'</div></div>':'')+
       '</div>';
     }).join('');
     $$('#rl .res[data-no]').forEach(function(b){b.onclick=function(){openT(b.dataset.no)}});
@@ -1636,17 +1716,17 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var el=$('#'+elId); if(!el) return;
     var items=opt.get();
     el.innerHTML=
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px">'+
+      '<div class="vwrap">'+
         (items.length?items.map(function(v){
           var c=usedByAttr(opt.axis,v);
-          return '<span class="chip own" style="padding:5px 8px"><b>'+esc2(v)+'</b>'+
-            '<span class="x">'+(c?'사용 '+c:'미사용')+'</span>'+
-            '<button class="mEdit" data-v="'+esc2(v)+'" title="이름 변경" style="font-size:11px;padding:0 3px;opacity:.6">✎</button>'+
-            '<button class="mDel" data-v="'+esc2(v)+'" title="삭제" style="font-size:12px;padding:0 3px;opacity:.6">×</button></span>';
+          return '<span class="vchip"><span class="vn">'+esc2(v)+'</span>'+
+            (c?'<span class="vu on">사용 '+c+'</span>':'<span class="vu">미사용</span>')+
+            '<button class="mEdit" data-v="'+esc2(v)+'" title="이름 변경" aria-label="이름 변경">✎︎</button>'+
+            '<button class="mDel dn" data-v="'+esc2(v)+'" title="삭제" aria-label="삭제">×</button></span>';
         }).join(''):'<span class="hint">값이 없습니다 — 값을 넣어야 요청 폼에 나옵니다</span>')+
       '</div>'+
-      '<div style="display:flex;gap:6px;align-items:center">'+
-        '<input type="text" class="mNew" placeholder="'+esc2(opt.ph||'새 항목')+'" style="max-width:260px;font-size:12.5px;padding:6px 9px">'+
+      '<div class="maddrow">'+
+        '<input type="text" class="mNew" placeholder="'+esc2(opt.ph||'새 항목')+'">'+
         '<button class="btn sm mAdd">추가</button>'+
       '</div>';
     var add=function(){
@@ -1691,22 +1771,26 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
     // 1) 분류축 — 추가 / 이름변경 / 배정축 지정 / 삭제
     $('#mAxes').innerHTML=
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px">'+
+      '<div style="margin-bottom:12px">'+
         (ax.length?ax.map(function(x){
           var used=Object.keys(T).filter(function(n){return T[n].dept===MD&&(T[n].attrs||{})[x.n]}).length;
-          return '<span class="chip'+(x.a?' own':'')+'" style="padding:5px 8px">'+
-            (x.a?'<b style="font-size:9px;background:var(--good);color:#fff;border-radius:3px;padding:1px 4px;margin-right:2px">배정축</b>':'')+
-            '<b>'+esc2(x.n)+'</b><span class="x">값 '+x.o.length+(used?' · 사용 '+used:'')+'</span>'+
-            (x.a?'':'<button class="axA" data-n="'+esc2(x.n)+'" title="배정축으로 지정" style="font-size:10px;padding:0 3px;opacity:.6">배정축</button>')+
-            '<button class="axE" data-n="'+esc2(x.n)+'" title="이름 변경" style="font-size:11px;padding:0 3px;opacity:.6">✎</button>'+
-            '<button class="axD" data-n="'+esc2(x.n)+'" title="삭제" style="font-size:12px;padding:0 3px;opacity:.6">×</button>'+
-          '</span>';
-        }).join(''):'<span class="hint">분류축이 없습니다 — 이 부서는 아직 접수를 받을 수 없습니다</span>')+
+          return '<div class="mrow'+(x.a?' is':'')+'">'+
+            (x.a?'<span class="axbadge">배정축</span>':'')+
+            '<span class="nm">'+esc2(x.n)+'</span>'+
+            '<span class="meta">값 '+x.o.length+(used?' · 사용 '+used:'')+'</span>'+
+            '<span class="sp"></span>'+
+            '<span class="mact">'+
+              (x.a?'':'<button class="axA" data-n="'+esc2(x.n)+'" title="이 축의 값이 담당자를 결정하게 합니다">배정축으로</button>')+
+              '<button class="axE" data-n="'+esc2(x.n)+'">이름 변경</button>'+
+              '<button class="axD dn" data-n="'+esc2(x.n)+'">삭제</button>'+
+            '</span>'+
+          '</div>';
+        }).join(''):'<div class="nyx">분류축이 없습니다 — <b>이 부서는 아직 접수를 받을 수 없습니다</b> <span>축을 만들고 값을 넣어야 요청 폼이 열립니다</span></div>')+
       '</div>'+
-      '<div style="display:flex;gap:6px;align-items:center">'+
-        '<input type="text" id="axNew" placeholder="예) 서비스 · 설비 종류 · 처리 유형" style="max-width:280px;font-size:12.5px;padding:6px 9px">'+
+      '<div class="maddrow">'+
+        '<input type="text" id="axNew" placeholder="예) 서비스 · 설비 종류 · 처리 유형">'+
         '<button class="btn sm" id="axAdd">축 추가</button>'+
-        '<span class="hint" style="margin:0">부서마다 축이 다릅니다 — 공간기획은 "공간 유형", 총무는 "서비스"가 될 수 있습니다</span>'+
+        '<span class="hint">부서마다 축이 다릅니다 — 공간기획은 "공간 유형", 총무는 "서비스"가 될 수 있습니다</span>'+
       '</div>';
     var addAx=function(){
       var v=($('#axNew').value||'').trim();
@@ -1768,11 +1852,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     });
 
     // 3) 부서 — 읽기 전용
-    $('#mDept').innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+    $('#mDept').innerHTML='<div class="vwrap" style="margin-bottom:0">'+
       DEPT.map(function(d){
         var c=Object.keys(T).filter(function(n){return T[n].dept===d}).length;
-        return '<span class="chip'+(deptReady(d)?' own':' gh')+'" style="padding:5px 9px"><b>'+esc2(d)+'</b>'+
-          '<span class="x">'+(deptReady(d)?'요청 '+c:'준비 중')+'</span></span>';
+        var rd=deptReady(d);
+        return '<span class="vchip"'+(rd?' style="border-color:#B7DCC9;background:var(--good-tint)"':' style="border-style:dashed"')+'>'+
+          '<span class="vn"'+(rd?'':' style="color:var(--muted)"')+'>'+esc2(d)+'</span>'+
+          '<span class="vu'+(rd&&c?' on':'')+'" style="padding-right:6px">'+(rd?'요청 '+c:'준비 중')+'</span></span>';
       }).join('')+'</div>'+
       '<div class="hint" style="margin-top:9px">부서 신설·폐지는 시스템 관리자만 합니다. '+
       '부서 관리자는 <b>자기 부서의 분류축과 값</b>만 관리합니다.</div>';
@@ -1962,7 +2048,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       if(p.s==='ticket'&&p.no) openT(p.no,true);
       else { CUR=null; show(p.s); }
     };
-    if($('#hdX'))$('#hdX').onclick=function(){if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR;op('m-hd')};
+    if($('#hdX'))$('#hdX').onclick=function(){if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR;fillReassign();op('m-hd')};
+    if($('#aRej'))$('#aRej').onclick=function(){ if($('#rejT'))$('#rejT').textContent='반려 · dw://'+CUR; if($('#rej1'))$('#rej1').value=''; if($('#rej2'))$('#rej2').value=''; op('m-rej'); };
+    if($('#rejgo'))$('#rejgo').onclick=actReject;
+    if($('#aCancel'))$('#aCancel').onclick=function(){ if($('#canT'))$('#canT').textContent='요청 취소·회수 · dw://'+CUR; if($('#can1'))$('#can1').value=''; op('m-cancel'); };
+    if($('#cango'))$('#cango').onclick=actCancel;
     if($('#aDue'))$('#aDue').onclick=function(){
       var t=T[CUR];
       $('#dueT').textContent='기한 조정 · dw://'+CUR;
@@ -2016,6 +2106,20 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // ================= 상태 전이 =================
   var CUR=null;                       // 현재 열린 요청번호
   var DUEMODE='fix';                  // m-due 모달 용도: fix=접수단계 조정 / nego=지연 미리 알리기
+  var ACTIVE_NEGO=null;               // 현재 요청의 활성 지연 제안 이벤트(수락/거절 버튼 노출 대상)
+  // item 2 — 이관 수신자 선택. 인사 API 연동 시 전 부서 담당자 명부가 자동 조회된다는 전제.
+  //  데모에서는 TEAM 명부(공간기획만 채워짐)로 부서 간 선택 UI를 보여준다.
+  function fillReassign(){
+    var ds=$('#hdDept'), ws=$('#hdWho'); if(!ds||!ws) return;
+    ds.innerHTML=DEPT.map(function(d){return '<option value="'+d+'">'+d+'</option>'}).join('');
+    function fillWho(){
+      var r=roster(ds.value);
+      ws.innerHTML = r.length
+        ? r.map(function(n){return '<option>'+n+' · '+(TEAMORG[ds.value]||ds.value)+'</option>'}).join('')
+        : '<option value="">(인사 API 연동 시 자동 조회)</option>';
+    }
+    ds.onchange=fillWho; fillWho();
+  }
   var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
   var SCR={intake:'요청하기',mine:'내 요청',cc:'회람 중인 요청',work:'내 업무',find:'전체 요청',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function eun(s){ // 은/는 조사
@@ -2067,10 +2171,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   //  확인 전까지는 기존 기한 기준으로 지연이 산정된다(무응답으로 무한정 늦출 수 없게).
   function actNego(){
     var t=T[CUR], nd=$('#du1').value, why=$('#du2').value.trim(), ct=$('#du3').value.trim();
+    // item 5 — 지연 미리 알리기는 최대 3회
+    if((t.negoCount||0)>=3){ toast('지연 알림은 최대 3회까지만 가능합니다 · 추가 지연은 팀장 이관을 검토하세요'); return; }
     if(!why){ toast('지연 사유를 적어주세요'); return; }
     if(!ct){ toast('대책을 적어주세요 — 요청자 업무 영향을 줄일 방안'); return; }
     if(!nd){ toast('새 완료 예정일을 골라주세요'); return; }
     if(nd<=t.due){ toast('새 완료 예정일은 현재 기한('+t.due+') 이후여야 합니다'); return; }
+    t.negoCount=(t.negoCount||0)+1;
     t.state='nego'; t.nego={to:nd,why:why,ct:ct}; t.notified=true;   // 미리 알림 기록
     t.ev.push({t:'nego',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,fr:t.due,to:nd,why:why,ct:ct});
     cl('m-due');
@@ -2194,6 +2301,29 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     toast('의견 등록 · 요청자·담당자·회람자 메일 발송 · 상태는 그대로');
     openT(CUR); refresh();
   }
+  // item 1 — 요청자 요청 취소/회수. 완료·종결 전까지 가능하며 사유는 담당자에게 전달된다.
+  function actCancel(){
+    var t=T[CUR]; if(!t) return;
+    var why=$('#can1')?$('#can1').value.trim():'';
+    if(!why){ toast('취소 사유를 적어주세요 — 담당자에게 전달됩니다'); if($('#can1'))$('#can1').focus(); return; }
+    t.state='cancel'; t.cancelInfo={why:why};
+    t.ev.push({t:'cancel',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:why});
+    cl('m-cancel');
+    toast('요청 취소·회수 · 담당자에게 통보 · 메일 발송');
+    openT(CUR); refresh();
+  }
+  // item 3 — 담당자 반려. 사유(선택)와 설명(자유서술)이 모두 필수.
+  function actReject(){
+    var t=T[CUR]; if(!t) return;
+    var why=$('#rej1')?$('#rej1').value:'', ex=$('#rej2')?$('#rej2').value.trim():'';
+    if(!why){ toast('반려 사유를 선택해주세요'); return; }
+    if(!ex){ toast('설명을 적어주세요 — 요청자에게 그대로 전달됩니다'); if($('#rej2'))$('#rej2').focus(); return; }
+    t.state='reject'; t.rejectInfo={why:why,ex:ex};
+    t.ev.push({t:'reject',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:why,ex:ex});
+    cl('m-rej');
+    toast('반려 · 요청자에게 사유·설명 전달 · 메일 발송');
+    openT(CUR); refresh();
+  }
 
   // ================= 요청 상세 렌더 =================
   function esc2(s){return String(s==null?'':s).replace(/[&<>]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
@@ -2216,11 +2346,26 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '<div class="bx cm"><div class="evx"><b>'+esc2(e.who)+'</b>'+(ga(e.who).slice(-1))+' 기한을 <b>'+esc2(e.fr)+'</b>에서 <b>'+esc2(e.to)+'</b>로 변경했습니다</div>'+
       '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
       '<div class="ft" style="color:var(--good)">기한 확정 마감 전 조정 · 요청자 메일 발송</div></div></div></div>';
-    if(e.t==='nego') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">지연 미리 알림</span></div>'+
+    if(e.t==='nego'){
+      // item 4 — 새 기한 수락/거절 버튼을 '지연 미리 알림'(새 기한 제안) 카드 안에 둔다.
+      // 활성 제안(마지막 nego)이고 요청자 시점일 때만 노출한다.
+      var negoAct = (e===ACTIVE_NEGO && cur==='req')
+        ? '<div data-r="req" class="pk" style="margin-top:12px;gap:7px"><button class="btn pri sm" id="aNegoY">새 기한 수락</button><button class="btn dn sm" id="aNegoN">거절</button></div>'+
+          '<div data-r="req" style="font-size:11px;color:var(--muted);margin-top:6px">거절하려면 사유를 아래 <b>의견</b>란에 적고 [거절]을 눌러주세요</div>'
+        : '';
+      return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">지연 미리 알림</span></div>'+
       '<div class="bx sl"><dl class="f"><dt>지연 사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
       (e.ct?'<dl class="f"><dt>대책</dt><dd>'+esc2(e.ct)+'</dd></dl>':'')+
       '<dl class="f"><dt>새 완료 예정일</dt><dd><b>'+esc2(e.to)+'</b> <span style="color:var(--muted)">(기존 '+esc2(e.fr)+')</span></dd></dl>'+
-      '<div class="ft" style="color:var(--signal)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div></div></div></div>';
+      '<div class="ft" style="color:var(--signal)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div>'+negoAct+'</div></div></div>';
+    }
+    if(e.t==='reject') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">반려</span></div>'+
+      '<div class="bx sl"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+      '<dl class="f"><dt>설명</dt><dd>'+esc2(e.ex)+'</dd></dl>'+
+      '<div class="ft" style="color:var(--signal)">요청자에게 반송 · 메일 발송</div></div></div></div>';
+    if(e.t==='cancel') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-closed">요청 취소</span></div>'+
+      (e.why?'<div class="bx"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl></div>':'')+
+      '<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자가 요청을 취소·회수 · 담당자 통보</div></div></div>';
     if(e.t==='res') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-resolved">완료 처리</span></div>'+
       (e.x?'<div class="evx">'+lnk(e.x)+'</div>':'')+'<div style="font-size:11px;color:var(--muted);margin-top:3px">요청자 확인 대기 · 종결 권한은 요청자에게 있습니다</div></div></div>';
     return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl '+(e.r||'')+'">'+(e.r==='ow'?'담당자':'요청자')+'</span></div><div class="evx">'+lnk(e.x)+'</div></div></div>';
@@ -2247,26 +2392,36 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
   function acts(t){
     if(t.state==='closed') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">종결 · 읽기 전용 · 전체 요청에서 검색 가능</span></div>';
-    var req='',own='';
+    if(t.state==='cancel') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">취소된 요청 · 읽기 전용 · 다시 필요하면 [요청하기]로 새로 접수하세요</span></div>';
+    if(t.state==='reject') return '<div class="acts"><span style="font-size:11.5px;color:var(--faint);font-family:var(--mono)">반려된 요청 · 읽기 전용 · 사유·설명 확인 후 수정하여 다시 요청하세요</span></div>';
+    var req='',own='',canCancel=false;
     if(t.state==='open'){
       req='<button class="btn" data-t2="담당자가 아직 요청을 확인하지 않았습니다" disabled>담당자 확인 대기</button>';
+      canCancel=true;
       own='<button class="btn pri" id="aStart">확인 · 진행</button>'+
           '<button class="btn" id="aDue">기한 조정</button>'+
+          '<button class="btn" id="aRej">반려</button>'+
           '<button class="btn" id="hdX">이관</button>';
     } else if(t.state==='nego'){
-      req='<button class="btn pri" id="aNegoY">새 기한 수락</button><button class="btn" id="aNegoN">거절</button>';
+      // item 4 — 수락/거절 버튼은 위 [지연 미리 알림] 카드 안으로 이동. 여기서는 안내만.
+      req='<span style="font-size:12px;color:var(--muted)">위 <b>지연 미리 알림</b> 카드에서 새 기한을 수락하거나 거절하세요</span>';
       own='<button class="btn" data-t2="요청자 확인 대기 중 · 기존 기한 적용" disabled>요청자 확인 대기</button><button class="btn" id="hdX">이관</button>';
     } else if(t.state==='prog'||t.state==='slip'){
       req = t.state==='slip'
         ? '<button class="btn" data-t2="기한이 지났습니다 · 담당자 처리 중" disabled>지연 중</button>'
         : '<button class="btn" data-t2="담당자 진행 중입니다" disabled>진행 중</button>';
+      // item 5 — 지연 미리 알리기는 최대 3회. 소진되면 비활성.
+      var nc=t.negoCount||0, capped=nc>=3;
+      // 반려는 [확인·진행] 전(접수 상태)에만 — 진행 시작 후엔 이관 등으로 처리
       own='<button class="btn pri" id="aRes">완료</button>'+
-          '<button class="btn dn" id="aNego">지연 미리 알리기</button>'+
+          '<button class="btn dn" id="aNego"'+(capped?' disabled data-t2="지연 알림 3회 소진 · 팀장 이관을 검토하세요"':'')+'>지연 미리 알리기 ('+nc+'/3)</button>'+
           '<button class="btn" id="hdX">이관</button>';
     } else if(t.state==='done'){
       req='<button class="btn pri" id="closeBtn" disabled>완료 확인 · 종결</button><button class="btn" id="aReopen">재요청</button>';
       own='<button class="btn" data-t2="완료 · 요청자 확인 대기 중" disabled>요청자 확인 대기</button>';
     }
+    // item 1 — 요청 취소/회수: 요청자, 완료·종결 전까지 언제든
+    if(canCancel) req='<button class="btn" id="aCancel">요청 취소</button>'+req;
     // 회람은 요청자 뷰에서, 남의 요청에만. 내 요청은 어차피 다 받으니 필요 없다.
     var canJoin = t.rq.nm!==ROLE.req.nm && !t.jn.some(function(x){return x.nm===ROLE.req.nm});
     req+='<span style="flex:1"></span>'+(canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':'');
@@ -2299,9 +2454,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(t.want) meta+='<span class="kv">희망 완료일 <b>'+esc2(t.want)+'</b></span>';
     if(t.att) meta+='<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>';
 
-    var flow=FLOW.map(function(s,i){
-      return '<span class="st '+(i<si?'done':i===si?'now':'')+'">'+s+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
-    }).join('');
+    // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
+    ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
+    var flow = (t.state==='reject'||t.state==='cancel')
+      ? '<span class="st" style="border-color:var(--signal);color:var(--signal);background:var(--signal-tint)">'+(t.state==='reject'?'반려됨':'요청 취소·회수됨')+'</span>'
+      : FLOW.map(function(s,i){
+          return '<span class="st '+(i<si?'done':i===si?'now':'')+'">'+s+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
+        }).join('');
 
     var bk = BACK.length ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
     var head=bk+'<div class="th"><div style="display:flex;justify-content:space-between;gap:11px;flex-wrap:wrap;align-items:flex-start">'+
@@ -2319,7 +2478,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         '</div></div></div>'+
       t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
 
-    if(t.state!=='closed'){
+    if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
       body+='<div class="cmb"><div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
         '<textarea id="ctx" placeholder="의견을 남기면 요청자·담당자·회람자 전원에게 메일이 갑니다"></textarea>'+
         '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
@@ -2371,7 +2530,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '내가 접수한 요청':'Requests you submitted','나에게 배정된 요청':'Requests assigned to you',
     '내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다':'Others requests you follow · updates arrive by email',
     '요청번호, 제목, 내용':'Request no., title, content',
-    '제목·본문·완료 결과 전체 검색':'Searches title, body and comments',
+    '제목·본문·의견 전체 검색':'Searches title, body and comments',
+    '최근 담당자 의견':'Latest assignee comment',
+    '반려':'Return','요청 취소':'Cancel request','요청 취소·회수':'Cancel / withdraw request',
+    '수신 부서':'Recipient dept.','설명':'Explanation','반려 사유':'Return reason',
+    '취소 사유':'Cancellation reason','반려 · 요청자에게 알리기':'Return and notify requester',
     '번호 일치 — 바로가기':'Exact number match',
     '분야':'Area','공간 유형':'Space type','업무 유형':'Work type','제목':'Title',
     '현재 상황':'Current situation','요청 사항':'What you need','요청 기한':'Requested by','첨부':'Attachment','선택':'Select',
