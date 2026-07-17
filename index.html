@@ -92,7 +92,7 @@ button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;backgrou
 /* topbar */
 .top{
   background:var(--surface);border-bottom:1px solid var(--line);
-  height:54px;display:flex;align-items:center;gap:16px;padding:0 18px;position:sticky;top:0;z-index:30;
+  height:64px;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:30;
 }
 .mark{display:flex;align-items:center;gap:14px;flex:none}
 .mark .dwlogo{display:block;flex:none}
@@ -117,14 +117,19 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
   font-size:9px;font-weight:800;min-width:14px;height:14px;border-radius:7px;
   display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:var(--mono);
 }
-.me{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 4px;border-radius:6px}
+.me{display:flex;align-items:center;gap:7px;padding:4px 8px 4px 4px;border-radius:var(--r-field)}
+.me .caret{color:var(--faint);flex:none}
+.me .nm{font-size:13px;font-weight:600;line-height:1.2}
+.dropi{display:block;width:100%;text-align:left;padding:9px 14px;font-size:13px;color:var(--ink-2);border:none;background:none}
+.dropi:hover{background:var(--surface-2)}
+.dropi.on{color:var(--primary-ink);font-weight:700;background:var(--primary-tint)}
 .me:hover{background:var(--surface-2)}
 .av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--on-primary);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
 .me .nm{font-size:12.5px;font-weight:700;line-height:1.2}
 .me .dp{font-size:10.5px;color:var(--muted);line-height:1.2}
 
 .drop{
-  position:absolute;top:46px;right:0;width:330px;background:#fff;border:1px solid var(--line);
+  position:absolute;top:52px;right:0;width:180px;background:#fff;border:1px solid var(--line);
   border-radius:8px;box-shadow:var(--ele-md);display:none;z-index:40;overflow:hidden;
 }
 .drop.on{display:block}
@@ -137,27 +142,38 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .ni-x b{font-weight:700}
 .ni-t{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:2px}
 
-/* shell — 상단 가로 탭 (화면 폭과 무관하게 동일 구조) */
-.shell{display:block}
+/* shell — 좌측 사이드바. 햄버거로 접는다.
+   가로 탭은 역할이 바뀔 때마다 순서가 재배치돼 어디에 뭐가 있는지 매번 다시 찾아야 했다.
+   세로로 세우면 위치가 고정되고, 부서가 늘어도 아래로 계속 자란다. */
+.shell{display:flex;align-items:flex-start}
 .rail{
-  background:var(--surface);border-bottom:1px solid var(--line);
-  display:flex;align-items:stretch;gap:2px;padding:0 18px;
-  position:sticky;top:54px;z-index:20;overflow-x:auto;
+  width:208px;flex:none;background:var(--surface);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;gap:1px;padding:14px 10px;
+  position:sticky;top:64px;height:calc(100vh - 64px);z-index:20;
 }
 .rg{display:none}
 .nb{
-  display:flex;align-items:center;gap:7px;white-space:nowrap;
-  padding:13px 15px;font-size:13px;color:var(--muted);font-weight:400;letter-spacing:-.016em;
-  border-bottom:2px solid transparent;flex:none;
+  display:flex;align-items:center;gap:8px;width:100%;white-space:nowrap;
+  padding:9px 11px;font-size:13.5px;color:var(--muted);font-weight:500;letter-spacing:-.014em;
+  border-radius:var(--r-field);border:none;text-align:left;
 }
 .nb:hover{color:var(--ink);background:var(--surface-2)}
-.nb.on{color:var(--ink);border-bottom-color:var(--primary);border-bottom-width:2.5px;font-weight:700;background:transparent}
-.nb .c{font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:0 6px;min-width:20px;text-align:center}
-.nb.on .c{background:var(--primary-tint);border-color:#f0c99a;color:var(--primary-ink)}
+.nb.on{color:var(--primary-ink);background:var(--primary-tint);font-weight:700}
+.nb .c{margin-left:auto;font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:0 6px;min-width:20px;text-align:center}
+.nb.on .c{background:var(--surface);border-color:#f0c99a;color:var(--primary-ink)}
 .nb .c.hot{background:var(--signal);border-color:var(--signal);color:#fff}
 .railf{display:none}
+.shell.fold .rail{display:none}
+.navbd{display:none}
 
-.main{padding:22px 26px 60px;max-width:1140px;min-width:0;margin:0 auto}
+.main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1100px;margin:0 auto}
+
+/* 햄버거 */
+.ham{
+  width:34px;height:34px;border-radius:var(--r-field);display:flex;align-items:center;
+  justify-content:center;color:var(--ink-2);flex:none;
+}
+.ham:hover{background:var(--surface-2)}
 .screen{display:none}
 .screen.on{display:block;animation:f .2s ease}
 @keyframes f{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
@@ -214,7 +230,7 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 
 .flow{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:7px}
 .st{font-size:11px;font-weight:700;padding:4px 9px;border:1px solid var(--line-2);border-radius:20px;color:var(--muted);background:#fff;white-space:nowrap}
-.st.done{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.st.done{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .st.now{background:#fff;border-color:var(--primary-ink);border-width:2px;color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
 .aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
 
@@ -233,17 +249,15 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 
 /* 날짜 — 기한·희망 완료일·확인 마감이 부서/자산 칩과 같은 모양이라 뭐가 뭔지 구분이 안 됐다.
    따로 묶고, 각자 뜻을 한 줄로 달고, '지금 의미 있는 것'만 보여준다. */
-.dates{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line-2)}
-.dt{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border:1px solid var(--line);
-    border-radius:var(--r-field);background:var(--surface-2)}
-.dt i{font-style:normal;font-size:9.5px;font-weight:800;color:var(--faint);letter-spacing:.04em}
-.dt b{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
-.dt em{font-style:normal;font-size:10px;color:var(--faint);line-height:1.4}
-.dt.key{border-color:var(--dw-gray);border-width:1.5px;background:var(--surface)}
-.dt.key b{font-size:15px}
-.dt.key i{color:var(--dw-gray)}
-.dt.warn{border-color:#f0c99a;background:var(--primary-tint)}
-.dt.warn b,.dt.warn i{color:var(--primary-ink)}
+.dates{display:flex;gap:0;flex-wrap:wrap;align-items:center;margin-top:9px}
+.dt{display:flex;align-items:baseline;gap:6px;padding:0 12px 0 0;margin-right:12px;border-right:1px solid var(--line)}
+.dt:last-child{border-right:none;margin-right:0}
+.dt i{font-style:normal;font-size:11px;font-weight:600;color:var(--faint)}
+.dt b{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink-2);letter-spacing:-.02em}
+.dt em{display:none}
+.dt.key i{color:var(--ink)}
+.dt.key b{font-size:13.5px;color:var(--ink)}
+.dt.warn i,.dt.warn b{color:var(--primary-ink)}
 .rl{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2)}
 .rl.rq{color:var(--primary-ink);border-color:#f0c99a;background:var(--primary-tint)}
 .rl.ow{color:var(--good);border-color:#b9dcc9;background:var(--good-tint)}
@@ -266,7 +280,7 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .pk{display:flex;gap:4px;margin-top:7px}
 .pk button{flex:1;border:1px solid var(--line-2);border-radius:4px;padding:5px 0;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
 .pk button:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
-.pk button.on{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.pk button.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 
 /* 결과 평가 */
 .gr3{display:grid;grid-template-columns:1fr 1fr;gap:13px}
@@ -277,15 +291,15 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .gg .pk{gap:3px;margin-top:6px}
 .gg .pk button{flex:none;width:30px;padding:3px 0;font-size:11.5px;font-family:var(--mono);font-weight:700}
 .gg .pk button:disabled{opacity:1}
-.gg .pk button.on:disabled{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.gg .pk button.on:disabled{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .gk{margin-top:7px;font-size:10.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:6px}
 .gk b{color:var(--ink-2);font-weight:700;font-family:var(--mono)}
 
 .acts{display:flex;gap:7px;padding:12px 15px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap;border-radius:0 0 7px 7px}
 .btn{border:1px solid var(--line-2);background:#fff;border-radius:var(--r-field);padding:7px 13px;font-size:13px;font-weight:500;color:var(--ink);letter-spacing:-.016em}
 .btn:hover{border-color:var(--ink-2)}
-.btn.pri{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary);font-weight:700}
-.btn.pri:hover{background:var(--primary-2)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:700}
+.btn.pri:hover{background:var(--primary-2);border-color:var(--primary-2)}
 .btn.dn{background:var(--signal);border-color:var(--signal);color:#fff;font-weight:600}
 .btn.sm{padding:4px 10px;font-size:11.5px}
 .btn.lg{
@@ -320,7 +334,7 @@ textarea:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px
 .ps{display:grid;grid-template-columns:24px 1fr;gap:11px;padding:9px 0;opacity:0;transform:translateX(-5px);transition:.3s ease}
 .ps.in{opacity:1;transform:none}
 .pi{width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--faint)}
-.ps.in .pi{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.ps.in .pi{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .pn{font-size:12.5px;font-weight:800}
 .pd{font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-top:2px;word-break:break-all}
 .mp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
@@ -369,7 +383,7 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .dpa{margin-top:7px;display:flex;gap:5px}
 .mini{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--muted)}
 .mini:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
-.mini.p{background:var(--primary);border-color:var(--primary-ink);color:var(--on-primary)}
+.mini.p{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 
 /* screening — radar field grid */
 .rg2{display:grid;grid-template-columns:118px 1fr;border-top:1px solid var(--line)}
@@ -633,13 +647,20 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
   /* 상단바 압축 — 폰에서는 로고+CTA+언어+이름이 한 줄에 안 들어간다.
      주 행동(요청하기)은 남기고 이름표를 아바타만 남긴다. */
-  .top{gap:6px;padding:0 10px}
-  .mark{gap:9px}
+  .top{gap:6px;padding:0 10px;height:58px}
+  .mark{gap:8px}
   .me .dp,.me .nm{display:none}
   .me{padding:2px}
   .newreq{padding:7px 11px;font-size:12px;flex:none}
-  .lang{padding:5px 9px;font-size:11.5px}
   .brand{display:none}   /* 로고 워드마크만으로 충분 */
+  /* 사이드바 → 서랍 */
+  .rail{position:fixed;top:58px;left:0;bottom:0;height:auto;width:230px;transform:translateX(-100%);
+        transition:transform .2s ease;box-shadow:var(--ele-md);z-index:45}
+  .shell:not(.fold) .rail{transform:none}
+  .shell.fold .rail{display:flex}
+  .shell:not(.fold) .navbd{display:block;position:fixed;top:58px;left:0;right:0;bottom:0;
+        background:rgba(0,0,0,.34);z-index:44}
+  .main{padding:14px 12px 60px}
   .drop{width:calc(100vw - 20px);right:-4px}
 
   /* 탭 레일 — 스크롤바 숨김 */
@@ -763,6 +784,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 </div>
 
 <header class="top">
+  <button class="ham" id="ham" aria-label="메뉴 접기/펼치기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
   <div class="mark"><svg class="dwlogo" viewBox="0 0 160 28" width="108.6" height="19" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="대웅제약"><g clip-path="url(#dwlogo)">
 <path d="M3.461 18.2407C3.27175 18.1231 3.13575 18.2181 3.08543 18.2743C3.04167 18.3236 2.97531 18.4674 3.0847 18.6416C3.80412 19.7767 5.01688 23.1215 2.06665 27.9946H6.91588C7.62362 24.7335 7.23821 20.5577 3.461 18.2407Z" fill="#F18A00"/>
 <path d="M14.0499 19.953C13.7709 19.8917 13.5653 20.1334 13.8001 20.3616C13.8001 20.3616 16.0791 22.3704 15.6255 27.9946H19.83C19.83 27.9946 19.7308 21.2287 14.0499 19.953Z" fill="#F18A00"/>
@@ -782,18 +804,23 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 </clipPath>
 </defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn">Shared Service Request System</span></span></div>
   <div class="topr" style="position:relative">
-    <!-- 요청하기는 이 시스템의 단 하나의 주 행동이다. 페이지마다 제목 옆에 떠 있으니
-         페이지를 옮길 때마다 나타났다 사라져서 뜬금없어 보였다. 상단바에 고정한다. -->
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
-    <button class="lang" id="langBtn">EN</button>
-    <button class="me">
+    <button class="me" id="meBtn" aria-haspopup="true">
       <span class="av" id="uav">유</span>
-      <span style="text-align:left"><span class="nm" id="unm" style="display:block">요청자</span></span>
+      <span class="nm" id="unm">요청자</span>
+      <svg class="caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+        <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
+    <div class="drop" id="meDrop">
+      <div class="drop-h" id="dropWho">요청자</div>
+      <button class="dropi" data-lang="ko">한국어</button>
+      <button class="dropi" data-lang="en">English</button>
+    </div>
   </div>
 </header>
 
 <div class="shell">
+  <div class="navbd" id="navbd"></div>
   <nav class="rail">
     <button class="nb on" data-s="find" data-r="req own adm">전체 요청<span class="c" id="cAll">0</span></button>
     <button class="nb" data-s="mine" data-r="req">내 요청<span class="c" id="cMine">0</span></button>
@@ -873,13 +900,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   <!-- FIND -->
   <section class="screen" id="s-find">
     <div class="head">
-      <div><h1>전체 요청</h1><div class="sub">쉐어드서비스에 접수된 모든 요청 · 읽기 전용</div></div>
+      <div><h1>전체 요청</h1></div>
     </div>
     <div class="sbig"><span class="sch">dw://</span><input type="text" id="sq" placeholder="요청번호, 제목, 내용" autocomplete="off"></div>
     <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
     <div id="hit"></div>
     <div class="card">
-      <div class="ch2"><h3 id="rcount">결과</h3><span class="nt">제목·본문·의견 전체 검색</span></div>
+      <div class="ch2"><h3 id="rcount">결과</h3></div>
       <div id="rl"></div>
     </div>
   </section>
@@ -1017,7 +1044,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
   <!-- RULE — 담당자 관리 -->
   <section class="screen" id="s-rule">
-    <div class="head"><div><h1>담당자 관리</h1><div class="sub">요청이 접수되면 이 표대로 담당자가 자동 지정됩니다</div></div>
+    <div class="head"><div><h1>담당자 관리</h1></div>
       <div class="filt" id="ruleBar" style="align-items:center"></div></div>
     <div class="card">
       <div class="ch2"><h3>담당자 지정</h3><span class="nt" id="ruleNote">순위대로 배정 · 앞 순위가 한도를 넘으면 다음 순위로</span></div>
@@ -1028,11 +1055,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       <div class="cf" id="ruleFoot"></div>
     </div>
     <div class="card">
-      <div class="ch2"><h3>근무조</h3><span class="nt">교대로 돌지만 <b>멤버는 고정</b> · 조를 담당자로 지정하면 <b>조원 전원에게 메일</b>이 갑니다</span></div>
+      <div class="ch2"><h3>근무조</h3><span class="nt">조를 담당자로 지정하면 조원 전원에게 메일</span></div>
       <div class="cb"><div id="grpBody"></div></div>
     </div>
     <div class="card">
-      <div class="ch2"><h3>팀원 명부</h3><span class="nt">인사 API 연동 시 자동 동기화 — 지금은 데모 고정값</span></div>
+      <div class="ch2"><h3>팀원 명부</h3><span class="nt">인사 API 연동 시 자동 동기화</span></div>
       <div class="cb"><div id="teamBody"></div></div>
       <div class="cf" id="moveFoot"></div>
     </div>
@@ -1040,15 +1067,15 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
   <!-- MASTER — 기준정보 관리 (부서 단위) -->
   <section class="screen" id="s-master">
-    <div class="head"><div><h1>기준정보</h1><div class="sub">요청 폼의 분류를 부서가 직접 관리합니다 · 개발자 요청 없이 추가·수정·삭제</div></div>
+    <div class="head"><div><h1>기준정보</h1></div>
       <div class="filt" id="mBar" style="align-items:center"></div></div>
     <div class="card">
-      <div class="ch2"><h3>분류축</h3><span class="nt">이 부서가 요청을 나누는 기준 · <b>배정축</b>의 값이 담당자를 결정합니다</span></div>
+      <div class="ch2"><h3>분류축</h3><span class="nt">배정축의 값이 담당자를 결정합니다</span></div>
       <div class="cb"><div id="mAxes"></div></div>
     </div>
     <div id="mOpts"></div>
     <div class="card">
-      <div class="ch2"><h3>부서</h3><span class="nt">읽기 전용 — 부서 신설·폐지는 시스템 관리자만</span></div>
+      <div class="ch2"><h3>부서</h3><span class="nt">읽기 전용</span></div>
       <div class="cb"><div id="mDept"></div></div>
     </div>
   </section>
@@ -1299,7 +1326,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if($('#cav'))$('#cav').textContent=m.av;
     // 관리자 화면은 국문 고정 — 영문 전환은 요청자·담당자 화면에만
     if(r==='adm' && LANG==='en') setLang('ko');
-    if($('#langBtn'))$('#langBtn').style.display = r==='adm' ? 'none' : '';
+
     if($('#ownAs'))$('#ownAs').style.display = r==='own' ? '' : 'none';
     if($('#reqAs'))$('#reqAs').style.display = r==='req' ? '' : 'none';
     // 역할별 탭 순서 — 첫 탭이 그 역할의 홈
@@ -1651,7 +1678,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       return '<div class="fr"><label class="fk">'+esc2(x.n)+' <span class="rq">*</span></label>'+
         '<div class="fv"><select class="axs" data-n="'+esc2(x.n)+'" style="min-width:190px">'+
           '<option value="">선택</option>'+x.o.map(function(v){return '<option>'+esc2(v)+'</option>'}).join('')+
-        '</select>'+(x.a?'<div class="deriv" id="deriv" style="display:none"><div id="dvOwn"></div></div>':'')+'</div></div>';
+        '</select></div></div>';
     }).join('');
     $$('.axs',g).forEach(function(s){ s.onchange=deriv });
     deriv();
@@ -1781,7 +1808,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var mine=byPeriod(allT().filter(function(t){return isMine(t,ME)}));
     var list=bySearch(mine.filter(FGROUP[WQ].f), WS);
     $('#s-work').innerHTML=
-     '<div class="head"><div><h1>내 업무</h1><div class="sub">나에게 배정된 요청</div></div></div>'+
+     '<div class="head"><div><h1>내 업무</h1></div></div>'+
      searchBox('wq',WS)+
      '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateBar(mine,'w',WQ)+'</div>'+
      '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
@@ -1795,7 +1822,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var own=byPeriod(allT().filter(function(t){return t.rq.nm===ROLE.req.nm}));   // 내가 낸 요청만
     var list=bySearch(own.filter(FGROUP[MQ].f), MS);
     $('#s-mine').innerHTML=
-     '<div class="head"><div><h1>내 요청</h1><div class="sub">내가 접수한 요청</div></div>'+CTA+'</div>'+
+     '<div class="head"><div><h1>내 요청</h1></div></div>'+
      searchBox('mq',MS)+
      '<div class="filt" id="mFilt" style="margin-bottom:12px">'+periodSel('m')+stateBar(own,'m',MQ)+'</div>'+
      '<div class="card"><div class="cb">'+
@@ -1812,7 +1839,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var cc=byPeriod(allT().filter(function(t){return t.rq.nm!==me&&t.jn.some(function(j){return j.nm===me})}));
     var list=bySearch(cc.filter(FGROUP[CQ].f), CS);
     $('#s-cc').innerHTML=
-     '<div class="head"><div><h1>회람 중인 요청</h1><div class="sub">내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다</div></div>'+CTA+'</div>'+
+     '<div class="head"><div><h1>회람 중인 요청</h1></div></div>'+
      searchBox('cq',CS)+
      '<div class="filt" id="cFilt" style="margin-bottom:12px">'+periodSel('c')+stateBar(cc,'c',CQ)+'</div>'+
      '<div class="card"><div class="cb">'+
@@ -2752,7 +2779,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // 배치 원칙: 상태 설명은 왼쪽, 버튼은 오른쪽, 주 버튼(pri)이 가장 오른쪽.
   //   예전엔 disabled 버튼으로 상태를 표시했는데, 눌리지도 않는 걸 버튼처럼 보이게 둘 이유가 없다 → 글로 뺐다.
   function acts(t){
-    var lab='<div class="seclab">요청 처리 <span class="n">상태를 바꿉니다 · 사유가 필요한 것은 창이 뜹니다</span></div>';
+    var lab='<div class="seclab">요청 처리</div>';
     var note=function(m){ return m?'<span class="ronote">'+m+'</span>':'' };
     var sp='<span class="sp"></span>';
     var wrap=function(r,o,a){
@@ -2892,12 +2919,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
     if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
       body+='<div class="cmb">'+
-        '<div class="seclab">의견 <span class="n">이 요청에 대해 말을 남깁니다 · <b>상태는 바뀌지 않습니다</b> · 요청자·담당자·회람자 전원에게 메일</span></div>'+
+        '<div class="seclab">의견</div>'+
         '<div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
         '<textarea id="ctx" placeholder="진행하면서 남길 의견을 적어주세요"></textarea>'+
         '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
         '<button class="atc" data-t2="파일 선택">+ 첨부</button>'+
-        '<span class="nt2">공개 · 종결 후에도 검색됩니다</span></div></div></div></div>';
+        '</div></div></div></div>';
     }
     // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
     // 남의 요청에는 평가 폼을 띄우지 않는다 — 종결된 건의 '결과'는 읽기 전용이라 그대로 보여준다.
@@ -3038,7 +3065,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
   function setLang(l){
     LANG=l;
-    if($('#langBtn')) $('#langBtn').textContent = l==='ko' ? 'EN' : '한국어';
+    
     document.documentElement.lang=l;
     // 영문에서는 국문 제목을 숨기고 영문 하나만 — 같은 말을 두 번 쓰지 않는다
     var k1=$('#brandKo'), k2=$('#brandEn');
@@ -3052,7 +3079,26 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     } else { NODES=[]; tr(); }
     try{ localStorage.setItem(LS+'-lang', l) }catch(e){}
   }
-  if($('#langBtn')) $('#langBtn').onclick=function(){ setLang(LANG==='ko'?'en':'ko') };
+  // 햄버거 — 사이드바 접기. 폰에서는 서랍처럼 열린다.
+  var isPhone=function(){ return matchMedia('(max-width:900px)').matches };
+  if(isPhone()) $('.shell').classList.add('fold');   // 폰은 서랍이 기본으로 닫혀 있다
+  if($('#ham')) $('#ham').onclick=function(){ $('.shell').classList.toggle('fold'); };
+  // 폰에서 탭을 고르면 서랍은 닫는다 — 열어둔 채로 두면 내용을 가린다
+  $$('.rail .nb').forEach(function(b){ b.addEventListener('click',function(){
+    if(isPhone()) $('.shell').classList.add('fold');
+  });});
+  // 뒷배경을 누르면 닫힘
+  if($('#navbd')) $('#navbd').onclick=function(){ $('.shell').classList.add('fold'); };
+  // 프로필 드롭다운 — 한/영을 여기로 넣어 상단바 버튼 수를 줄였다
+  if($('#meBtn')) $('#meBtn').onclick=function(e){
+    e.stopPropagation(); $('#meDrop').classList.toggle('on'); markLang();
+  };
+  document.addEventListener('click',function(){ if($('#meDrop')) $('#meDrop').classList.remove('on'); });
+  if($('#meDrop')) $('#meDrop').onclick=function(e){ e.stopPropagation(); };
+  function markLang(){ $$('.dropi[data-lang]').forEach(function(b){ b.classList.toggle('on', b.dataset.lang===LANG) }); }
+  $$('.dropi[data-lang]').forEach(function(b){ b.onclick=function(){
+    setLang(b.dataset.lang); markLang(); $('#meDrop').classList.remove('on');
+  };});
 
   // ================= 초기화 =================
   // 위쪽 var 선언(empty 등)이 모두 평가된 뒤 실행되어야 한다.
