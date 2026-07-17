@@ -653,16 +653,24 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
       color:var(--primary-ink);margin-right:6px}
 .prno .s{color:var(--faint);font-weight:400}
 /* 카드 아래 줄 — 왼쪽은 확인용 사실, 오른쪽은 지금 알아야 할 한 가지(기한·결과).
-   오른쪽을 세로로 정렬시켜 카드가 쌓였을 때 날짜가 한 열로 읽히게 한다. */
-.prb{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:5px;flex-wrap:wrap}
-.prm{font-size:10.5px;color:var(--faint);font-family:var(--mono);min-width:0;flex:1}
-/* 요청번호는 참조용이라 뒤로 뺐다. 색은 더 낮추지 않는다 — --faint 가 이미 AA 하한(5.24:1)이고
-   여기서 더 흐리면 안 보인다. 강조를 낮추는 건 색이 아니라 자리로 한다. */
-.prd{flex:none;font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+   오른쪽을 세로로 정렬시켜 카드가 쌓였을 때 날짜가 한 열로 읽히게 한다.
+   폰트는 sans. 예전엔 mono 였는데 내용이 대부분 한글이고 JetBrains Mono 에는 한글이 없어
+   한 줄이 두 폰트(라틴=JBM, 한글=폴백)로 그려졌다 — 자간·높이가 미묘하게 어긋나 지저분했다.
+   mono 가 필요한 요청번호는 이미 제목 줄(.prno)로 갔으므로 여기서 mono 는 할 일이 없다. */
+.prb{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-top:6px;flex-wrap:wrap}
+.prm{font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);min-width:0;flex:1;line-height:1.5}
+/* 라벨은 낮게, 값은 높게 — 대비로 위계를 만든다. 색을 --faint 아래로 더 낮추지는 않는다.
+   --faint 가 이미 AA 하한(5.24:1)이라 그 밑은 안 보인다. 값을 올려서 벌린다(--ink-2 = 10:1). */
+.pmk{color:var(--faint);font-weight:400}
+.pmv{color:var(--ink-2);font-weight:600}
+.pmv.me{color:var(--good)}
+.pms{color:var(--faint);font-style:normal;margin:0 6px;font-weight:400}
+.prd{flex:none;font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);white-space:nowrap}
 .prd .dd{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--primary-ink);
-         background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:3px}
+         background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:4px}
 .prd .dd.w{color:var(--signal);background:var(--signal-tint);border-color:#f0bcc1}
-.pr.fin .prd{color:var(--faint);font-weight:500}
+/* 끝난 요청은 값도 가라앉힌다 — 회색 카드 안에서 이름만 진하면 따로 논다 */
+.pr.fin .pmv{color:var(--muted);font-weight:500}
 .hp{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .hp.w{background:var(--signal-tint);border-color:#f0bcc1;color:var(--signal)}
 
@@ -1830,6 +1838,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var n=Math.round((new Date(d2)-new Date(today()))/864e5);
     return n===0?'오늘':n>0?'D-'+n:'D+'+(-n);
   }
+  // 목록에서는 올해면 연도를 뗀다 — 카드 열에 '2026-'이 열다섯 번 반복돼봐야 읽는 사람은 없다.
+  // 해가 넘어가는 건에만 연도를 남겨 그때 눈에 띄게 한다.
+  function shortD(d2){
+    if(!d2) return '';
+    return String(d2).slice(0,4)===today().slice(0,4) ? String(d2).slice(5) : d2;
+  }
   // ================= 목록 렌더 =================
   // 카드는 훑는 물건이다. 한 줄에 사실을 다 늘어놓고 같은 회색으로 칠하면 아무것도 안 읽힌다.
   // 그래서 두 갈래로 나눈다.
@@ -1846,21 +1860,28 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // 같은 요청이 [전체 요청]에선 '담당 박수지'가 붙고 [내 업무]에선 없어서 다른 카드처럼 보였다.
   // 카드는 보는 각도가 아니라 요청 그 자체를 그려야 한다. 내 것은 이름이 초록으로 뜨므로
   // [내 업무] 배지는 같은 말을 두 번 하는 것이라 뺐다.
+  // 라벨(요청자·담당·기한)은 낮게, 값(이름·분류·날짜)은 높게. 예전엔 둘 다 같은 회색이라
+  // 다섯 개 사실이 점으로 이어진 한 덩어리로 보였다. 값만 진하게 해도 눈이 값에 먼저 간다.
+  // 클래스명은 pmk/pmv/pms — 짧은 이름(.pk/.pv/.pd)은 이미 버튼 그룹·상세 필드가 쓰고 있다.
+  // 겹치면 그쪽 display:flex 를 물려받아 라벨과 값이 줄바꿈된다.
+  var K=function(s2){ return '<span class="pmk">'+s2+'</span>' };            // 라벨
+  var V=function(s2,c){ return '<b class="pmv'+(c||'')+'">'+s2+'</b>' };     // 값
+  var SEP='<i class="pms">·</i>';
   function row(t, forRole, q, all){
     var s=ST[t.state], m=[], own=forRole==='own'&&isMine(t,ME);
     var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
-    if(attrVals(t).length) m.push(attrVals(t).map(H).join(' · '));
-    if(forRole==='own') m.push('요청자 '+H(t.rq.nm));
-    m.push('담당 '+(own?'<b style="color:var(--good)">'+H(t.as)+'</b>':H(t.as)));
-    if(t.parent) m.push('원 요청 dw://'+esc2(t.parent));
+    if(attrVals(t).length) m.push(attrVals(t).map(function(v){return V(H(v))}).join(SEP));
+    if(forRole==='own') m.push(K('요청자')+' '+V(H(t.rq.nm)));
+    m.push(K('담당')+' '+V(H(t.as), own?' me':''));
+    if(t.parent) m.push(K('원 요청')+' '+V('dw://'+esc2(t.parent)));
     // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
     var r2='';
-    if(t.state==='closed') r2='종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:'');
-    else if(t.state==='done') r2='완료'+(t.resolved?' '+t.resolved:'')+' · 확인 대기';
+    if(t.state==='closed') r2=K('종결')+(t.resolved?' '+V(shortD(t.resolved)):'')+(t.ev2&&t.ev2.g?SEP+K('평가')+' '+V(t.ev2.g):'');
+    else if(t.state==='done') r2=K('완료')+(t.resolved?' '+V(shortD(t.resolved)):'')+SEP+K('확인 대기');
     // 취소·반려는 배지가 이미 말한다 — 오른쪽에 또 쓰면 같은 말을 두 번 하는 것이고,
     // 이 둘은 기한이 의미를 잃은 상태라 날짜 열에 넣을 것도 없다.
     else if(t.state!=='cancel' && t.state!=='reject' && t.due)
-      r2='기한 '+t.due+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
+      r2=K('기한')+' '+V(shortD(t.due))+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
     // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
     //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
     var cls='pr';
