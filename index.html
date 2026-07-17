@@ -89,18 +89,28 @@ button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;backgrou
 }
 .rsw select option{color:#2f3334}
 
-/* topbar */
+/* topbar — 헤더는 하나의 띠다. 왼쪽 로고 락업 · 가운데 검색 · 오른쪽 행동, 셋뿐.
+   그 밖의 것은 이 띠에 들어오지 않는다. */
 .top{
   background:var(--surface);border-bottom:1px solid var(--line);
-  height:64px;display:flex;align-items:center;gap:12px;padding:0 16px;position:sticky;top:0;z-index:30;
+  height:64px;position:sticky;top:0;z-index:30;
 }
-.mark{display:flex;align-items:center;gap:14px;flex:none}
+/* 헤더 속살은 본문과 같은 격자에 태운다 — max-width·좌우 패딩을 .main 과 맞춰야
+   로고 왼쪽선과 본문 왼쪽선이 떨어지고, 우측 아이콘이 카드 오른쪽선과 떨어진다.
+   이게 안 맞으면 헤더가 화면에 얹힌 남의 물건처럼 보인다. */
+.topin{
+  height:100%;max-width:1100px;margin:0 auto;padding:0 28px;
+  display:flex;align-items:center;gap:14px;
+}
+/* 로고 락업 — [대웅 심볼+워드마크] │ [서비스명]. 구분선이 모기업과 제품명을 가른다.
+   서비스명은 문장이 아니라 표식이라 자간을 좁히고 무게를 올려 워드마크와 한 덩어리로 읽히게 한다.
+   색은 DAEWOONG 워드마크와 같은 계열(--dw-gray) — 주황을 또 쓰면 CTA와 싸운다. */
+.mark{display:flex;align-items:center;gap:11px;flex:none;min-width:0}
 .mark .dwlogo{display:block;flex:none}
-/* 서비스 로고 락업 — DAEWOONG 워드마크에서 자연스럽게 이어지도록 */
-.brand{display:flex;align-items:baseline;gap:9px;flex:none;white-space:nowrap}
-.brand .lk1{font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
-.brand .lk2{font-size:11px;font-weight:400;letter-spacing:.01em;color:var(--faint)}
-@media(max-width:760px){.brand .lk2{display:none}}
+.mbar{width:1px;height:18px;background:var(--line-2);flex:none}
+.brand{display:flex;align-items:center;flex:none;white-space:nowrap}
+.brand .lk1{font-size:15px;font-weight:800;letter-spacing:-.038em;color:var(--dw-gray)}
+.brand .lk2{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--dw-gray)}
 input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--faint);letter-spacing:-.01em;opacity:1}
 .topr{flex:none;display:flex;align-items:center;gap:10px}
 /* 주 행동 — 헤더에서 가장 큰 버튼이어야 한다. 어느 화면에서든 여기로 요청을 낸다.
@@ -172,27 +182,35 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 
 .main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1100px;margin:0 auto}
 
-/* 전역 검색 — 헤더의 중심. 어느 화면에서든 여기서 전체를 찾는다.
+/* 전역 검색 — 헤더의 중심. 알약 하나가 곧 검색창이고, 지우기·검색은 그 안에 산다.
+   버튼을 밖에 두면 '입력칸 + 남의 버튼' 두 덩어리로 보인다. 안에 넣어야 한 덩어리가 된다.
    좌우 auto 마진으로 로고와 우측 사이 남는 자리 가운데에 놓인다. */
-.gs{flex:1;max-width:560px;min-width:0;margin:0 auto;display:flex;gap:6px;align-items:center}
-.gsw{position:relative;flex:1;min-width:0}
-.gs input[type=text]{
-  width:100%;border:1px solid var(--line-2);border-radius:var(--r-field);background:var(--surface-2);
-  padding:10px 30px 10px 54px;font-family:var(--sans);font-size:13.5px;color:var(--ink);
+.gs{
+  flex:1;max-width:620px;min-width:0;margin:0 auto;position:relative;
+  display:flex;align-items:center;gap:7px;height:42px;padding:0 5px 0 15px;
+  border:1px solid var(--line-2);border-radius:var(--r-pill);background:var(--surface-2);
 }
-.gs input[type=text]:focus{outline:none;border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px var(--primary-tint)}
-.gsp{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:var(--mono);
-     font-size:12px;font-weight:700;color:var(--primary-ink);pointer-events:none}
-.gsx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:20px;height:20px;
-     border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;color:var(--faint)}
+.gs:focus-within{background:var(--surface);border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-tint)}
+/* 뒤에 오는 전역 input 규칙에 덮이지 않도록 선택자를 강하게 */
+.gs input[type=text]{
+  flex:1;min-width:0;height:100%;border:none;background:none;padding:0;
+  font-family:var(--sans);font-size:13.5px;color:var(--ink);
+}
+.gs input[type=text]:focus{outline:none;border:none;background:none;box-shadow:none}
+.gsp{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--primary-ink);flex:none;pointer-events:none}
+/* 폰에서 워드마크를 접었을 때 검색창 안으로 흡수되는 대웅 심볼 */
+.dwsym{display:none;flex:none}
+.gsx{width:24px;height:24px;border-radius:50%;border:none;background:none;color:var(--faint);
+     display:none;align-items:center;justify-content:center;font-size:15px;line-height:1;flex:none;padding:0}
 .gsx:hover{background:var(--line);color:var(--ink)}
-.gsgo{flex:none;padding:10px 15px;font-size:13px;font-weight:700;white-space:nowrap;
-      border:1px solid var(--line-2);border-radius:var(--r-field);background:var(--surface);color:var(--ink-2)}
-.gsgo:hover{border-color:var(--primary);color:var(--primary-ink);background:var(--primary-tint)}
+.gsdiv{width:1px;height:20px;background:var(--line);flex:none;display:none}
+.gsgo{width:32px;height:32px;border-radius:50%;border:none;background:none;flex:none;padding:0;
+      display:flex;align-items:center;justify-content:center;color:var(--primary-ink)}
+.gsgo:hover{background:var(--primary-tint)}
 
 /* 제안 — 결과가 아니라 '바로가기'다. 한 줄에 번호+제목만, 최대 5건, 스크롤 없음.
    훑는 건 결과 페이지 몫이라 스니펫·배지는 여기 넣지 않는다. */
-.gsres{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);
+.gsres{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface);
        border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--ele-sm);
        display:none;z-index:60;overflow:hidden}
 .gsres.on{display:block}
@@ -252,8 +270,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .b-wait,.b-verify{background:var(--primary-tint);color:var(--primary-ink);border-color:#f0c99a;font-weight:700}
 .b-slip{background:var(--signal-tint);color:var(--signal);border-color:#f0bcc1}
 .b-resolved{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
-/* 부서 전체를 볼 때 내 업무를 표시 — 담당자 이름과 같은 초록으로 묶는다 */
-.b-mine{background:var(--good-tint);color:var(--good);border-color:#b9dcc9;font-weight:700}
 .b-closed{background:var(--surface-2);color:var(--faint);border-color:var(--line)}
 
 .tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface-2);white-space:nowrap}
@@ -731,13 +747,18 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
   /* 상단바 압축 — 폰에서는 로고+CTA+언어+이름이 한 줄에 안 들어간다.
      주 행동(요청하기)은 남기고 이름표를 아바타만 남긴다. */
-  .top{gap:6px;padding:8px 10px;height:auto;flex-wrap:wrap}
-  .gs{order:9;flex-basis:100%;max-width:none;margin:2px 0 0}
-  .mark{gap:8px}
+  /* 로고 락업을 통째로 접고, 대웅 심볼을 검색창 안으로 들여보낸다.
+     좁은 폭에서 [로고][검색창]을 나란히 두면 검색창이 설 자리가 없다.
+     심볼이 알약 안에 들어가면 자리를 안 쓰면서 브랜드는 남는다 — 헤더가 한 줄로 떨어진다. */
+  .top{height:auto}
+  .topin{gap:8px;padding:8px 12px;max-width:none}
+  .mark{display:none}
+  .dwsym{display:block}
+  .gsp{display:none}          /* 심볼이 그 자리를 대신한다 */
+  .gs{max-width:none;margin:0;padding:0 4px 0 9px}
   .me .dp,.me .nm{display:none}
   .me{padding:2px}
-  .btn.newreq{padding:9px 14px;font-size:13px;flex:none}
-  .brand{display:none}   /* 로고 워드마크만으로 충분 */
+  .btn.newreq{padding:9px 13px;font-size:13px;flex:none}
   /* 사이드바 → 서랍 */
   .rail{position:fixed;top:58px;left:0;bottom:0;height:auto;width:230px;transform:translateX(-100%);
         transition:transform .2s ease;box-shadow:var(--ele-md);z-index:45}
@@ -816,7 +837,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   .chip{padding:6px 10px}
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
   .tl{padding:2px 0;display:inline-block}
-  .gsgo{min-height:42px}
+  .gsgo,.gsx{min-width:40px;min-height:40px;border-radius:50%}
   .gsi,.gsall{min-height:44px}
 }
 
@@ -845,7 +866,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   .bell{width:40px;height:40px}
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
   .tl{display:inline-block;padding:3px 0}
-  .gsgo{min-height:42px}
+  .gsgo,.gsx{min-width:40px;min-height:40px;border-radius:50%}
   .gsi,.gsall{min-height:44px}
   /* 카드 아래 줄 — 폰 폭에서는 분류와 기한이 한 줄에 안 들어간다.
      억지로 붙이면 기한이 분류 텍스트 중간을 끊고 들어가 둘 다 안 읽힌다. 세로로 쌓는다. */
@@ -873,7 +894,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </span>
 </div>
 
-<header class="top">
+<header class="top"><div class="topin">
   <button class="ham" id="ham" aria-label="메뉴 접기/펼치기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
   <div class="mark"><svg class="dwlogo" viewBox="0 0 160 28" width="108.6" height="19" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="대웅제약"><g clip-path="url(#dwlogo)">
 <path d="M3.461 18.2407C3.27175 18.1231 3.13575 18.2181 3.08543 18.2743C3.04167 18.3236 2.97531 18.4674 3.0847 18.6416C3.80412 19.7767 5.01688 23.1215 2.06665 27.9946H6.91588C7.62362 24.7335 7.23821 20.5577 3.461 18.2407Z" fill="#F18A00"/>
@@ -892,16 +913,19 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 <clipPath id="dwlogo">
 <rect width="160" height="28" fill="white"/>
 </clipPath>
-</defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn" style="display:none">Shared Service Request System</span></span></div>
-  <!-- 전역 검색 — 브라우저 검색창처럼. 치고 [검색]하면 결과 페이지로 간다. -->
+</defs></svg><span class="mbar"></span><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn" style="display:none">Shared Service Request System</span></span></div>
+  <!-- 전역 검색 — 알약 하나가 검색창. 지우기·검색은 그 안에 있다.
+       폰에서는 로고 락업이 접히고 대웅 심볼이 이 알약 안으로 들어온다. -->
   <form class="gs" id="gsf">
-    <div class="gsw">
-      <span class="gsp">dw://</span>
-      <input type="text" id="gsq" placeholder="요청번호 · 제목 · 분류 · 담당자로 전체 검색" autocomplete="off">
-      <button type="button" class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
-      <div class="gsres" id="gsres"></div>
-    </div>
-    <button type="submit" class="gsgo" id="gsgo">검색</button>
+    <svg class="dwsym" viewBox="0 0 28 28" width="19" height="19" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="대웅"><path d="M3.461 18.2407C3.27175 18.1231 3.13575 18.2181 3.08543 18.2743C3.04167 18.3236 2.97531 18.4674 3.0847 18.6416C3.80412 19.7767 5.01688 23.1215 2.06665 27.9946H6.91588C7.62362 24.7335 7.23821 20.5577 3.461 18.2407Z" fill="#F18A00"/><path d="M14.0499 19.953C13.7709 19.8917 13.5653 20.1334 13.8001 20.3616C13.8001 20.3616 16.0791 22.3704 15.6255 27.9946H19.83C19.83 27.9946 19.7308 21.2287 14.0499 19.953Z" fill="#F18A00"/><path d="M25.7228 11.5021C25.7228 11.5021 27.0763 10.7646 26.176 9.4655C26.176 9.4655 26.9647 8.72798 26.2314 7.88311C26.2314 7.88311 26.7379 6.97545 26.0072 6.35476C26.0072 6.35476 27.0409 4.69642 25.8358 4.01549C25.4796 3.81358 25.1368 3.8092 24.8495 3.88296C24.6744 3.92786 24.506 4.00563 24.3517 4.10348C24.0371 4.29882 23.826 4.54928 23.6207 4.85707C23.3775 5.22255 23.0059 5.84944 22.4455 6.91849L20.3116 4.99837C20.1618 4.85671 20.3441 4.60515 20.425 4.47772C20.572 4.255 20.7765 4.09436 21.0026 3.95415C21.2407 3.80519 21.5003 3.69383 21.768 3.61022C21.9641 3.54596 22.4207 3.46381 22.4148 3.1845C22.4115 3.00523 22.2048 2.94316 22.063 2.92381C21.9492 2.90665 21.8303 2.89387 21.7115 2.88876C21.629 2.8862 21.5029 2.90665 21.4475 2.82121C21.4139 2.76973 21.4052 2.69744 21.4161 2.63829C21.4358 2.55541 21.5383 2.52328 21.6101 2.50831C21.6101 2.50831 22.3765 2.32539 22.3357 2.14028C22.3357 2.14028 22.3357 2.02637 21.7738 0.891966C21.7738 0.891966 21.66 0.678011 21.1813 1.08036C21.1022 1.14389 21.0449 1.22385 20.9399 1.24649C20.7065 1.29286 20.5111 1.05371 20.3572 0.911317C20.1596 0.727301 19.9525 0.553143 19.7133 0.424259C19.3873 0.249006 19.0249 0.159919 18.654 0.143489C18.5946 0.139838 18.5319 0.139838 18.4703 0.139838C18.1694 0.143489 17.83 0.191318 17.5481 0.303407C17.4329 0.349776 17.2932 0.352697 17.1908 0.28004C17.0985 0.221622 17.0194 0.138742 16.9202 0.088722C16.7984 0.0299391 16.6686 0 16.5344 0C16.052 0 15.6651 0.387748 15.6651 0.871155C15.6651 0.90365 15.6673 0.935049 15.6713 0.964988C15.6732 0.982879 15.6754 0.997848 15.6772 1.01428C15.698 1.13403 15.7421 1.25051 15.811 1.35091C15.8238 1.37209 15.8394 1.39071 15.8515 1.40933C15.8799 1.44365 15.9109 1.47687 15.9109 1.52324C15.9109 1.56121 15.8981 1.59079 15.8708 1.61708C15.5671 1.92852 14.9596 2.52109 14.397 4.23857C14.397 4.23857 11.7516 2.10194 9.43033 2.92673C9.27572 2.9815 9.12768 3.04795 8.98511 3.12827C8.98511 3.12827 10.1363 3.8092 10.5581 4.49488C10.5891 4.54782 10.5796 4.58652 10.5643 4.61537C10.5494 4.64531 10.5279 4.67671 10.448 4.69168C10.448 4.69168 10.4469 4.68876 10.4458 4.68876L5.61337 5.45257C5.57399 5.46133 5.543 5.45111 5.52987 5.41971C5.51601 5.38977 5.53716 5.35983 5.55065 5.35107L9.7935 1.77334C9.7935 1.77334 9.95868 1.63789 10.0874 1.4327C10.1662 1.32681 10.2139 1.19647 10.2139 1.05481C10.2139 0.733143 9.97399 0.467707 9.66369 0.423894C9.62869 0.417322 9.59368 0.412575 9.55977 0.408924C9.3213 0.37862 9.10617 0.385557 9.10617 0.385557H5.32714C5.32714 0.385557 5.24436 0.387748 5.14992 0.407464V0.408924C5.02741 0.438863 4.93625 0.548762 4.93625 0.680567C4.93625 0.780607 5.00298 0.868234 5.08867 0.947098C5.28083 1.12308 5.44127 1.20341 5.44965 1.48491C5.45549 1.78065 5.29942 2.0585 5.15868 2.3075L3.31437 5.5318C3.28447 5.57707 3.24509 5.67017 3.15539 5.74247C3.0657 5.8133 2.97235 5.82973 2.84181 5.84981C2.1224 5.94875 0.409725 6.18681 0.272623 6.20433C0.0779105 6.22916 0.000244141 6.35439 0.000244141 6.49752C0.000244141 6.61983 0.0779105 6.72352 0.18657 6.76405C0.305805 6.8075 0.403161 6.84547 0.564328 6.90279C0.564328 6.90279 1.01538 8.25443 1.08611 8.44502C1.15685 8.63524 1.4657 9.0982 2.25877 8.83204C2.55631 8.73309 2.976 8.81196 2.976 9.37788V16.8882C2.976 16.9061 2.97891 16.9474 3.00152 16.9831C3.02486 17.0204 3.06825 17.0452 3.11018 17.0525C3.44345 17.1153 4.35321 17.319 5.20863 17.8291C5.24291 17.8463 5.26551 17.8598 5.29724 17.8397C5.32969 17.8211 5.32714 17.7882 5.32714 17.7696V15.6589H9.52003L9.51383 16.7407C9.51383 16.7407 9.51383 17.8138 8.37873 17.8138C8.37873 17.8138 6.01483 17.8123 5.92841 17.8123C5.82413 17.8123 5.74464 17.8857 5.73625 17.9671C5.72276 18.0996 5.80371 18.169 5.93935 18.2501C5.93935 18.2501 10.9042 21.1345 9.60535 27.9942L13.7629 28C13.7629 28 14.0969 23.6643 10.9042 21.1348C10.8068 21.0592 10.7729 20.9979 10.7714 20.9552C10.766 20.8668 10.8615 20.8453 10.9242 20.8318C10.9548 20.8219 10.9855 20.8139 11.0154 20.8077C11.7253 20.6102 14.9982 19.5112 15.0343 15.8593L15.0562 8.97881C15.093 7.60052 15.2396 7.34749 15.5087 7.34749C15.6841 7.34749 15.7917 7.62826 15.9033 8.04084C16.1133 8.83824 16.4232 9.52794 17.0146 10.1154C17.4077 10.5021 17.8001 10.8891 18.1931 11.2757C18.1931 11.2757 20.2934 13.3353 20.4455 13.5029C20.751 13.8406 22.0075 15.8838 18.8243 17.7272C18.6529 17.8276 18.4455 17.8747 18.3561 18.0701C18.2435 18.3118 18.5111 18.5491 18.6555 18.7061C19.0774 19.1632 19.3961 19.6525 19.6899 20.1936C20.5975 21.853 21.8814 25.0499 21.259 27.9942H26.0881C26.0881 27.9942 26.5333 21.2568 20.44 18.9164C20.3503 18.8821 20.2788 18.8087 20.3124 18.7046C20.3499 18.605 20.4549 18.5597 20.5373 18.502C21.0238 18.1712 22.8163 16.7969 22.4743 14.7403C22.4743 14.7403 25.6648 14.8377 25.7228 11.5021ZM9.57436 14.0769H5.34063V12.987H9.57436V14.0769ZM9.57436 11.4053H5.34063V10.3162H9.57436V11.4053ZM12.2734 18.3027L12.2708 18.3012C12.2435 18.3198 12.2121 18.3297 12.1771 18.3297C12.0859 18.3297 12.0115 18.2563 12.0115 18.165C12.0115 18.1621 12.0126 18.1599 12.0126 18.1559L12.0115 18.1537V9.89816C12.0115 8.82692 11.2965 8.73638 10.9607 8.73638H5.15795C4.73388 8.73638 4.53662 8.54652 4.44728 8.37638C4.41957 8.32563 4.39587 8.26575 4.42431 8.18798C4.45421 8.11021 4.5089 8.07954 4.56178 8.06019L10.4699 6.09042C10.5348 6.06815 10.6198 6.04368 10.7109 6.01374C10.7346 6.00863 10.7795 5.98234 10.8323 6.01374C10.8921 6.04806 10.8885 6.07946 10.898 6.11415C10.9508 6.32956 11.0551 6.67606 11.2024 6.94295C11.931 8.26721 13.4052 8.33366 13.4052 8.33366L13.4074 16.2719C13.4074 17.5155 12.689 18.0175 12.2734 18.3027ZM18.4976 0.786814C18.7937 0.786814 19.0387 1.02998 19.0387 1.32864C19.0387 1.63022 18.7937 1.87192 18.4976 1.87192C18.1982 1.87192 17.9514 1.63022 17.9514 1.32864C17.9514 1.02998 18.1982 0.786814 18.4976 0.786814ZM21.9332 12.4496C21.7581 12.2794 17.9452 8.53922 17.8052 8.39536C17.6644 8.25114 16.844 7.34749 17.6644 6.49131C18.2588 5.87208 19.062 6.22113 19.3807 6.51139C19.695 6.80056 23.0548 9.87114 23.0548 9.87114C23.2867 7.89188 24.141 7.42782 24.141 7.42782C24.141 7.42782 24.6245 7.08133 24.9523 7.54392C25.2163 7.91634 24.7959 8.43662 24.7959 8.43662C25.0602 8.50782 25.1167 8.78202 25.077 9.02481C25.0526 9.17232 24.9826 9.30887 24.8794 9.41256C24.8032 9.48668 24.7401 9.51881 24.7401 9.51881C24.8546 9.50895 24.9293 9.56518 24.9727 9.6466C25.0194 9.73203 25.0351 9.84558 25.0343 9.94307C25.0314 10.1713 24.9505 10.4053 24.7948 10.5754C24.5494 10.8409 24.1957 10.9771 24.1957 10.9771C24.2354 11.7595 24.0079 12.1513 23.6808 12.4189C22.8808 13.1089 22.0841 12.5949 21.9332 12.4496Z" fill="#F18A00"/></svg>
+    <span class="gsp">dw://</span>
+    <input type="text" id="gsq" placeholder="요청번호 · 제목 · 분류 · 담당자로 전체 검색" autocomplete="off">
+    <button type="button" class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
+    <span class="gsdiv"></span>
+    <button type="submit" class="gsgo" id="gsgo" aria-label="검색">
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true"><circle cx="7.2" cy="7.2" r="5.3" stroke="currentColor" stroke-width="1.7"/><path d="M11.3 11.3L15.2 15.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <div class="gsres" id="gsres"></div>
   </form>
   <div class="topr" style="position:relative">
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
@@ -917,7 +941,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       <button class="dropi" data-lang="en">English</button>
     </div>
   </div>
-</header>
+</div></header>
 
 <div class="shell">
   <div class="navbd" id="navbd"></div>
@@ -1817,15 +1841,17 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   //
   // q를 주면 검색 결과용 — 걸린 자리를 제목과 아래 줄 양쪽에서 칠한다.
   // 검색 대상이 곧 이 카드에 적힌 값들이라(hayOf 참고) 어디서 걸렸는지가 늘 보인다.
-  // all=true 면 부서 전체를 보는 중 — 누구 업무인지가 카드마다 있어야 내 것과 남의 것이 구분된다.
+  //
+  // 담당자는 어느 화면에서든 항상 적는다. 예전엔 [내 업무]에서 생략했는데(어차피 나니까),
+  // 같은 요청이 [전체 요청]에선 '담당 박수지'가 붙고 [내 업무]에선 없어서 다른 카드처럼 보였다.
+  // 카드는 보는 각도가 아니라 요청 그 자체를 그려야 한다. 내 것은 이름이 초록으로 뜨므로
+  // [내 업무] 배지는 같은 말을 두 번 하는 것이라 뺐다.
   function row(t, forRole, q, all){
-    var s=ST[t.state], m=[], own=forRole==='own'&&all&&isMine(t,ME);
+    var s=ST[t.state], m=[], own=forRole==='own'&&isMine(t,ME);
     var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
     if(attrVals(t).length) m.push(attrVals(t).map(H).join(' · '));
-    if(forRole==='own'){
-      m.push('요청자 '+H(t.rq.nm));
-      if(all) m.push('담당 '+(own?'<b style="color:var(--good)">'+H(t.as)+'</b>':H(t.as)));
-    } else m.push('담당 '+H(t.as));
+    if(forRole==='own') m.push('요청자 '+H(t.rq.nm));
+    m.push('담당 '+(own?'<b style="color:var(--good)">'+H(t.as)+'</b>':H(t.as)));
     if(t.parent) m.push('원 요청 dw://'+esc2(t.parent));
     // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
     var r2='';
@@ -1842,7 +1868,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
     else if(t.state==='done'||t.state==='nego') cls+=' wait';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
-      '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(own?'<span class="badge b-mine">내 업무</span>':'')+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prb"><div class="prm">'+m.join(' · ')+'</div>'+
         (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
     '</div>';
@@ -1925,7 +1951,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
        (unass?'<span class="warn2">미배정 '+unass+'건</span>':'')+
      '</div>'+
      '<div class="card"><div class="cb">'+
-       (tot?pg.map(function(t){return row(t,'own',null,WSC==='dept')}).join(''):empty(WSC==='dept'?'부서에 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>'+
+       (tot?pg.map(function(t){return row(t,'own')}).join(''):empty(WSC==='dept'?'부서에 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>'+
      pager(tot, WPG, null);
     if($('#wScope')) $('#wScope').onchange=function(){WSC=this.value;WPG=1;renderWork()};
     if($('#wFin')) $('#wFin').onchange=function(){WFIN=this.checked;WPG=1;renderWork()};
@@ -3198,7 +3224,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   var GSN=5;      // 제안 최대 — 이보다 많으면 훑는 일이라 결과 페이지로 보낸다
   var GSL=[];     // 현재 제안된 요청번호
   var GSI=-1;     // 키보드 선택 위치. 0~GSL.length-1 = 제안, GSL.length = [전체 결과], -1 = 없음
-  function gsClear(){ if($('#gsx')) $('#gsx').style.display = ($('#gsq').value||'').trim() ? 'flex' : 'none'; }
+  // 지우기(×)와 그 옆 구분선은 칠 게 있을 때만 — 빈 검색창에 ×가 떠 있으면 뭘 지우라는 건지 모른다
+  function gsClear(){
+    var on=!!($('#gsq').value||'').trim();
+    if($('#gsx')) $('#gsx').style.display = on ? 'flex' : 'none';
+    if($('.gsdiv')) $('.gsdiv').style.display = on ? 'block' : 'none';
+  }
   function gsClose(){ var b=$('#gsres'); if(b){ b.classList.remove('on'); b.innerHTML=''; } GSL=[]; GSI=-1; }
   function gsMark(){
     var els=$$('#gsres .gsi,#gsres .gsall');
