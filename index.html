@@ -323,8 +323,19 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .tl{color:var(--link);font-weight:500;text-decoration:none;cursor:pointer}
 .tl:hover{text-decoration:underline}
 
+/* ── 요청 상세 — '의견'과 '상태를 바꾸는 버튼'을 눈으로도 갈라놓는다 ──
+   둘이 같은 회색 띠로 붙어 있으면 한 덩어리로 보인다. 그래서 의견을 적어놓고
+   아무 버튼이나 누르게 되고, 그 글이 어디로 갈지 예측이 안 된다.
+   의견 = 흰 바탕(말하는 곳) · 액션 = 회색 바탕(상태를 바꾸는 곳)으로 분리한다. */
+.seclab{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  font-size:11px;font-weight:800;color:var(--ink-2);letter-spacing:.02em;margin-bottom:9px;
+}
+.seclab .n{font-size:10.5px;font-weight:500;color:var(--faint);letter-spacing:0}
+.acts .seclab{width:100%;margin-bottom:2px}
+
 /* comment box */
-.cmb{border-top:1px solid var(--line);padding:13px 15px;background:var(--surface-2)}
+.cmb{border-top:2px solid var(--line-2);padding:14px 15px;background:var(--surface)}
 .cmb .row{display:flex;gap:9px;align-items:flex-start}
 .cmb .av2{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:2px}
 .cmb .fld{flex:1}
@@ -1035,6 +1046,26 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     <input type="text" id="can1" placeholder="담당자에게 그대로 전달됩니다">
   </div>
   <div class="mdf"><button class="btn" data-c>닫기</button><button class="btn dn" id="cango">요청 취소</button></div>
+</div></div>
+
+<div class="mk" id="m-nrej"><div class="md">
+  <div class="mdh"><h3 id="nrejT">새 기한 거절</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb" id="nrejW"></div>
+    <label class="fl">거절 사유 <span style="color:var(--signal)">필수</span></label>
+    <input type="text" id="nrej1" placeholder="담당자에게 그대로 전달됩니다">
+  </div>
+  <div class="mdf"><button class="btn" data-c>닫기</button><button class="btn dn" id="nrejgo">거절 · 기존 기한 유지</button></div>
+</div></div>
+
+<div class="mk" id="m-reopen"><div class="md">
+  <div class="mdh"><h3 id="reoT">재요청</h3><button class="btn sm" data-c>닫기</button></div>
+  <div class="mdb">
+    <div class="wb">재요청하면 <b>진행 상태로 되돌아가고</b> 담당자에게 통보됩니다 · 사유는 담당자에게 그대로 공개됩니다</div>
+    <label class="fl">무엇이 부족한가요 <span style="color:var(--signal)">필수</span></label>
+    <input type="text" id="reo1" placeholder="어떤 점이 미흡한지 구체적으로 적어주세요">
+  </div>
+  <div class="mdf"><button class="btn" data-c>닫기</button><button class="btn pri" id="reogo">재요청</button></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -2273,9 +2304,23 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       DUEMODE='nego'; op('m-due');
     };
     if($('#aNegoY'))$('#aNegoY').onclick=actNegoY;
-    if($('#aNegoN'))$('#aNegoN').onclick=actNegoN;
+    // 거절·재요청 — 사유는 각자 창에서 받는다(의견란과 분리)
+    if($('#aNegoN'))$('#aNegoN').onclick=function(){
+      var t=T[CUR], n=t.nego||{};
+      if($('#nrejT'))$('#nrejT').textContent='새 기한 거절 · dw://'+CUR;
+      if($('#nrejW'))$('#nrejW').innerHTML='담당자가 제안한 <b>'+esc2(n.to||'')+'</b>을(를) 거절합니다. '+
+        '기존 기한 <b>'+esc2(t.due)+'</b>이 그대로 유지되고, 그때까지 완료되지 않으면 지연으로 처리됩니다.';
+      if($('#nrej1'))$('#nrej1').value='';
+      op('m-nrej');
+    };
+    if($('#nrejgo'))$('#nrejgo').onclick=actNegoN;
     if($('#aRes'))$('#aRes').onclick=actResolve;
-    if($('#aReopen'))$('#aReopen').onclick=actReopen;
+    if($('#aReopen'))$('#aReopen').onclick=function(){
+      if($('#reoT'))$('#reoT').textContent='재요청 · dw://'+CUR;
+      if($('#reo1'))$('#reo1').value='';
+      op('m-reopen');
+    };
+    if($('#reogo'))$('#reogo').onclick=actReopen;
   }
 
 
@@ -2369,28 +2414,29 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     toast('새 기한 수락 · '+n.to+' 재확정');
     openT(CUR); refresh();
   }
+  // 거절 — 사유는 이 액션의 창에서 받는다. 의견란은 건드리지 않는다.
   function actNegoN(){
-    var t=T[CUR], n=t.nego||{}, v=$('#ctx')?$('#ctx').value.trim():'';
-    if(!v){ toast('거절 사유를 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#ctx'))$('#ctx').focus(); return; }
+    var t=T[CUR], n=t.nego||{}, v=$('#nrej1')?$('#nrej1').value.trim():'';
+    if(!v){ toast('거절 사유를 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#nrej1'))$('#nrej1').focus(); return; }
     t.state='prog'; t.nego=null;
-    t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'rq',x:v});
+    t.ev.push({t:'negoN',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,to:n.to,keep:t.due,why:v});
     t.ev.push({t:'sys',at:now(),x:'요청자 새 기한 거절 ('+n.to+' 제안) → 기존 기한 '+t.due+' 유지 · 미완료 시 지연 처리 · 담당자 메일 발송'});
+    cl('m-nrej');
     toast('거절 · 기한 '+t.due+' 유지 · 담당자 메일 발송');
     openT(CUR); refresh();
   }
   // 접수 → 진행. 담당자가 요청을 확인하고 기한을 확정하는 시점.
+  // 상태만 바꾼다. 의견란은 읽지 않는다 — 할 말이 있으면 [의견 등록]으로 따로 남긴다.
   function actStart(){
-    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
+    var t=T[CUR];
     t.state='prog'; t.fixedAt=now();
-    if(v) t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'ow',x:v});
     t.ev.push({t:'sys',at:now(),x:'담당자 '+ROLE[cur].nm+' 요청 확인 → 진행 · 기한 '+t.due+' 확정 · 이후 기한 변경은 요청자 동의가 필요합니다 · 요청자 메일 발송'});
     toast('진행 시작 · 기한 '+t.due+' 확정 · 요청자 메일 발송');
     openT(CUR); refresh();
   }
   // 완료 — 상태 전환만. 결과 설명은 의견으로 따로 남긴다.
   function actResolve(){
-    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
-    if(v) t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'ow',x:v});
+    var t=T[CUR];
     // 기한이 지난 뒤 완료된 건은 지연으로 기록한다.
     // autoSlip은 화면이 열릴 때만 도는 탓에, 그 사이에 완료되면 지연이 누락될 수 있다.
     if(t.due && today()>t.due && !t.slipAuto){
@@ -2445,12 +2491,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     toast('종결 · 최종 '+t.ev2.g+' · 관리대장 자동 반영');
     openT(CUR); refresh();
   }
+  // 재요청 — 사유는 이 액션의 창에서 받는다. 의견란은 건드리지 않는다.
   function actReopen(){
-    var t=T[CUR], v=$('#ctx')?$('#ctx').value.trim():'';
-    if(!v){ toast('무엇이 부족한지 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#ctx'))$('#ctx').focus(); return; }
+    var t=T[CUR], v=$('#reo1')?$('#reo1').value.trim():'';
+    if(!v){ toast('무엇이 부족한지 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#reo1'))$('#reo1').focus(); return; }
     t.state='prog'; t.resolved=null; t.reopened=(t.reopened||0)+1;
-    t.ev.push({t:'cm',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,r:'rq',x:v});
+    t.ev.push({t:'reopen',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:v});
     t.ev.push({t:'sys',at:now(),x:'요청자 재요청 → 진행 상태로 복귀 · 담당자 메일 발송'});
+    cl('m-reopen');
     toast('재요청 · 진행 상태로 복귀');
     openT(CUR); refresh();
   }
@@ -2460,9 +2508,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var t=T[CUR], m=ROLE[cur];
     if(t.rq.nm===m.nm){ toast('요청자는 이미 모든 알림을 받습니다'); return; }
     if(t.jn.some(function(x){return x.nm===m.nm})){ toast('이미 회람 중입니다'); return; }
-    var v=$('#ctx')?$('#ctx').value.trim():'';
     t.jn.push({nm:m.nm,org:m.dp});
-    t.ev.push({t:'joiner',at:now(),who:m.nm,org:m.dp,x:v});
+    t.ev.push({t:'joiner',at:now(),who:m.nm,org:m.dp});
     toast('회람 등록 · 이후 의견·상태 변경·종결까지 메일 수신 · 회람 '+t.jn.length+'명');
     openT(CUR); refresh();
   }
@@ -2526,8 +2573,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       // item 4 — 새 기한 수락/거절 버튼을 '지연 미리 알림'(새 기한 제안) 카드 안에 둔다.
       // 활성 제안(마지막 nego)이고 요청자 시점일 때만 노출한다.
       var negoAct = (e===ACTIVE_NEGO && cur==='req')
-        ? '<div data-r="req" class="pk" style="margin-top:12px;gap:7px"><button class="btn pri sm" id="aNegoY">새 기한 수락</button><button class="btn dn sm" id="aNegoN">거절</button></div>'+
-          '<div data-r="req" style="font-size:11px;color:var(--muted);margin-top:6px">거절하려면 사유를 아래 <b>의견</b>란에 적고 [거절]을 눌러주세요</div>'
+        ? '<div data-r="req" class="pk" style="margin-top:12px;gap:7px"><button class="btn pri sm" id="aNegoY">새 기한 수락</button><button class="btn dn sm" id="aNegoN">거절</button></div>'
         : '';
       return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">지연 미리 알림</span></div>'+
       '<div class="bx sl"><dl class="f"><dt>지연 사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
@@ -2535,6 +2581,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       '<dl class="f"><dt>새 완료 예정일</dt><dd><b>'+esc2(e.to)+'</b> <span style="color:var(--muted)">(기존 '+esc2(e.fr)+')</span></dd></dl>'+
       '<div class="ft" style="color:var(--signal)">기한 경과 전 알림 · 요청자 확인 필요 · 확인 전까지 기존 기한 적용</div>'+negoAct+'</div></div></div>';
     }
+    if(e.t==='negoN') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">새 기한 거절</span></div>'+
+      '<div class="bx hd"><div class="evx">제안된 <b>'+esc2(e.to)+'</b>을(를) 거절 · 기존 기한 <b>'+esc2(e.keep)+'</b> 유지</div>'+
+      '<dl class="f" style="margin-top:6px"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+      '<div class="ft" style="color:var(--amber)">담당자 메일 발송 · 미완료 시 지연 처리</div></div></div></div>';
+    if(e.t==='reopen') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl rq">요청자</span> <span class="badge b-wait">재요청</span></div>'+
+      '<div class="bx hd"><dl class="f"><dt>부족한 점</dt><dd>'+esc2(e.why)+'</dd></dl>'+
+      '<div class="ft" style="color:var(--amber)">진행 상태로 복귀 · 담당자 메일 발송</div></div></div></div>';
     if(e.t==='reject') return '<div class="ev">'+w+'<div><div class="evw">'+esc2(e.who)+' <span class="org">'+esc2(e.org)+'</span> <span class="rl ow">담당자</span> <span class="badge b-slip">반려</span></div>'+
       '<div class="bx sl"><dl class="f"><dt>사유</dt><dd>'+esc2(e.why)+'</dd></dl>'+
       '<dl class="f"><dt>설명</dt><dd>'+esc2(e.ex)+'</dd></dl>'+
@@ -2602,7 +2655,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var canJoin = t.rq.nm!==ROLE.req.nm && !t.jn.some(function(x){return x.nm===ROLE.req.nm});
     req+='<span style="flex:1"></span>'+(canJoin?'<button class="btn" id="joinBtn">회람 받기</button>':'');
     own+='<span style="flex:1"></span>';
-    return '<div class="acts" data-r="req">'+req+'</div><div class="acts" data-r="own adm" style="display:none">'+own+'</div>';
+    // 의견란과 확실히 구분 — 여기 버튼은 '상태를 바꾸는' 것들이고, 사유가 필요하면 각자 창을 띄운다
+    var lab='<div class="seclab">⚙ 요청 처리 <span class="n">상태를 바꿉니다 · 사유가 필요한 것은 창이 뜹니다</span></div>';
+    return '<div class="acts" data-r="req">'+lab+req+'</div>'+
+           '<div class="acts" data-r="own adm" style="display:none">'+lab+own+'</div>';
   }
 
   function openT(no,noPush){
@@ -2657,8 +2713,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
 
     if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
-      body+='<div class="cmb"><div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
-        '<textarea id="ctx" placeholder="의견을 남기면 요청자·담당자·회람자 전원에게 메일이 갑니다"></textarea>'+
+      body+='<div class="cmb">'+
+        '<div class="seclab">💬 의견 <span class="n">이 요청에 대해 말을 남깁니다 · <b>상태는 바뀌지 않습니다</b> · 요청자·담당자·회람자 전원에게 메일</span></div>'+
+        '<div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
+        '<textarea id="ctx" placeholder="진행하면서 남길 의견을 적어주세요"></textarea>'+
         '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
         '<button class="atc" data-t2="파일 선택">+ 첨부</button>'+
         '<span class="nt2">공개 · 종결 후에도 검색됩니다</span></div></div></div></div>';
