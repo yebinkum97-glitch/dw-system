@@ -497,6 +497,12 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .ga{color:var(--good)} .gc{color:var(--primary-ink)} .gd{color:var(--signal)}
 
 .filt{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* 검색 전 안내 — 목록을 깔지 않고 무엇을 할 수 있는지만 말한다 */
+.idle{padding:52px 24px;text-align:center}
+.idle-t{font-size:16px;font-weight:700;color:var(--ink-2);letter-spacing:-.015em}
+.idle-s{font-size:13px;color:var(--muted);margin-top:7px}
+.idle-k{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--faint);
+        background:var(--surface);border:1px solid var(--line);border-radius:var(--r-field);padding:7px 12px}
 /* 필터 드롭다운 — 상태 6개를 버튼으로 깔면 줄이 길어져서 셀렉트로 통일 */
 .fsel{width:auto;min-width:110px;font-size:12.5px;font-weight:600;padding:6px 9px;
       border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff}
@@ -816,7 +822,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
         <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <div class="drop" id="meDrop">
-      <div class="drop-h" id="dropWho">요청자</div>
+      <div class="drop-h">언어</div>
       <button class="dropi" data-lang="ko">한국어</button>
       <button class="dropi" data-lang="en">English</button>
     </div>
@@ -826,7 +832,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 <div class="shell">
   <div class="navbd" id="navbd"></div>
   <nav class="rail">
-    <button class="nb on" data-s="find" data-r="req own adm">전체 요청<span class="c" id="cAll">0</span></button>
+    <button class="nb on" data-s="find" data-r="req own adm">요청 찾기<span class="c" id="cAll">0</span></button>
     <button class="nb" data-s="mine" data-r="req">내 요청<span class="c" id="cMine">0</span></button>
     <button class="nb" data-s="work" data-r="own">내 업무<span class="c" id="cWork">0</span></button>
     <button class="nb" data-s="dash" data-r="adm">대시보드</button>
@@ -902,12 +908,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   <!-- FIND -->
   <section class="screen" id="s-find">
     <div class="head">
-      <div><h1>전체 요청</h1></div>
+      <div><h1>요청 찾기</h1></div>
     </div>
     <div class="sbig"><span class="sch">dw://</span><input type="text" id="sq" placeholder="요청번호, 제목, 내용" autocomplete="off"></div>
     <div class="filt" id="findBar" style="margin-bottom:12px;align-items:center"></div>
     <div id="hit"></div>
-    <div class="card">
+    <div id="findIdle"></div>
+    <div class="card" id="findCard">
       <div class="ch2"><h3 id="rcount">결과</h3></div>
       <div id="rl"></div>
     </div>
@@ -1449,7 +1456,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     el.innerHTML=
       periodSel('f')+
       deptFilt('findDept',FD)+
-      stateSel('findState',FQ,scoped);
+      stateSel('findState',FQ);
     $('#findState').onchange=function(){FQ=this.value;render()};
     $('#findDept').onchange=function(){FD=this.value;render()};
     wirePeriod(); tr();
@@ -1474,14 +1481,27 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var direct=q?_db.filter(function(x){return x.no===num||x.no.split('-')[1]===num}):[];
     $('#hit').innerHTML = direct.length ? '<div class="card" style="margin-bottom:12px;border-color:var(--primary-ink)"><div class="res" data-no="'+direct[0].no+'"><div class="resh"><div class="rest">'+esc(direct[0].t)+'</div><span class="badge '+direct[0].stc+'">'+direct[0].st+'</span></div><div class="resm"><span style="color:var(--primary-ink);font-weight:700">dw://'+direct[0].no+'</span><span class="sep">·</span><span>번호 일치 — 바로가기</span></div></div></div>' : '';
 
+    // 검색 우선 — 이 화면은 읽기 전용이라 '둘러보는 곳'이 아니라 '찾아보는 곳'이다.
+    // 남의 요청 수백 건을 처음부터 깔아둘 이유가 없다. 검색어가 있어야 결과를 낸다.
+    var idle = !q;
+    if($('#findBar')) $('#findBar').style.display = idle ? 'none' : '';
+    if($('#findCard')) $('#findCard').style.display = idle ? 'none' : '';
+    if($('#findIdle')) $('#findIdle').style.display = idle ? 'block' : 'none';
+    if(idle){
+      if($('#findIdle')) $('#findIdle').innerHTML=
+        '<div class="idle"><div class="idle-t">요청 번호·제목·내용으로 찾습니다</div>'+
+        '<div class="idle-s">쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용</div>'+
+        '<div class="idle-k">dw://공간-1024 처럼 번호를 넣으면 그 요청으로 바로 갑니다</div></div>';
+      tr(); return;
+    }
     findFilt(_db);
-    var r = q ? _db.filter(function(x){
+    var r = _db.filter(function(x){
       var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
       return hay.indexOf(q.toLowerCase())>=0;
-    }) : _db;
+    });
     r = byDept(r).filter(FGROUP[FQ].f);
     var fl = (FD==='all'?'':' · '+FD)+(FQ==='all'?'':' · '+FGROUP[FQ].l);
-    $('#rcount').textContent = (q ? '결과 '+r.length+'건' : '전체 '+r.length+'건')+fl;
+    $('#rcount').textContent = '결과 '+r.length+'건'+fl;
     if(!r.length){ $('#rl').innerHTML=empty(_db.length?'조건에 맞는 요청이 없습니다':'요청이 없습니다'); wire(); tr(); return; }
     $('#rl').innerHTML = r.map(function(x){
       if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
@@ -1791,11 +1811,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
   var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
   // 상태가 6개라 버튼으로 깔면 줄이 길어지고 폰에서 두 줄로 접힌다 → 드롭다운.
-  function stateSel(id,cur2,list){
+  function stateSel(id,cur2){
     return '<select id="'+id+'" class="fsel">'+
       Object.keys(FGROUP).map(function(k){
         var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
-        return '<option value="'+k+'"'+(cur2===k?' selected':'')+'>'+lb+' '+list.filter(FGROUP[k].f).length+'</option>';
+        return '<option value="'+k+'"'+(cur2===k?' selected':'')+'>'+lb+'</option>';
       }).join('')+'</select>';
   }
   function deptFilt(id,cur2){
@@ -1811,7 +1831,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
      searchBox('wq',WS)+
-     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateSel('wState',WQ,mine)+'</div>'+
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateSel('wState',WQ)+'</div>'+
      '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
        (list.length?list.map(function(t){return row(t,'own')}).join(''):empty(mine.length?'해당 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>';
     if($('#wState')) $('#wState').onchange=function(){WQ=this.value;renderWork()};
@@ -1842,7 +1862,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
          '<option value="cc"'+(MSC==='cc'?' selected':'')+'>회람 중인 요청</option>'+
          '<option value="all"'+(MSC==='all'?' selected':'')+'>내 요청 + 회람</option>'+
        '</select>'+
-       periodSel('m')+deptFilt('mDept',MD2)+stateSel('mState',MQ,own)+
+       periodSel('m')+deptFilt('mDept',MD2)+stateSel('mState',MQ)+
      '</div>'+
      '<div class="card"><div class="cb">'+
        (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':none))+'</div></div>';
@@ -2468,7 +2488,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     ds.onchange=fillWho; fillWho();
   }
   var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
-  var SCR={intake:'요청하기',mine:'내 요청',work:'내 업무',find:'전체 요청',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
+  var SCR={intake:'요청하기',mine:'내 요청',work:'내 업무',find:'요청 찾기',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function eun(s){ // 은/는 조사
     var c=s.charCodeAt(s.length-1);
     if(c<0xAC00||c>0xD7A3) return s+'는';
@@ -2963,7 +2983,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '입력한 요청은 이 브라우저에 저장됩니다 · 백엔드 미연동':'Requests are stored in this browser · no backend',
     '건':'','명':'','전체':'All','미열람':'Unread',
     '요청자로 보기':'View as requester','담당자로 보기':'View as assignee','관리자로 보기':'View as admin',
-    '전체 요청':'All requests','내 요청':'My requests','회람 중인 요청':'Following','내 업무':'My work',
+    '요청 찾기':'Find a request','전체 요청':'All requests','내 요청':'My requests','회람 중인 요청':'Following','내 업무':'My work',
     '대시보드':'Dashboard','관리대장':'Register','담당자 관리':'Assignee management','기준정보':'Master data','부서':'Department','분류축':'Category axis','배정축':'Routing axis','분류':'Category','요청하기':'New request','＋요청하기':'＋ New request',
     '요청 상세':'Request',
     '접수':'Received','진행':'In progress','지연':'Overdue','완료':'Completed','종결':'Closed',
@@ -2975,6 +2995,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '조건에 맞는 요청이 없습니다':'No requests match','해당 요청이 없습니다':'No requests in this state',
     '회람 중인 요청이 없습니다':'Not following any requests',
     '쉐어드서비스에 접수된 모든 요청':'All requests submitted to shared services',
+    '요청 번호·제목·내용으로 찾습니다':'Search by request no., title or content',
+    '쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용':'Search every request submitted to shared services · read only',
+    '언어':'Language','한국어':'한국어',
+    '내가 낸 요청':'Requests I submitted','회람 중인 요청':'Following','내 요청 + 회람':'Mine + following',
     '내가 접수한 요청':'Requests you submitted','나에게 배정된 요청':'Requests assigned to you',
     '내가 팔로업 중인 다른 사람의 요청 · 진행사항이 메일로 옵니다':'Others requests you follow · updates arrive by email',
     '요청번호, 제목, 내용':'Request no., title, content',
