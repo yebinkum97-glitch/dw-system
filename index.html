@@ -643,9 +643,6 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
          background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:3px}
 .prd .dd.w{color:var(--signal);background:var(--signal-tint);border-color:#f0bcc1}
 .pr.fin .prd{color:var(--faint);font-weight:500}
-/* 검색 결과 발췌 — 제목에 없는 말로 걸렸을 때 '왜 나왔는지'를 보여준다 */
-.prs{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;
-     border-top:1px dashed var(--line);padding-top:6px}
 .hp{font-size:10px;font-weight:800;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .hp.w{background:var(--signal-tint);border-color:#f0bcc1;color:var(--signal)}
 
@@ -893,7 +890,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   <form class="gs" id="gsf">
     <div class="gsw">
       <span class="gsp">dw://</span>
-      <input type="text" id="gsq" placeholder="요청번호 · 제목 · 내용으로 전체 검색" autocomplete="off">
+      <input type="text" id="gsq" placeholder="요청번호 · 제목 · 분류 · 담당자로 전체 검색" autocomplete="off">
       <button type="button" class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
       <div class="gsres" id="gsres"></div>
     </div>
@@ -1505,20 +1502,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(e.key==='Escape')$$('.mk').forEach(function(m){m.classList.remove('on')})});
 
 
-  // ---- 전체 요청 ----
+  // ---- 검색 색인 ----
+  // av(축 값)는 부서마다 축이 다르므로 이름을 박지 않는다. attrVals 가 요청에 실제로
+  // 붙어 있는 축을 그대로 읽으므로, 관리자가 [기준정보]에서 축이나 부서를 추가해도
+  // 코드를 고치지 않고 그대로 검색에 걸린다.
   function DB(){ return Object.keys(T).map(function(n){
     var t=T[n];
-    return {no:n, t:t.title, av:attrVals(t), st:stl(t.state), stc:ST[t.state].c,
-      state:t.state, rq:t.rq.nm, dept:t.dept||'공간기획', openDate:t.openDate,
-      o:t.as, d:t.open.split(' ')[0], cm:t.ev.filter(function(e){return e.t==='cm'}).length,
-      lock:t.vis==='locked',
-      b:bodyOf(t),
-      // 담당자의 마지막 의견 — '완료 결과'가 아니라 여러 의견 중 최근 것일 뿐이므로 그렇게 라벨링한다
-      a:(function(){
-        if(t.state!=='closed'&&t.state!=='done') return '';
-        var c=t.ev.filter(function(e){return e.t==='cm'&&e.r==='ow'});
-        return c.length?c[c.length-1].x:'';
-      })()};
+    return {no:n, t:t.title, av:attrVals(t), rq:t.rq.nm, o:t.as,
+      dept:t.dept||'공간기획', lock:t.vis==='locked'};
   }).sort(newestFirst); }
 
 
@@ -1564,14 +1555,17 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(fid && fid!=='search' && fid!=='intake' && fid!=='ticket') SBACK=fid;
     BACK=[]; renderSearch(); show('search'); window.scrollTo(0,0);
   }
+  // 검색 대상 — 요청을 낼 때 정해지는 값들만. 제목 · 요청번호 · 부서 · 축 값 · 요청자 · 담당자.
+  // 본문(현재상황·요청사항)과 의견은 넣지 않는다. 자유서술이라 흔한 말이 아무 데나 걸려
+  // 결과가 뿌예진다. 이 목록은 카드에 보이는 것과 정확히 같아서 왜 걸렸는지가 늘 눈에 보인다.
+  function hayOf(x){ return (x.t+' '+x.no+' '+x.dept+' '+x.av.join(' ')+' '+x.rq+' '+x.o).toLowerCase(); }
   function searchHits(q){
     if(!q) return [];
     var num=q.replace(/^dw:\/\//,''), db=DB();
     var direct=db.filter(function(x){return x.no===num||x.no.split('-')[1]===num});
     var rest=db.filter(function(x){
       if(direct.length&&x.no===direct[0].no) return false;
-      var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
-      return hay.indexOf(q.toLowerCase())>=0;
+      return hayOf(x).indexOf(q.toLowerCase())>=0;
     });
     return direct.concat(rest);
   }
@@ -1602,16 +1596,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var i=s2.toLowerCase().indexOf(q.toLowerCase());
     if(i<0)return esc(s2);
     return esc(s2.slice(0,i))+'<mark>'+esc(s2.slice(i,i+q.length))+'</mark>'+esc(s2.slice(i+q.length));
-  }
-  function snip(b2,q){
-    if(!q)return '';
-    var i=b2.toLowerCase().indexOf(q.toLowerCase()); if(i<0)return '';
-    var st=Math.max(0,i-30),e=Math.min(b2.length,i+q.length+60);
-    return (st>0?'…':'')+b2.slice(st,e)+(e<b2.length?'…':'');
-  }
-  // 검색 대상 본문 — 현재상황·요청사항 + 의견 전체(완료 결과도 의견으로 남는다)
-  function bodyOf(t){
-    return t.asis+' '+t.tobe+' '+t.ev.filter(function(e){return e.t==='cm'}).map(function(e){return e.x}).join(' ');
   }
 
   // ---- 공간기획 요청 축 (실제 데이터) ----
@@ -1824,17 +1808,19 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // 기한 확정 마감(fixBy)은 뺐다 — 접수 직후에만 살아있는 시계인데 종결된 카드에까지
   // 따라붙어 '기한'과 헷갈렸다. 담당자가 아직 안 봤다는 건 [미열람] 배지가 이미 말한다.
   //
-  // q를 주면 검색 결과용 — 제목의 일치 부분을 표시하고 본문에서 걸린 대목을 발췌해 붙인다.
+  // q를 주면 검색 결과용 — 걸린 자리를 제목과 아래 줄 양쪽에서 칠한다.
+  // 검색 대상이 곧 이 카드에 적힌 값들이라(hayOf 참고) 어디서 걸렸는지가 늘 보인다.
   // all=true 면 부서 전체를 보는 중 — 누구 업무인지가 카드마다 있어야 내 것과 남의 것이 구분된다.
   function row(t, forRole, q, all){
     var s=ST[t.state], m=[], own=forRole==='own'&&all&&isMine(t,ME);
-    if(attrVals(t).length) m.push(attrVals(t).join(' · '));
+    var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
+    if(attrVals(t).length) m.push(attrVals(t).map(H).join(' · '));
     if(forRole==='own'){
-      m.push('요청자 '+esc2(t.rq.nm));
-      if(all) m.push('담당 '+(own?'<b style="color:var(--good)">'+esc2(t.as)+'</b>':esc2(t.as)));
-    } else m.push('담당 '+esc2(t.as));
+      m.push('요청자 '+H(t.rq.nm));
+      if(all) m.push('담당 '+(own?'<b style="color:var(--good)">'+H(t.as)+'</b>':H(t.as)));
+    } else m.push('담당 '+H(t.as));
     if(t.parent) m.push('원 요청 dw://'+esc2(t.parent));
-    m.push('dw://'+esc2(t.no));
+    m.push(H('dw://'+t.no));
     // resolved 가 없을 수도 있다(예전 데이터·이관된 건) — 'undefined'가 그대로 찍히면 안 된다
     var r2='';
     if(t.state==='closed') r2='종결'+(t.resolved?' '+t.resolved:'')+(t.ev2&&t.ev2.g?' · 평가 '+t.ev2.g:'');
@@ -1849,12 +1835,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
     else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
     else if(t.state==='done'||t.state==='nego') cls+=' wait';
-    var sn=q?snip(bodyOf(t),q):'';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
-      '<div class="prh"><div class="prt">'+(q?hl(t.title,q):esc2(t.title))+'</div><span style="display:flex;gap:4px">'+(own?'<span class="badge b-mine">내 업무</span>':'')+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="prh"><div class="prt">'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(own?'<span class="badge b-mine">내 업무</span>':'')+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prb"><div class="prm">'+m.join(' · ')+'</div>'+
         (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
-      (sn?'<div class="prs">'+hl(sn,q)+'</div>':'')+
     '</div>';
   }
   function byNo(list){return list.map(function(n){return T[n]})}
@@ -3091,8 +3075,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '요청 번호·제목·내용으로 찾습니다':'Search by request no., title or content',
     '쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용':'Search every request submitted to shared services · read only',
     '언어':'Language','한국어':'한국어',
-    '요청번호, 제목, 내용':'Request no., title, content',
-    '제목·본문·의견 전체 검색':'Searches title, body and comments',
+    '요청번호 · 제목 · 분류 · 담당자로 전체 검색':'Search by request no., title, category or assignee',
     '최근 담당자 의견':'Latest assignee comment',
     '반려':'Return','요청 취소':'Cancel request','요청 취소·회수':'Cancel / withdraw request',
     '수신 부서':'Recipient dept.','설명':'Explanation','반려 사유':'Return reason',
