@@ -496,7 +496,11 @@ td.d{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .gr{font-family:var(--mono);font-weight:700}
 .ga{color:var(--good)} .gc{color:var(--primary-ink)} .gd{color:var(--signal)}
 
-.filt{display:flex;gap:5px;flex-wrap:wrap}
+.filt{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* 필터 드롭다운 — 상태 6개를 버튼으로 깔면 줄이 길어져서 셀렉트로 통일 */
+.fsel{width:auto;min-width:110px;font-size:12.5px;font-weight:600;padding:6px 9px;
+      border-radius:var(--r-field);border:1px solid var(--line-2);color:var(--ink-2);background:#fff}
+.fsel:hover{border-color:var(--line-3)}
 .filt button{border:1px solid var(--line-2);border-radius:5px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--muted);background:#fff}
 .filt button.on{background:var(--dw-gray);border-color:var(--dw-gray);color:#fff}
 
@@ -824,7 +828,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   <nav class="rail">
     <button class="nb on" data-s="find" data-r="req own adm">전체 요청<span class="c" id="cAll">0</span></button>
     <button class="nb" data-s="mine" data-r="req">내 요청<span class="c" id="cMine">0</span></button>
-    <button class="nb" data-s="cc" data-r="req">회람 중인 요청<span class="c" id="cCC">0</span></button>
     <button class="nb" data-s="work" data-r="own">내 업무<span class="c" id="cWork">0</span></button>
     <button class="nb" data-s="dash" data-r="adm">대시보드</button>
     <button class="nb" data-s="ledger" data-r="adm">관리대장</button>
@@ -895,7 +898,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
   <!-- MINE -->
   <section class="screen" id="s-mine"></section>
-  <section class="screen" id="s-cc"></section>
 
   <!-- FIND -->
   <section class="screen" id="s-find">
@@ -1268,14 +1270,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // ---- 역할 전환 ----
   // 인물 정보는 하드코딩하지 않는다. 백엔드 연동 시 인사 API(로그인 사용자)로 대체된다.
   var ROLE={
-    req:{nm:'요청자',dp:'',av:'요',home:'find'},
+    req:{nm:'요청자',dp:'',av:'요',home:'mine'},
     own:{nm:'담당자',dp:'공간기획팀',av:'담',home:'work'},
     adm:{nm:'관리자',dp:'',av:'관',home:'dash'}
   };
   var cur='req';
   // 역할별 탭 순서 (첫 항목이 홈)
   var NAVORDER={
-    req:['find','mine','cc'],
+    req:['mine','find'],   // 내 요청이 홈 — 전체 요청은 찾아보는 곳이라 뒤로
     own:['work','find'],
     adm:['dash','ledger','rule','master','find']
   };
@@ -1446,16 +1448,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var scoped=byDept(db);
     el.innerHTML=
       periodSel('f')+
-      '<select id="findDept" style="width:auto;min-width:118px;font-size:12px;font-weight:700;padding:4px 7px">'+
-        '<option value="all">분야 전체</option>'+
-        DEPT.map(function(x){return '<option value="'+x+'"'+(FD===x?' selected':'')+'>'+x+'</option>'}).join('')+
-      '</select>'+
-      '<span style="width:1px;height:18px;background:var(--line-2);flex:none;margin:0 3px"></span>'+
-      Object.keys(FGROUP).map(function(k){
-        var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
-        return '<button data-f="'+k+'"'+(FQ===k?' class="on"':'')+'>'+lb+' '+scoped.filter(FGROUP[k].f).length+'</button>';
-      }).join('');
-    $$('button',el).forEach(function(b){b.onclick=function(){FQ=b.dataset.f;render()}});
+      deptFilt('findDept',FD)+
+      stateSel('findState',FQ,scoped);
+    $('#findState').onchange=function(){FQ=this.value;render()};
     $('#findDept').onchange=function(){FD=this.value;render()};
     wirePeriod(); tr();
   }
@@ -1795,11 +1790,17 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if(el.value){ el.focus(); try{ el.setSelectionRange(el.value.length,el.value.length) }catch(e){} }
   }
   var CTA='';   // 요청하기는 상단바에 고정 — 페이지마다 띄우지 않는다
-  function stateBar(list, sel, cur2, extra){
-    return Object.keys(FGROUP).map(function(k){
-      var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
-      return '<button data-'+sel+'="'+k+'"'+(cur2===k?' class="on"':'')+'>'+lb+' '+list.filter(FGROUP[k].f).length+'</button>';
-    }).join('')+(extra||'');
+  // 상태가 6개라 버튼으로 깔면 줄이 길어지고 폰에서 두 줄로 접힌다 → 드롭다운.
+  function stateSel(id,cur2,list){
+    return '<select id="'+id+'" class="fsel">'+
+      Object.keys(FGROUP).map(function(k){
+        var lb=FGROUP[k].l===null?stl('done'):FGROUP[k].l;
+        return '<option value="'+k+'"'+(cur2===k?' selected':'')+'>'+lb+' '+list.filter(FGROUP[k].f).length+'</option>';
+      }).join('')+'</select>';
+  }
+  function deptFilt(id,cur2){
+    return '<select id="'+id+'" class="fsel"><option value="all">분야 전체</option>'+
+      DEPT.map(function(x){return '<option value="'+esc2(x)+'"'+(cur2===x?' selected':'')+'>'+esc2(x)+'</option>'}).join('')+'</select>';
   }
 
   function renderWork(){
@@ -1810,44 +1811,50 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     $('#s-work').innerHTML=
      '<div class="head"><div><h1>내 업무</h1></div></div>'+
      searchBox('wq',WS)+
-     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateBar(mine,'w',WQ)+'</div>'+
+     '<div class="filt" id="wFilt" style="margin-bottom:12px">'+periodSel('w')+stateSel('wState',WQ,mine)+'</div>'+
      '<div class="card"><div class="ch2"><h3>나에게 배정된 요청</h3><span class="nt">'+list.length+'건</span></div><div class="cb">'+
        (list.length?list.map(function(t){return row(t,'own')}).join(''):empty(mine.length?'해당 요청이 없습니다':'배정된 요청이 없습니다'))+'</div></div>';
-    $$('#wFilt button').forEach(function(b){b.onclick=function(){WQ=b.dataset.w;renderWork()}});
+    if($('#wState')) $('#wState').onchange=function(){WQ=this.value;renderWork()};
     if($('#wq')) $('#wq').oninput=function(){WS=this.value;renderWork()};
     wirePeriod(); wire(); tr(); keepFocus('wq');
   }
 
+  // 내 요청 — 이 시스템의 홈. 회람은 별도 탭이 아니라 여기 '구분' 필터로 들어온다.
+  //   회람은 결국 '내가 지켜보는 요청'이라 내 요청과 같은 성격이다. 탭을 나누면
+  //   같은 걸 두 군데서 찾게 된다.
+  var MSC='mine', MD2='all';
   function renderMine(){
-    var own=byPeriod(allT().filter(function(t){return t.rq.nm===ROLE.req.nm}));   // 내가 낸 요청만
+    var me=ROLE.req.nm;
+    var base=allT().filter(function(t){
+      var mine=t.rq.nm===me, cc=t.jn.some(function(j){return j.nm===me});
+      return MSC==='mine' ? mine : MSC==='cc' ? (cc&&!mine) : (mine||cc);
+    });
+    var own=byPeriod(base);
+    if(MD2!=='all') own=own.filter(function(t){return (t.dept||'공간기획')===MD2});
     var list=bySearch(own.filter(FGROUP[MQ].f), MS);
+    var none = MSC==='cc' ? '회람 중인 요청이 없습니다' : '요청이 없습니다';
     $('#s-mine').innerHTML=
      '<div class="head"><div><h1>내 요청</h1></div></div>'+
      searchBox('mq',MS)+
-     '<div class="filt" id="mFilt" style="margin-bottom:12px">'+periodSel('m')+stateBar(own,'m',MQ)+'</div>'+
+     '<div class="filt" id="mFilt" style="margin-bottom:12px">'+
+       '<select id="mScope" class="fsel">'+
+         '<option value="mine"'+(MSC==='mine'?' selected':'')+'>내가 낸 요청</option>'+
+         '<option value="cc"'+(MSC==='cc'?' selected':'')+'>회람 중인 요청</option>'+
+         '<option value="all"'+(MSC==='all'?' selected':'')+'>내 요청 + 회람</option>'+
+       '</select>'+
+       periodSel('m')+deptFilt('mDept',MD2)+stateSel('mState',MQ,own)+
+     '</div>'+
      '<div class="card"><div class="cb">'+
-       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':'요청이 없습니다'))+'</div></div>';
-    $$('#mFilt button').forEach(function(b){b.onclick=function(){MQ=b.dataset.m;renderMine()}});
+       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(own.length?'해당 요청이 없습니다':none))+'</div></div>';
+    if($('#mScope')) $('#mScope').onchange=function(){MSC=this.value;renderMine()};
+    if($('#mDept'))  $('#mDept').onchange=function(){MD2=this.value;renderMine()};
+    if($('#mState')) $('#mState').onchange=function(){MQ=this.value;renderMine()};
     if($('#mq')) $('#mq').oninput=function(){MS=this.value;renderMine()};
     wirePeriod(); wire(); tr(); keepFocus('mq');
   }
 
-  // 회람 중인 요청 — 내가 낸 건 아니지만 팔로업 중인 남의 요청
-  var CQ='all';
-  function renderCC(){
-    var me=ROLE.req.nm;
-    var cc=byPeriod(allT().filter(function(t){return t.rq.nm!==me&&t.jn.some(function(j){return j.nm===me})}));
-    var list=bySearch(cc.filter(FGROUP[CQ].f), CS);
-    $('#s-cc').innerHTML=
-     '<div class="head"><div><h1>회람 중인 요청</h1></div></div>'+
-     searchBox('cq',CS)+
-     '<div class="filt" id="cFilt" style="margin-bottom:12px">'+periodSel('c')+stateBar(cc,'c',CQ)+'</div>'+
-     '<div class="card"><div class="cb">'+
-       (list.length?list.map(function(t){return row(t,'req')}).join(''):empty(cc.length?'해당 요청이 없습니다':'회람 중인 요청이 없습니다'))+'</div></div>';
-    $$('#cFilt button').forEach(function(b){b.onclick=function(){CQ=b.dataset.c;renderCC()}});
-    if($('#cq')) $('#cq').oninput=function(){CS=this.value;renderCC()};
-    wirePeriod(); wire(); tr(); keepFocus('cq');
-  }
+  // 회람 전용 화면은 없앴다 — [내 요청]의 '구분' 필터로 흡수.
+  function renderCC(){}
 
   // 등급 색상 (관리대장·대시보드 공용)
   function gc(v){return v==='A'?'ga':v==='B'?'gc':v==='C'?'gc':v==='D'?'gd':''}
@@ -2356,7 +2363,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     var w=all.filter(function(t){return t.as===ME&&t.state!=='closed'}).length;
     // 관리자 탭에서는 전체 요청 건수 배지를 빼둔다 — 집계는 대시보드가 한다
     if($('#cAll')){ $('#cAll').textContent=all.length; $('#cAll').style.display = cur==='adm' ? 'none' : ''; }
-    if($('#cCC'))$('#cCC').textContent=all.filter(function(t){return t.rq.nm!==ROLE.req.nm&&t.jn.some(function(j){return j.nm===ROLE.req.nm})}).length;
     if($('#cMine'))$('#cMine').textContent=m;
     if($('#cWork')){$('#cWork').textContent=w;$('#cWork').classList.toggle('hot',w>0);}
   }
@@ -2462,7 +2468,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     ds.onchange=fillWho; fillWho();
   }
   var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
-  var SCR={intake:'요청하기',mine:'내 요청',cc:'회람 중인 요청',work:'내 업무',find:'전체 요청',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
+  var SCR={intake:'요청하기',mine:'내 요청',work:'내 업무',find:'전체 요청',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function eun(s){ // 은/는 조사
     var c=s.charCodeAt(s.length-1);
     if(c<0xAC00||c>0xD7A3) return s+'는';
