@@ -168,6 +168,36 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 
 .main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1100px;margin:0 auto}
 
+/* 전역 검색 — 헤더에 상주. 어느 화면에서든 전체를 찾는다. */
+.gs{position:relative;flex:1;max-width:440px;min-width:0;margin-left:6px}
+.gs input[type=text]{
+  width:100%;border:1px solid var(--line-2);border-radius:var(--r-field);background:var(--surface-2);
+  padding:8px 30px 8px 54px;font-family:var(--sans);font-size:13px;color:var(--ink);
+}
+.gs input[type=text]:focus{outline:none;border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 3px var(--primary-tint)}
+.gsp{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:var(--mono);
+     font-size:12px;font-weight:700;color:var(--primary-ink);pointer-events:none}
+.gsx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:20px;height:20px;
+     border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;color:var(--faint)}
+.gsx:hover{background:var(--line);color:var(--ink)}
+.gsres{
+  position:absolute;top:44px;left:0;right:0;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-card);box-shadow:var(--ele-md);display:none;z-index:60;overflow:hidden;max-height:70vh;overflow-y:auto;
+}
+.gsres.on{display:block}
+.gsh2{padding:9px 14px;font-size:10.5px;font-weight:800;color:var(--faint);letter-spacing:.04em;
+      background:var(--surface-2);border-bottom:1px solid var(--line)}
+.gsi{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.gsi:last-child{border-bottom:none}
+.gsi:hover{background:var(--primary-tint)}
+.gsh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+.gst{font-size:13px;font-weight:700;color:var(--ink);line-height:1.45;letter-spacing:-.012em}
+.gsm{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:4px;
+     font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.gsn{color:var(--primary-ink);font-weight:700}
+.gsx2{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.gsmore,.gsnone{padding:12px 14px;font-size:12px;color:var(--faint);text-align:center}
+
 /* 햄버거 */
 .ham{
   width:34px;height:34px;border-radius:var(--r-field);display:flex;align-items:center;
@@ -657,7 +687,9 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
   /* 상단바 압축 — 폰에서는 로고+CTA+언어+이름이 한 줄에 안 들어간다.
      주 행동(요청하기)은 남기고 이름표를 아바타만 남긴다. */
-  .top{gap:6px;padding:0 10px;height:58px}
+  .top{gap:6px;padding:8px 10px;height:auto;flex-wrap:wrap}
+  .gs{order:9;flex-basis:100%;max-width:none;margin:2px 0 0}
+  .gsres{top:42px}
   .mark{gap:8px}
   .me .dp,.me .nm{display:none}
   .me{padding:2px}
@@ -813,6 +845,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 <rect width="160" height="28" fill="white"/>
 </clipPath>
 </defs></svg><span class="brand"><span class="lk1" id="brandKo">통합 쉐어드 요청 관리</span><span class="lk2" id="brandEn">Shared Service Request System</span></span></div>
+  <!-- 전역 검색 — 요청 찾기는 화면이 아니라 도구다. 어느 화면에서든 전체를 찾는다. -->
+  <div class="gs">
+    <span class="gsp">dw://</span>
+    <input type="text" id="gsq" placeholder="요청번호 · 제목 · 내용으로 전체 검색" autocomplete="off">
+    <button class="gsx" id="gsx" aria-label="검색어 지우기">×</button>
+    <div class="gsres" id="gsres"></div>
+  </div>
   <div class="topr" style="position:relative">
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
     <button class="me" id="meBtn" aria-haspopup="true">
@@ -832,7 +871,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 <div class="shell">
   <div class="navbd" id="navbd"></div>
   <nav class="rail">
-    <button class="nb on" data-s="find" data-r="req own adm">요청 찾기<span class="c" id="cAll">0</span></button>
     <button class="nb" data-s="mine" data-r="req">내 요청<span class="c" id="cMine">0</span></button>
     <button class="nb" data-s="work" data-r="own">내 업무<span class="c" id="cWork">0</span></button>
     <button class="nb" data-s="dash" data-r="adm">대시보드</button>
@@ -902,6 +940,10 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
 
   </section>
 
+  <!-- MINE -->
+  <section class="screen" id="s-mine"></section>
+
+  <!-- FIND -->
   <!-- MINE -->
   <section class="screen" id="s-mine"></section>
 
@@ -1222,8 +1264,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     if($('#pipe')) $('#pipe').classList.remove('on');
     if($('#pipeBody')) $('#pipeBody').innerHTML='';
   }
-  $$('.nb').forEach(function(b){b.onclick=function(){BACK=[];show(b.dataset.s);if(b.dataset.s==='find'&&typeof render==='function')render()}});
-  if($('#bkIntake')) $('#bkIntake').onclick=function(){ show(PREV); if(PREV==='find'&&typeof render==='function') render(); };
+  $$('.nb').forEach(function(b){b.onclick=function(){BACK=[];show(b.dataset.s);}});
+  if($('#bkIntake')) $('#bkIntake').onclick=function(){ show(PREV);  };
 
 
   // ================= 데이터 =================
@@ -1284,9 +1326,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   var cur='req';
   // 역할별 탭 순서 (첫 항목이 홈)
   var NAVORDER={
-    req:['mine','find'],   // 내 요청이 홈 — 전체 요청은 찾아보는 곳이라 뒤로
-    own:['work','find'],
-    adm:['dash','ledger','rule','master','find']
+    req:['mine'],
+    own:['work'],
+    adm:['dash','ledger','rule','master']
   };
   // 각 뷰는 "특정 개인 본인"의 뷰다. 로그인 연동 전까지는 선택기로 누구 시점인지 고른다.
   var ME=null;      // 담당자 본인
@@ -1346,7 +1388,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     });
     $$('.rsw button').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
     // 상태 이름이 역할별로 다르므로(완료 / 종결 대기) 목록을 다시 그린다
-    renderWork(); renderMine(); renderCC(); counts(); if($('#sq')) render();
+    renderWork(); renderMine(); renderCC(); counts();
     $$('[data-r]').forEach(function(el){
       if(el.classList.contains('rsw')||el.parentNode.classList.contains('rsw'))return;
       el.style.display = el.dataset.r.split(' ').indexOf(r)>=0 ? '' : 'none';
@@ -1439,7 +1481,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       })()};
   }).sort(newestFirst); }
 
-  // 요청 찾기 필터 — 부서(드롭다운) × 상태
+  // 상태 필터 그룹 — 목록(내 요청·내 업무)과 전역 검색이 공유한다
   var FQ='all', FD='all';
   var FGROUP={
     all:   {l:'전체', f:function(){return true}},
@@ -1449,75 +1491,57 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     done:  {l:null, f:function(x){return x.state==='done'}},   // 라벨은 stl()이 역할별로 결정
     closed:{l:'종결', f:function(x){return x.state==='closed'}}
   };
-  function byDept(db){ return FD==='all' ? db : db.filter(function(x){return x.dept===FD}) }
-  function findFilt(db){
-    var el=$('#findBar'); if(!el) return;
-    var scoped=byDept(db);
-    el.innerHTML=
-      periodSel('f')+
-      deptFilt('findDept',FD)+
-      stateSel('findState',FQ);
-    $('#findState').onchange=function(){FQ=this.value;render()};
-    $('#findDept').onchange=function(){FD=this.value;render()};
-    wirePeriod(); tr();
-  }
-  function esc(s){return s.replace(/[&<>]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
-  function hl(s,q){
-    if(!q)return esc(s);
-    var i=s.toLowerCase().indexOf(q.toLowerCase());
-    if(i<0)return esc(s);
-    return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));
-  }
-  function snip(b,q){
-    if(!q)return '';
-    var i=b.toLowerCase().indexOf(q.toLowerCase()); if(i<0)return '';
-    var s=Math.max(0,i-40),e=Math.min(b.length,i+q.length+70);
-    return (s>0?'…':'')+b.slice(s,e)+(e<b.length?'…':'');
-  }
-  function render(){
-    var q=$('#sq').value.trim();
-    var num=q.replace(/^dw:\/\//,'');
-    var _db=byPeriod(DB());
-    var direct=q?_db.filter(function(x){return x.no===num||x.no.split('-')[1]===num}):[];
-    $('#hit').innerHTML = direct.length ? '<div class="card" style="margin-bottom:12px;border-color:var(--primary-ink)"><div class="res" data-no="'+direct[0].no+'"><div class="resh"><div class="rest">'+esc(direct[0].t)+'</div><span class="badge '+direct[0].stc+'">'+direct[0].st+'</span></div><div class="resm"><span style="color:var(--primary-ink);font-weight:700">dw://'+direct[0].no+'</span><span class="sep">·</span><span>번호 일치 — 바로가기</span></div></div></div>' : '';
 
-    // 검색 우선 — 이 화면은 읽기 전용이라 '둘러보는 곳'이 아니라 '찾아보는 곳'이다.
-    // 남의 요청 수백 건을 처음부터 깔아둘 이유가 없다. 검색어가 있어야 결과를 낸다.
-    var idle = !q;
-    if($('#findBar')) $('#findBar').style.display = idle ? 'none' : '';
-    if($('#findCard')) $('#findCard').style.display = idle ? 'none' : '';
-    if($('#findIdle')) $('#findIdle').style.display = idle ? 'block' : 'none';
-    if(idle){
-      if($('#findIdle')) $('#findIdle').innerHTML=
-        '<div class="idle"><div class="idle-t">요청 번호·제목·내용으로 찾습니다</div>'+
-        '<div class="idle-s">쉐어드서비스에 접수된 모든 요청을 검색할 수 있습니다 · 읽기 전용</div>'+
-        '<div class="idle-k">dw://공간-1024 처럼 번호를 넣으면 그 요청으로 바로 갑니다</div></div>';
-      tr(); return;
-    }
-    findFilt(_db);
-    var r = _db.filter(function(x){
+  // ── 전역 검색 ──
+  // 요청 찾기는 화면이 아니라 도구다. 별도 탭으로 두면 "찾으려고 페이지를 옮기는"
+  // 단계가 생긴다. 헤더에 두면 어느 화면에서든 바로 전체를 찾는다.
+  function esc(s2){return s2.replace(/[&<>]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]})}
+  function hl(s2,q){
+    if(!q)return esc(s2);
+    var i=s2.toLowerCase().indexOf(q.toLowerCase());
+    if(i<0)return esc(s2);
+    return esc(s2.slice(0,i))+'<mark>'+esc(s2.slice(i,i+q.length))+'</mark>'+esc(s2.slice(i+q.length));
+  }
+  function snip(b2,q){
+    if(!q)return '';
+    var i=b2.toLowerCase().indexOf(q.toLowerCase()); if(i<0)return '';
+    var st=Math.max(0,i-30),e=Math.min(b2.length,i+q.length+60);
+    return (st>0?'…':'')+b2.slice(st,e)+(e<b2.length?'…':'');
+  }
+  var GSMAX=8;   // 너무 많이 깔면 목록이 되어버린다 — 검색은 '찾는' 것이지 '둘러보는' 게 아니다
+  function gsRender(){
+    var box=$('#gsres'); if(!box) return;
+    var q=($('#gsq').value||'').trim();
+    if($('#gsx')) $('#gsx').style.display = q ? 'flex' : 'none';
+    if(!q){ box.classList.remove('on'); box.innerHTML=''; return; }
+    var num=q.replace(/^dw:\/\//,'');
+    var db=DB();
+    var direct=db.filter(function(x){return x.no===num||x.no.split('-')[1]===num});
+    var r=db.filter(function(x){
+      if(direct.length&&x.no===direct[0].no) return false;
       var hay=(x.t+' '+x.b+' '+x.a+' '+x.av.join(' ')+' '+x.o+' '+x.no+' '+x.dept).toLowerCase();
       return hay.indexOf(q.toLowerCase())>=0;
     });
-    r = byDept(r).filter(FGROUP[FQ].f);
-    var fl = (FD==='all'?'':' · '+FD)+(FQ==='all'?'':' · '+FGROUP[FQ].l);
-    $('#rcount').textContent = '결과 '+r.length+'건'+fl;
-    if(!r.length){ $('#rl').innerHTML=empty(_db.length?'조건에 맞는 요청이 없습니다':'요청이 없습니다'); wire(); tr(); return; }
-    $('#rl').innerHTML = r.map(function(x){
-      if(x.lock) return '<div class="res" data-no="'+x.no+'"><div class="resh"><div class="rest" style="color:var(--faint)">'+esc(x.t)+'</div><span class="lock">잠금</span></div><div class="resm"><span style="color:var(--faint);font-weight:700">dw://'+x.no+'</span><span class="sep">·</span><span>당사자만 조회 가능</span></div></div>';
-      var s=snip(x.b,q), m=[];
-      m.push('<span style="color:var(--primary-ink);font-weight:700">dw://'+x.no+'</span>');
-      x.av.forEach(function(v){m.push(esc(v))}); m.push(esc(x.o)); m.push(x.d); m.push('의견 '+x.cm);
-      if(x.jn>1) m.push('<span style="color:var(--primary-ink)">회람 '+(x.jn-1)+'명</span>');
-      return '<div class="res" data-no="'+x.no+'">'+
-        '<div class="resh"><div class="rest">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
-        '<div class="resm">'+m.join('<span class="sep">·</span>')+'</div>'+
-        (s?'<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">'+hl(s,q)+'</div>':'')+
-        (x.a?'<div class="ans"><div class="ansl">최근 담당자 의견</div><div class="ansx">'+hl(x.a,q)+'</div></div>':'')+
+    var all=direct.concat(r), more=all.length-GSMAX;
+    var rows=all.slice(0,GSMAX).map(function(x,i){
+      if(x.lock) return '<div class="gsi" data-no="'+x.no+'"><div class="gst" style="color:var(--faint)">'+esc(x.t)+'</div>'+
+        '<div class="gsm"><span class="gsn">dw://'+x.no+'</span><span class="sep">·</span>당사자만 조회 가능</div></div>';
+      var sn=snip(x.b,q);
+      return '<div class="gsi" data-no="'+x.no+'">'+
+        '<div class="gsh"><div class="gst">'+hl(x.t,q)+'</div><span class="badge '+x.stc+'">'+x.st+'</span></div>'+
+        '<div class="gsm"><span class="gsn">dw://'+x.no+'</span>'+
+          (i===0&&direct.length?'<span class="sep">·</span><b style="color:var(--primary-ink)">번호 일치</b>':'')+
+          '<span class="sep">·</span>'+esc(x.dept)+'<span class="sep">·</span>담당 '+esc(x.o)+'</div>'+
+        (sn?'<div class="gsx2">'+hl(sn,q)+'</div>':'')+
       '</div>';
     }).join('');
-    $$('#rl .res[data-no]').forEach(function(b){b.onclick=function(){openT(b.dataset.no)}});
-    var d=$('#hit .res'); if(d)d.onclick=function(){openT(d.dataset.no)};
+    box.innerHTML = all.length
+      ? '<div class="gsh2">결과 '+all.length+'건</div>'+rows+(more>0?'<div class="gsmore">+ '+more+'건 더 — 검색어를 좁혀보세요</div>':'')
+      : '<div class="gsnone">일치하는 요청이 없습니다</div>';
+    box.classList.add('on');
+    $$('.gsi',box).forEach(function(el){ el.onclick=function(){
+      $('#gsq').value=''; gsRender(); openT(el.dataset.no);
+    };});
     tr();
   }
 
@@ -1726,7 +1750,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   }
   if($('#s0')){ fillForms(); $('#s0').onchange=deptSwitch; }
 
-  if($('#sq')) $('#sq').oninput=render;   // 초기 렌더는 맨 끝 init의 refresh()가 한다
 
 
 
@@ -2518,7 +2541,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
       }
     });
   }
-  function refresh(){ autoSlip(); ownPick(); reqPick(); renderWork(); renderMine(); renderCC(); renderLedger(); renderRule(); renderMaster(); renderDash(); counts(); save(); if($('#sq')) render(); tr(); }
+  function refresh(){ autoSlip(); ownPick(); reqPick(); renderWork(); renderMine(); renderCC(); renderLedger(); renderRule(); renderMaster(); renderDash(); counts(); save(); tr(); }
 
   function actDue(){
     var t=T[CUR], nd=$('#du1').value, why=$('#du2').value.trim();
@@ -3109,6 +3132,19 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     try{ localStorage.setItem(LS+'-lang', l) }catch(e){}
   }
   // 햄버거 — 사이드바 접기. 폰에서는 서랍처럼 열린다.
+  // 전역 검색 배선
+  if($('#gsq')){
+    $('#gsq').oninput=gsRender;
+    $('#gsq').onclick=function(e){ e.stopPropagation(); if(this.value.trim()) gsRender(); };
+    $('#gsq').onkeydown=function(e){
+      if(e.key==='Escape'){ this.value=''; gsRender(); this.blur(); }
+      if(e.key==='Enter'){ var f=$('.gsi'); if(f) f.click(); }
+    };
+  }
+  if($('#gsx')) $('#gsx').onclick=function(){ $('#gsq').value=''; gsRender(); $('#gsq').focus(); };
+  document.addEventListener('click',function(){ if($('#gsres')) $('#gsres').classList.remove('on'); });
+  if($('#gsres')) $('#gsres').onclick=function(e){ e.stopPropagation(); };
+
   var isPhone=function(){ return matchMedia('(max-width:900px)').matches };
   if(isPhone()) $('.shell').classList.add('fold');   // 폰은 서랍이 기본으로 닫혀 있다
   if($('#ham')) $('#ham').onclick=function(){ $('.shell').classList.toggle('fold'); };
