@@ -159,6 +159,15 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .ni-x{font-size:12px;line-height:1.5}
 .ni-x b{font-weight:700}
 .ni-t{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:2px}
+/* 알림 인박스 — 프로필 드롭다운(.drop)보다 넓고, 목록이 길면 안에서 스크롤 */
+.belld{width:320px;max-height:min(70vh,420px);overflow-y:auto;box-sizing:border-box}
+.belld .ni-d{background:var(--signal)}
+.belld .drop-h{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
+.belld .bempty{padding:22px 14px;text-align:center;font-size:12px;color:var(--faint)}
+.bellw .bell.hasnew{color:var(--primary-ink)}
+/* 폰 — 벨이 화면 오른쪽 가까이라 320px 드롭다운이 왼쪽으로 넘친다.
+   화면 양옆 8px 여백으로 고정하고, 세로 위치는 헤더가 스크롤에 따라 움직이므로 JS 가 잡는다. */
+@media(max-width:640px){ .belld{position:fixed;left:8px;right:8px;width:auto} }
 
 /* shell — 좌측 사이드바. 햄버거로 접는다.
    가로 탭은 역할이 바뀔 때마다 순서가 재배치돼 어디에 뭐가 있는지 매번 다시 찾아야 했다.
@@ -309,6 +318,10 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .st{font-size:11px;font-weight:700;padding:4px 9px;border:1px solid var(--line-2);border-radius:20px;color:var(--muted);background:#fff;white-space:nowrap}
 .st.done{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .st.now{background:#fff;border-color:var(--primary-ink);border-width:2px;color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
+/* 지연 — 진행 단계에서 난 사고. 현재 단계를 붉게 세운다 */
+.st.now.danger{border-color:var(--signal);color:var(--signal);box-shadow:0 0 0 3px var(--signal-tint)}
+/* 반려·취소 — 정상 흐름을 벗어난 종료 */
+.st.bad{border-color:var(--signal);color:var(--signal);background:var(--signal-tint)}
 .aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
 
 .thr{padding:4px 15px 14px}
@@ -998,6 +1011,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </form>
   <div class="topr" style="position:relative">
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
+    <!-- 알림 — 담당자에게만. 새로 배정됐거나 이관돼 온, 아직 안 연 업무가 여기 쌓인다 -->
+    <div class="bellw" data-r="own" style="position:relative">
+      <button class="bell" id="bellBtn" aria-label="알림">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2.2a4 4 0 0 0-4 4v2.3c0 .5-.2 1-.5 1.4L3.4 13h11.2l-1.1-3.1a2.3 2.3 0 0 1-.5-1.4V6.2a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.2 15a1.9 1.9 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span class="cnt" id="bellCnt" style="display:none">0</span>
+      </button>
+      <div class="drop belld" id="bellDrop"></div>
+    </div>
     <button class="me" id="meBtn" aria-haspopup="true">
       <span class="av" id="uav">유</span>
       <span class="nm" id="unm">요청자</span>
@@ -1426,7 +1447,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     reject:{l:'반려',      c:'b-slip',   i:1},   // 담당자 반려 — 사유·설명 필수
     cancel:{l:'취소',      c:'b-closed', i:1}    // 요청자 취소/회수
   };
-  var FLOW=['접수','진행','완료','종결'];
+  // 스텝 뱃지의 4단계. 세 번째는 '완료'가 아니라 '종결 대기' — 담당자가 끝냈어도
+  // 요청자가 확인해야 종결이라, 상태 이름(stl)과 스텝 이름이 어긋나면 안 된다.
+  var FLOW=['접수','진행','종결 대기','종결'];
+  // 현재 단계에 실제 상태를 표시한다 — 진행 중 지연이 나면 그 자리에 '지연'이 뜬다.
+  var FLOWNOW={open:'접수',prog:'진행',slip:'지연',nego:'지연 알림',done:'종결 대기',closed:'종결'};
 
   // 상태 이름은 보는 쪽에 따라 달라지지 않는다. 같은 요청은 어디서든 같은 말로 불린다.
   // 예전엔 done 을 담당자에겐 '완료', 요청자에겐 '종결 대기'로 갈라 불렀는데,
@@ -2640,6 +2665,34 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if($('#cAll')){ $('#cAll').textContent=all.length; $('#cAll').style.display = cur==='adm' ? 'none' : ''; }
     if($('#cMine'))$('#cMine').textContent=m;
     if($('#cWork')){$('#cWork').textContent=w;$('#cWork').classList.toggle('hot',w>0);}
+    renderBell();
+  }
+
+  // 알림 인박스 — 담당자에게 아직 안 연 업무(unseen)를 모은다.
+  // unseen 은 접수·이관으로 나에게 새로 배정될 때 켜지고, 티켓을 열면 꺼진다 = '새 업무'와 정확히 같다.
+  // 근무조 배정이면 조원 각자에게도 unseen 이므로 isMine 으로 잡는다.
+  function inbox(){
+    return allT().filter(function(t){ return t.unseen && isMine(t,ME) && !isFin(t); });
+  }
+  function renderBell(){
+    var b=$('#bellCnt'), btn=$('#bellBtn'); if(!b||!btn) return;
+    var list=inbox(), n=list.length;
+    b.textContent=n>9?'9+':n;
+    b.style.display = n?'flex':'none';
+    btn.classList.toggle('hasnew', n>0);
+    var box=$('#bellDrop'); if(!box) return;
+    box.innerHTML =
+      '<div class="drop-h">알림 <span style="font-weight:600;color:var(--faint)">'+(n?'새 업무 '+n+'건':'')+'</span></div>'+
+      (n ? list.map(function(t){
+        return '<div class="ni" data-o="'+esc2(t.no)+'">'+
+          '<span class="ni-d"></span>'+
+          '<div><div class="ni-x"><b>'+esc2(t.title)+'</b></div>'+
+          '<div class="ni-t">dw://'+esc2(t.no)+' · '+esc2(t.rq.nm)+' · '+esc2(dOnly(t.openDate))+'</div></div></div>';
+      }).join('')
+        : '<div class="bempty">새로 들어온 업무가 없습니다</div>');
+    $$('.ni',box).forEach(function(el){ el.onclick=function(){
+      $('#bellDrop').classList.remove('on'); openT(el.dataset.o);
+    };});
   }
 
   function wire(){
@@ -3174,10 +3227,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
     ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
+    // 지연은 진행 단계에서 벌어지는 사고라 그 자리(now)를 붉게 세운다.
+    var danger = t.state==='slip';
     var flow = (t.state==='reject'||t.state==='cancel')
-      ? '<span class="st" style="border-color:var(--signal);color:var(--signal);background:var(--signal-tint)">'+(t.state==='reject'?'반려됨':'요청 취소·회수됨')+'</span>'
+      ? '<span class="st bad">'+(t.state==='reject'?'반려됨':'요청 취소·회수됨')+'</span>'
       : FLOW.map(function(s,i){
-          return '<span class="st '+(i<si?'done':i===si?'now':'')+'">'+s+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
+          var isNow=i===si;
+          var cls = i<si ? 'done' : isNow ? ('now'+(danger?' danger':'')) : '';
+          return '<span class="st '+cls+'">'+(isNow?(FLOWNOW[t.state]||s):s)+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
         }).join('');
 
     var bk = BACK.length ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
@@ -3243,7 +3300,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '요청 상세':'Request',
     '접수':'Received','진행':'In progress','지연':'Overdue','완료':'Completed','종결':'Closed',
     '종결 대기':'Awaiting closure','미열람':'Unread',
-    '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester',
+    '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester','지연 알림':'Delay notice',
+    '알림':'Notifications','새로 들어온 업무가 없습니다':'No new work',
+    '반려됨':'Rejected','요청 취소·회수됨':'Cancelled',
     '전체 부서':'All departments','전체 기간':'All time',
     '끝난 요청 포함':'Include finished','취소':'Cancelled','반려':'Rejected','오늘':'Today',
     '최근 7일':'Last 7 days','최근 30일':'Last 30 days','최근 90일':'Last 90 days','최근 1년':'Last year','직접 지정':'Custom range',
@@ -3438,10 +3497,21 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   if($('#navbd')) $('#navbd').onclick=function(){ $('.shell').classList.add('fold'); };
   // 프로필 드롭다운 — 한/영을 여기로 넣어 상단바 버튼 수를 줄였다
   if($('#meBtn')) $('#meBtn').onclick=function(e){
-    e.stopPropagation(); $('#meDrop').classList.toggle('on'); markLang();
+    e.stopPropagation(); $('#meDrop').classList.toggle('on'); if($('#bellDrop'))$('#bellDrop').classList.remove('on'); markLang();
   };
   document.addEventListener('click',function(){ if($('#meDrop')) $('#meDrop').classList.remove('on'); });
   if($('#meDrop')) $('#meDrop').onclick=function(e){ e.stopPropagation(); };
+  // 알림 벨 — 열 때 새로 그린다(그 사이 들어온 업무 반영). 다른 드롭다운은 닫는다.
+  if($('#bellBtn')) $('#bellBtn').onclick=function(e){
+    e.stopPropagation(); renderBell();
+    var box=$('#bellDrop'), open=box.classList.toggle('on');
+    if($('#meDrop')) $('#meDrop').classList.remove('on');
+    // 폰(≤640, CSS의 fixed 구간과 일치): 세로 위치를 벨 아래로 직접 잡는다(헤더가 스크롤에 따라 움직임)
+    if(open && matchMedia('(max-width:640px)').matches) box.style.top=(Math.round($('#bellBtn').getBoundingClientRect().bottom)+6)+'px';
+    else box.style.top='';
+  };
+  document.addEventListener('click',function(){ if($('#bellDrop')) $('#bellDrop').classList.remove('on'); });
+  if($('#bellDrop')) $('#bellDrop').onclick=function(e){ e.stopPropagation(); };
   function markLang(){ $$('.dropi[data-lang]').forEach(function(b){ b.classList.toggle('on', b.dataset.lang===LANG) }); }
   $$('.dropi[data-lang]').forEach(function(b){ b.onclick=function(){
     setLang(b.dataset.lang); markLang(); $('#meDrop').classList.remove('on');
