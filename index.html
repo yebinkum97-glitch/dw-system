@@ -1362,7 +1362,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
   // 축은 부서 관리자가 [기준정보]에서 직접 추가·수정·삭제한다.
   var AXES={
     '공간기획':[
-      {n:'자산', a:false, o:['본관','신관','S빌딩','유로프라자','잠실선착장','마곡연구소','용인경영개발원','힐리언스 선마을','기타(공장)','기타(영업소)','기타(임대)','기타']},
+      // 자산 = 사업장. 총무 일일업무일지(대웅_통합_일일업무일지)의 자산별 탭 기준으로 보완.
+      //  · 삼성동 본사는 동 단위(본관·신관·S빌딩·비워크서울)로 쪼개 쓴다 — 일지의 검침·민원이 그 단위로 잡힌다
+      //  · 그 외 사업장은 탭 하나 = 값 하나
+      {n:'자산', a:false, o:['본관','신관','S빌딩','비워크서울','유로프라자','잠실선착장','마곡연구소',
+                             '용인경영개발원','용인 연구소','힐리언스 선마을','대전사옥','경남사옥',
+                             '시지메드텍 성수','시지메드텍 의정부','기타(공장)','기타(영업소)','기타(임대)','기타']},
       {n:'공간 유형', a:true,  o:['사무-업무공간','사무-공용공간','세미나/공연','호스피탈리티-객실','호스피탈리티-기타','호스피탈리티-BOH','F&B','라운지','야외','가구','사이니지']},
       {n:'업무 유형', a:false, o:['단순문의(길이, 면적, 층고 등)','레이아웃 변경','인테리어 설계','인테리어 시공','VMD 연출','기타']}
     ],
@@ -2713,9 +2718,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.res,.pr,.
     '공간기획':'Workplace Planning','총무':'General Affairs','시설':'Facilities','자산':'Asset Management',
     '인사쉐어드':'HR Shared','회계기획쉐어드':'Accounting Shared','재무쉐어드':'Finance Shared','IT쉐어드':'IT Shared',
     // 자산
-    '본관':'Main Building','신관':'New Building','S빌딩':'S Building','유로프라자':'Euro Plaza',
-    '잠실선착장':'Jamsil Dock','마곡연구소':'Magok R&D Center','용인경영개발원':'Yongin Management Center',
-    '힐리언스 선마을':'Healience Seonmaeul','기타(공장)':'Other (Plant)','기타(영업소)':'Other (Sales office)',
+    '본관':'Main Building','신관':'New Building','S빌딩':'S Building','비워크서울':'BeWork Seoul',
+    '유로프라자':'Euro Plaza','잠실선착장':'Jamsil Dock','마곡연구소':'Magok R&D Center',
+    '용인경영개발원':'Yongin Management Center','용인 연구소':'Yongin R&D Center',
+    '힐리언스 선마을':'Healience Seonmaeul','대전사옥':'Daejeon Office','경남사옥':'Gyeongnam Office',
+    // 시지메드텍 성수·의정부 — 계열사 고유명이라 임의 번역하지 않는다(공식 영문 표기를 받아 채울 자리)
+    '기타(공장)':'Other (Plant)','기타(영업소)':'Other (Sales office)',
     '기타(임대)':'Other (Leased)','기타':'Other',
     // 공간 유형
     '사무-업무공간':'Office — Work area','사무-공용공간':'Office — Shared area','세미나/공연':'Seminar / Performance',
