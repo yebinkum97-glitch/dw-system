@@ -1066,7 +1066,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
             <div class="fv">
               <div class="casc">
                 <input type="date" id="want" style="max-width:180px">
-                <span class="hint" style="margin:0">언제까지 되면 좋을지 · 담당자가 확인하며 조정할 수 있습니다</span>
+                <!-- '언제까지 되면 좋을지'는 라벨(희망 완료일)이 이미 하는 말이라 뺐다 -->
+                <span class="hint" style="margin:0">담당자가 조정할 수 있습니다</span>
               </div>
             </div>
           </div>
@@ -1417,19 +1418,22 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 요청자 확인 대기 = 요청자 차례라 주황. (예전엔 빨강이었는데 지연'예고'는 아직 사고가 아니다)
     nego  :{l:'지연 알림 · 요청자 확인 대기', c:'b-wait', i:1},
     slip  :{l:'지연',      c:'b-slip',   i:1},
-    done  :{l:'완료', c:'b-verify', i:2},
+    // '완료'가 아니라 '종결 대기' — 담당자 손을 떠났을 뿐 끝난 게 아니다.
+    // 요청자가 확인해야 종결되고, 재요청이 오면 진행으로 되돌아온다.
+    // 실제로 isFin() 은 done 을 끝난 요청으로 치지 않아, '완료'라고 적힌 카드가
+    // 담당자의 살아있는 목록에 그대로 남아 있었다 — 말과 동작이 어긋나 있었다.
+    done  :{l:'종결 대기', c:'b-verify', i:2},
     closed:{l:'종결',      c:'b-closed', i:3},
     reject:{l:'반려',      c:'b-slip',   i:1},   // 담당자 반려 — 사유·설명 필수
     cancel:{l:'취소',      c:'b-closed', i:1}    // 요청자 취소/회수
   };
   var FLOW=['접수','진행','완료','종결'];
 
-  // 같은 상태라도 보는 쪽에 따라 이름이 다르다.
-  // 담당자는 자기 손을 떠났으니 '완료', 요청자는 아직 확인할 게 남았으니 '종결 대기'.
-  function stl(state){
-    if(state==='done') return cur==='req' ? '종결 대기' : '완료';
-    return ST[state].l;
-  }
+  // 상태 이름은 보는 쪽에 따라 달라지지 않는다. 같은 요청은 어디서든 같은 말로 불린다.
+  // 예전엔 done 을 담당자에겐 '완료', 요청자에겐 '종결 대기'로 갈라 불렀는데,
+  // 담당자가 자기 카드를 '완료'로 읽고 손을 떼면 재요청이 왔을 때 놓친다.
+  // (관리대장은 이 함수를 거치지 않고 ST[state].l 을 직접 써서 세 갈래로 갈려 있었다.)
+  function stl(state){ return ST[state].l }
 
   // 예시 요청은 demoSeed() 가 깐다. 접수한 건은 그 위에 쌓인다.
   // 브라우저(localStorage)에 저장되며, 상단 [예시로 초기화]로 비울 수 있다.
@@ -1546,7 +1550,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       if(b) rail.appendChild(b);
     });
     $$('.rsw button').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
-    // 상태 이름이 역할별로 다르므로(완료 / 종결 대기) 목록을 다시 그린다
+    // 카드가 역할별로 다르므로(요청자 표기·내 차례 강조) 목록을 다시 그린다
     renderWork(); renderMine(); counts();
     $$('[data-r]').forEach(function(el){
       if(el.classList.contains('rsw')||el.parentNode.classList.contains('rsw'))return;
@@ -1592,7 +1596,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       asis:asis,tobe:tobe,
       ev:[{t:'sys',at:now(),x:(av||d0)+' 접수 → '+(r.pending?'담당 미배정 · '+r.why:(r.rank?r.rank+'순위 ':'')+r.nm+' 배정(업무 '+(r.load||0)+'건)')+' · 희망 완료일 '+want+
         ' · '+(r.pending?'요청자 메일 발송':'요청자 · '+mailNote(d0,r.nm)+' 발송')},
-          {t:'sys',at:now(),x:'담당자 확인 대기 · 기한 확정 마감 '+fx+' · 이 시점까지 담당자가 요청을 확인하고 기한을 확정해야 합니다'}]};
+          {t:'sys',at:now(),x:'담당자 확인 대기 · 담당자 확인 마감 '+fx+' · 이때 기한이 확정됩니다'}]};
     refresh();
     var p=$('#pipe');
     $('#pipeBody').innerHTML='<div class="bx cm" style="margin-top:0">'+
@@ -1600,8 +1604,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       '<div style="font-size:13px;font-weight:700;margin-top:3px">접수되었습니다</div>'+
       '<dl class="f" style="margin-top:9px"><dt>담당자</dt><dd>'+esc2(asLabel(d0,r.nm))+' · '+esc2(TEAMORG[d0]||d0)+
         (isGroup(d0,r.nm)?'<br><span style="color:var(--primary-ink);font-size:11px">근무조 — 조원 전원에게 메일이 갑니다</span>':'')+'</dd></dl>'+
-      '<dl class="f"><dt>희망 완료일</dt><dd>'+esc2(want)+' · 담당자가 확인하며 조정할 수 있음</dd></dl>'+
-      '<dl class="f"><dt>기한 확정 마감</dt><dd>'+esc2(fx)+' · 이후 변경은 요청자 확인 필요</dd></dl>'+
+      // 접수 직후 요청자가 알아야 할 건 셋뿐 — 번호 · 누가 맡는지 · 언제 답이 오는지.
+      // 조정 가능하다는 건 폼에서 이미 말했고, '이후 변경은 요청자 확인 필요'는
+      // 확정된 뒤의 규칙이라 지금 할 얘기가 아니다.
+      '<dl class="f"><dt>희망 완료일</dt><dd>'+esc2(want)+'</dd></dl>'+
+      '<dl class="f"><dt>담당자 확인 마감</dt><dd>'+esc2(fx)+' · 이때 기한이 확정됩니다</dd></dl>'+
       '<div style="margin-top:11px;display:flex;gap:6px">'+
         '<button class="btn pri sm" data-o="'+esc2(no)+'">요청 보기</button>'+
         '<button class="btn sm" data-j="mine">내 요청 목록</button></div></div>';
@@ -1979,10 +1986,12 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       r2+=SEP+K(t.state==='open'?'희망':'기한')+' '+V(shortD(t.due))+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
     // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
     //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
+    // 주황(wait)은 '내 차례'라는 뜻이다. 종결 대기·지연 알림은 요청자가 답할 차례이므로
+    // 담당자 화면에서는 주황으로 세우지 않는다 — 세우면 담당자에게 할 일이 있는 것처럼 보인다.
     var cls='pr';
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
     else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
-    else if(t.state==='done'||t.state==='nego') cls+=' wait';
+    else if((t.state==='done'||t.state==='nego') && forRole==='req') cls+=' wait';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prb"><div class="prm">'+m.join(' · ')+'</div>'+
@@ -3148,11 +3157,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     //     아무도 약속한 적 없는 날에 '약속한 완료일'이라 써 두면 [확인 · 진행]이 뭘 하는 건지 흐려진다.
     var dates='<span class="dt"><i>요청일</i><b>'+esc2(t.open)+'</b></span>';
     if(t.due) dates+= t.state==='open'
-      ? '<span class="dt key"><i>희망 완료일</i><b>'+esc2(t.due)+'</b><em>요청자가 원한 날 · [확인 · 진행] 시 기한으로 확정</em></span>'
+      ? '<span class="dt key"><i>희망 완료일</i><b>'+esc2(t.due)+'</b><em>요청자가 원한 날</em></span>'
       : '<span class="dt key"><i>기한</i><b>'+esc2(t.due)+'</b><em>약속한 완료일 · 넘기면 지연</em></span>';
     if(t.want && t.want!==t.due) dates+='<span class="dt"><i>희망 완료일</i><b>'+esc2(t.want)+'</b><em>요청자가 원한 날</em></span>';
     if(t.dueOrig && t.due!==t.dueOrig) dates+='<span class="dt"><i>당초 기한</i><b>'+esc2(t.dueOrig)+'</b><em>지연 판정의 기준선</em></span>';
-    if(t.fixBy && t.state==='open') dates+='<span class="dt warn"><i>담당자 확인 마감</i><b>'+esc2(t.fixBy)+'</b><em>이때까지 [확인 · 진행]을 눌러야</em></span>';
+    if(t.fixBy && t.state==='open') dates+='<span class="dt warn"><i>담당자 확인 마감</i><b>'+esc2(t.fixBy)+'</b><em>이때 기한이 확정됩니다</em></span>';
     if(t.resolved) dates+='<span class="dt"><i>완료</i><b>'+esc2(t.resolved)+'</b></span>';
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
@@ -3243,14 +3252,15 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '공간 유형':'Space type','업무 유형':'Work type','제목':'Title',
     '현재 상황':'Current situation','요청 사항':'What you need','첨부':'Attachment','선택':'Select',
     '희망 완료일':'Preferred completion date','희망':'Preferred','요청일':'Requested','요청':'Requests',
-    '언제까지 되면 좋을지 · 담당자가 확인하며 조정할 수 있습니다':'When you would like it done · the assignee may adjust this',
+    '담당자가 조정할 수 있습니다':'The assignee may adjust this',
     '한 줄로 요약해주세요':'Summarize in one line',
     '지금 무엇이 문제인지 적어주세요':'Describe the problem',
     '어떻게 되기를 원하는지 적어주세요':'Describe the outcome you want',
     '파일 선택 또는 끌어놓기':'Choose a file or drag it here',
-    '담당자가 확인하며 조정할 수 있음':'The assignee may adjust this',
     '접수되었습니다':'Request received','담당자':'Assignee','요청자':'Requester',
-    '기한 확정 마감':'Deadline confirmation due','내 요청 목록':'My requests','요청 보기':'View request',
+    '담당자 확인 마감':'Assignee must confirm by','이때 기한이 확정됩니다':'The deadline is fixed at this point',
+    '요청자가 원한 날':'The date the requester asked for',
+    '내 요청 목록':'My requests','요청 보기':'View request',
     '의견 등록':'Post comment','+ 첨부':'+ Attach','공개 · 종결 후에도 검색됩니다':'Public · searchable after closure',
     '확인 · 진행':'Confirm and start','기한 조정':'Adjust deadline','이관':'Reassign',
     '지연 미리 알리기':'Report delay early','재요청':'Reopen','완료 확인 · 종결':'Confirm and close',
@@ -3446,7 +3456,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         fixBy:d(o.in+1)+' 18:00', want:d(o.dueOrig===undefined?o.due:o.dueOrig),
         unseen:!!o.unseen, asis:o.asis, tobe:o.tobe,
         ev:[{t:'sys',at:ts(o.in,'09:12'),x:o.av+' 접수 → 1순위 '+o.as+' 배정(업무 0건) · 희망 완료일 '+d(o.dueOrig===undefined?o.due:o.dueOrig)+' · 요청자 · '+mailNote(o.dept,o.as)+' 발송'},
-            {t:'sys',at:ts(o.in,'09:13'),x:'담당자 확인 대기 · 기한 확정 마감 '+d(o.in+1)+' 18:00 · 이 시점까지 담당자가 요청을 확인하고 기한을 확정해야 합니다'}]};
+            {t:'sys',at:ts(o.in,'09:13'),x:'담당자 확인 대기 · 담당자 확인 마감 '+d(o.in+1)+' 18:00 · 이때 기한이 확정됩니다'}]};
       (o.ev||[]).forEach(function(e){ t.ev.push(e) });
       if(o.extra) Object.keys(o.extra).forEach(function(k){ t[k]=o.extra[k] });
       T[no]=t; return no;
