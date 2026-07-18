@@ -740,10 +740,13 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
      좁은 폭에서 [로고][검색창]을 나란히 두면 검색창이 설 자리가 없다.
      심볼이 알약 안에 들어가면 자리를 안 쓰면서 브랜드는 남는다 — 헤더가 한 줄로 떨어진다. */
   .top{height:auto}
-  .topin{gap:8px;padding:8px 12px;max-width:none}
-  /* 로고 박스는 폰에서도 유지 — 컴팩트해서 자리를 많이 안 쓴다. 검색은 아랫줄로. */
+  /* 폰에서는 두 줄로 — 윗줄에 로고·요청하기·벨·프로필, 아랫줄에 검색창 전체폭.
+     로고·버튼과 한 줄에 두면 검색창이 좁아져 안내문구가 잘린다. 검색창을 통째로
+     아랫줄로 내려 헤더 폭 전체를 쓰게 하면 문구가 다 읽힌다. */
+  .topin{flex-wrap:wrap;row-gap:8px;gap:8px;padding:8px 12px 10px;max-width:none}
   .brandbox{font-size:13.5px;padding:6px 11px}
-  .gs{max-width:none;margin:0;padding:0 4px 0 12px}
+  .topr{margin-left:auto}                 /* 로고는 왼쪽, 우측 컨트롤은 오른쪽으로 */
+  .gs{order:5;flex-basis:100%;width:100%;max-width:none;margin:0;padding:0 6px 0 14px}
   .me .dp,.me .nm{display:none}
   .me{padding:2px}
   .btn.newreq{padding:9px 13px;font-size:13px;flex:none}
