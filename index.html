@@ -896,7 +896,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
 <header class="top"><div class="topin">
   <button class="ham" id="ham" aria-label="메뉴 접기/펼치기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
-  <div class="mark"><span class="brandbox">D-shared hub</span></div>
+  <div class="mark" id="logoHome" role="button" tabindex="0" aria-label="홈으로" style="cursor:pointer"><span class="brandbox">D-shared hub</span></div>
   <!-- 전역 검색 — 알약 하나가 검색창. 지우기·검색은 그 안에 있다.
        폰에서는 로고 락업이 접히고 대웅 심볼이 이 알약 안으로 들어온다. -->
   <form class="gs" id="gsf">
@@ -1299,13 +1299,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   var $=function(s,c){return (c||document).querySelector(s)};
   var $$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
 
-  var PREV='find';   // 요청하기 직전에 보던 화면 — 뒤로가기 목적지
   function show(id){
-    if(id==='intake'){
-      var cs=$('.screen.on');
-      if(cs && cs.id!=='s-intake' && cs.id!=='s-ticket') PREV=cs.id.replace('s-','');
-      resetIntake();                   // 새로 들어올 땐 항상 빈 요청서
-    }
+    if(id==='intake') resetIntake();   // 새로 들어올 땐 항상 빈 요청서
     $$('.screen').forEach(function(x){x.classList.remove('on')});
     $('#s-'+id).classList.add('on');
     $$('.nb').forEach(function(b){b.classList.toggle('on',b.dataset.s===id)});
@@ -1321,8 +1316,44 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if($('#pipe')) $('#pipe').classList.remove('on');
     if($('#pipeBody')) $('#pipeBody').innerHTML='';
   }
-  $$('.nb').forEach(function(b){b.onclick=function(){BACK=[];show(b.dataset.s);}});
-  if($('#bkIntake')) $('#bkIntake').onclick=function(){ show(PREV);  };
+
+  // ── 브라우저 히스토리 연동 ──
+  // 사파리·크롬 등 브라우저 자체의 '뒤로' 버튼이 앱 화면 전환과 똑같이 동작하게 한다.
+  // 히스토리 상태가 곧 네비게이션이다: 앞으로 갈 땐 pushState 로 쌓고, 뒤로가기(popstate)는
+  // 그 상태를 그대로 다시 그린다. 앱 안의 [뒤로] 버튼도 history.back() 을 불러
+  // 브라우저 뒤로가기와 한 갈래로 합친다(둘이 어긋나지 않게).
+  var NAVLOCK=false;   // popstate 로 되그리는 중엔 다시 push 하지 않는다
+  var NAVDEPTH=0;      // 현재 히스토리 깊이(0=홈). 상세의 [뒤로] 노출 판단에 쓴다
+  function navGo(st){                 // 앞으로 이동 — 히스토리에 한 칸 쌓는다
+    if(NAVLOCK) return;
+    NAVDEPTH++; st.d=NAVDEPTH;
+    try{ history.pushState(st,''); }catch(e){}
+  }
+  function navBase(id){               // 역할 홈을 히스토리의 바닥으로(역할 전환·최초 진입의 기준점)
+    NAVDEPTH=0;
+    try{ history.replaceState({v:'screen',id:id,r:cur,d:0},''); }catch(e){}
+  }
+  function navRender(st){             // 히스토리 상태를 화면에 반영(뒤로/앞으로 눌렀을 때)
+    if(!st) st={v:'screen',id:ROLE[cur].home,r:cur,d:0};
+    NAVLOCK=true;
+    try{
+      NAVDEPTH=st.d||0;
+      if(st.r && st.r!==cur) setRole(st.r,true);   // 뒤로가기가 역할 경계를 넘으면 그 역할로 복원
+      if(st.v==='ticket' && st.no && T[st.no]) openT(st.no,true);
+      else if(st.v==='search'){ SQ=st.q||''; SPG=1; renderSearch(); show('search'); window.scrollTo(0,0); }
+      else show(st.id||ROLE[cur].home);
+    }catch(e){}
+    NAVLOCK=false;
+  }
+  window.addEventListener('popstate',function(e){ navRender(e.state); });
+  function goHome(){                  // 로고 클릭 — 역할별 홈으로
+    var h=ROLE[cur].home, cs=$('.screen.on');
+    if(cs && cs.id==='s-'+h){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+    show(h); navGo({v:'screen',id:h,r:cur});
+  }
+
+  $$('.nb').forEach(function(b){b.onclick=function(){ show(b.dataset.s); navGo({v:'screen',id:b.dataset.s,r:cur}); }});
+  if($('#bkIntake')) $('#bkIntake').onclick=function(){ history.back(); };
 
 
   // ================= 데이터 =================
@@ -1476,7 +1507,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       if(el.classList.contains('rsw')||el.parentNode.classList.contains('rsw'))return;
       el.style.display = el.dataset.r.split(' ').indexOf(r)>=0 ? '' : 'none';
     });
-    if(!keep) show(m.home);
+    if(!keep){ show(m.home); navBase(m.home); }   // 역할 전환 = 새 홈을 히스토리 바닥으로
   }
   $$('.rsw button').forEach(function(b){b.onclick=function(){setRole(b.dataset.r)}});
   // 초기 렌더는 스크립트 맨 끝(init)에서 수행한다 — 위에서 부르면 아래 var가 아직 undefined.
@@ -1604,7 +1635,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 되돌리는 게 의미가 없으니(빈 요청서, 방금 떠난 상세, 자기 자신) 직전 목록을 유지한다.
     var cs=$('.screen.on'), fid=cs?cs.id.replace('s-',''):'';
     if(fid && fid!=='search' && fid!=='intake' && fid!=='ticket') SBACK=fid;
-    BACK=[]; renderSearch(); show('search'); window.scrollTo(0,0);
+    renderSearch(); show('search'); navGo({v:'search',q:SQ,r:cur}); window.scrollTo(0,0);
   }
   // 검색 대상 — 요청을 낼 때 정해지는 값들만. 제목 · 요청번호 · 부서 · 축 값 · 요청자 · 담당자.
   // 본문(현재상황·요청사항)과 의견은 넣지 않는다. 자유서술이라 흔한 말이 아무 데나 걸려
@@ -1633,7 +1664,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         (tot?pageRows.map(function(x){return row(T[x.no],'req',SQ)}).join(''):empty('일치하는 요청이 없습니다'))+
       '</div></div>'+
       pager(tot, SPG, null);
-    if($('#bkSearch')) $('#bkSearch').onclick=function(){ BACK=[]; CUR=null; show(SBACK); };
+    if($('#bkSearch')) $('#bkSearch').onclick=function(){ history.back(); };
     wirePager(el, function(p){ SPG=p; renderSearch(); window.scrollTo(0,0); });
     wire(); tr();
   }
@@ -2594,15 +2625,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   function wire(){
     $$('[data-o]').forEach(function(b){b.onclick=function(e){e.preventDefault();openT(b.dataset.o)}});
-    $$('[data-j]').forEach(function(b){b.onclick=function(){show(b.dataset.j)}});
+    $$('[data-j]').forEach(function(b){b.onclick=function(){ show(b.dataset.j); navGo({v:'screen',id:b.dataset.j,r:cur}); }});
     $$('[data-t2]').forEach(function(b){b.onclick=function(){toast(b.dataset.t2)}});
     $$('[data-ac]').forEach(function(b){b.onclick=function(){b.textContent='수락됨';b.disabled=true;toast('수락 · '+b.dataset.ac+' · 책임 이전 · 기한 유지 · 요청자 통보')}});
     $$('[data-rj]').forEach(function(b){b.onclick=function(){toast('거절 · 사유 필수 · '+b.dataset.rj+' 제안자에게 반송 · 이관 1회 기록')}});
-    if($('#bkBtn'))$('#bkBtn').onclick=function(){
-      var p=BACK.pop(); if(!p) return;
-      if(p.s==='ticket'&&p.no) openT(p.no,true);
-      else { CUR=null; show(p.s); }
-    };
+    if($('#bkBtn'))$('#bkBtn').onclick=function(){ history.back(); };
     // 이관은 담당자 바·관리자 바 양쪽에 있으므로 클래스로 묶어 바인딩한다(id는 하나만 잡힌다)
     $$('.aHd').forEach(function(b){ b.onclick=function(){
       if($('#hdT'))$('#hdT').textContent='이관 · dw://'+CUR; fillReassign(); op('m-hd');
@@ -2691,7 +2718,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     }
     ds.onchange=fillWho; fillWho();
   }
-  var BACK=[];                        // 뒤로가기 스택 [{s:화면, label:표시}]
   var SCR={intake:'요청하기',mine:'내 요청',search:'검색 결과',work:'내 업무',ticket:'요청 상세',cat:'서비스 카탈로그',ledger:'관리대장',rule:'담당자 관리',master:'기준정보',dash:'대시보드'};
   function ga(s){ // 이/가 조사
     var c=s.charCodeAt(s.length-1);
@@ -3077,10 +3103,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var from=noPush?null:$('.screen.on');
     if(from){
       var fid=from.id.replace('s-','');
-      // 접수 직후 [요청 보기]로 들어온 경우 — 빈 요청서로 되돌아가봐야 의미가 없으니 내 요청으로
-      if(fid==='intake') fid='mine';
-      var lbl = fid==='ticket' && CUR ? 'dw://'+CUR : SCR[fid];
-      if(!(fid==='ticket'&&CUR===no)) BACK.push({s:fid,label:lbl,no:fid==='ticket'?CUR:null});
+      // 같은 요청을 다시 여는 경우(재렌더)만 히스토리에 안 쌓는다. 그 외에는 한 칸 전진.
+      if(!(fid==='ticket'&&CUR===no)) navGo({v:'ticket',no:no,r:cur});
     }
     CUR=no;
     // 담당자가 처음 열면 '최초 열람'을 한 번 기록한다(요청자 응답까지 걸린 시간의 근거).
@@ -3124,7 +3148,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 스텝 뱃지(접수→진행→…)는 뺐다 — 상태는 헤더 배지가 이미 말한다. 두 곳에서 같은 걸
     // 그리느라 상태가 늘 때마다 흐름도까지 손봐야 했고, 지연·반려 같은 분기는 흐름에 안 맞았다.
 
-    var bk = BACK.length ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
+    var bk = NAVDEPTH>0 ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
     var head=bk+'<div class="th"><div style="display:flex;justify-content:space-between;gap:11px;flex-wrap:wrap;align-items:flex-start">'+
       '<div><div class="tid"><span class="s">dw://</span>'+esc2(t.no)+'</div><div class="tt">'+esc2(t.title)+'</div></div>'+
       // [공개] 배지는 뺐다 — vis 를 'locked'로 바꾸는 코드가 어디에도 없어서 모든 요청이
@@ -3370,6 +3394,11 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   var isPhone=function(){ return matchMedia('(max-width:900px)').matches };
   if(isPhone()) $('.shell').classList.add('fold');   // 폰은 서랍이 기본으로 닫혀 있다
   if($('#ham')) $('#ham').onclick=function(){ $('.shell').classList.toggle('fold'); };
+  // 로고 클릭 → 홈. 키보드(Enter/Space)로도 누를 수 있게.
+  if($('#logoHome')){
+    $('#logoHome').onclick=goHome;
+    $('#logoHome').onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goHome(); } };
+  }
   // 폰에서 탭을 고르면 서랍은 닫는다 — 열어둔 채로 두면 내용을 가린다
   $$('.rail .nb').forEach(function(b){ b.addEventListener('click',function(){
     if(isPhone()) $('.shell').classList.add('fold');
