@@ -682,10 +682,8 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
 .pr.fin .prt{color:var(--muted);font-weight:600}
 .pr.fin .prm{color:var(--faint)}
 .pr.fin:hover{background:#f2f2f2}
-/* 급한 것 — 지연·미열람 */
-.pr.urg{border-color:var(--signal);border-width:1.5px}
-/* 내 차례 — 완료 확인 대기·새 기한 확인 */
-.pr.wait{border-color:var(--primary);border-width:1.5px}
+/* 급함(지연·미열람)·내 차례를 알리던 색 테두리는 뺐다 — 상태 배지가 이미 색으로 말하고,
+   '새 소식'은 알림 벨이 잡는다. 테두리까지 물들이면 같은 말을 세 번 하는 셈. 회색(fin)만 남긴다. */
 .pr:last-child{margin-bottom:0}
 .pr[data-o]:hover{background:var(--surface-2);border-color:var(--line-2)}
 .prh{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
@@ -2019,13 +2017,9 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     else if(t.state!=='cancel' && t.state!=='reject' && t.due)
       r2+=SEP+K(t.state==='open'?'희망':'기한')+' '+V(shortD(t.due))+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
     // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
-    //   끝난 것(종결·취소·반려)은 회색으로 가라앉히고, 급한 것(지연·미열람)은 붉게 세운다.
-    // 주황(wait)은 '내 차례'라는 뜻이다. 종결 대기·지연 알림은 요청자가 답할 차례이므로
-    // 담당자 화면에서는 주황으로 세우지 않는다 — 세우면 담당자에게 할 일이 있는 것처럼 보인다.
+    //   끝난 것(종결·취소·반려)만 회색으로 가라앉힌다. 급함·내 차례는 배지·알림이 잡는다.
     var cls='pr';
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
-    else if(t.state==='slip'||t.unseen||t.as==='미배정') cls+=' urg';
-    else if((t.state==='done'||t.state==='nego') && forRole==='req') cls+=' wait';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="prb"><div class="prm">'+seg.join('<span class="pmb"></span>')+'</div>'+
