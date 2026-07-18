@@ -101,13 +101,16 @@ button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;backgrou
   background:var(--surface);border-bottom:1px solid var(--line);
   height:64px;position:sticky;top:0;z-index:30;
 }
-/* 헤더 속살은 본문과 같은 격자에 태운다 — max-width·좌우 패딩을 .main 과 맞춰야
-   로고 왼쪽선과 본문 왼쪽선이 떨어지고, 우측 아이콘이 카드 오른쪽선과 떨어진다.
-   이게 안 맞으면 헤더가 화면에 얹힌 남의 물건처럼 보인다. */
+/* 헤더는 화면 전체 폭을 쓴다(구글식). 로고·햄버거는 왼쪽 끝, 프로필은 오른쪽 끝,
+   검색은 가운데. 본문 격자(max-width)에 묶지 않는다 — 묶으면 관리자 뷰의 햄버거가
+   안쪽으로 들어가 왼쪽 끝에 붙은 사이드바와 어긋난다.
+   왼쪽 패딩은 사이드바(.rail)의 패딩과 맞춰 햄버거가 나란히 서게 한다. */
 .topin{
-  height:100%;max-width:1100px;margin:0 auto;padding:0 28px;
-  display:flex;align-items:center;gap:14px;
+  height:100%;padding:0 16px 0 6px;   /* 왼쪽은 햄버거 아이콘이 사이드바 첫 탭과 나란히 서게 좁힌다 */
+  display:flex;align-items:center;gap:12px;
 }
+/* 햄버거가 없는 뷰(요청자·담당자)에선 로고가 왼쪽 끝에 붙지 않도록 여백 */
+.topin .mark{margin-left:8px}
 /* 로고 락업 — [대웅 심볼+워드마크] │ [서비스명]. 구분선이 모기업과 제품명을 가른다.
    서비스명은 문장이 아니라 표식이라 자간을 좁히고 무게를 올려 워드마크와 한 덩어리로 읽히게 한다.
    색은 DAEWOONG 워드마크와 같은 계열(--dw-gray) — 주황을 또 쓰면 CTA와 싸운다. */
@@ -156,9 +159,13 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .ni:last-child{border-bottom:none}
 .ni:hover{background:var(--surface-2);cursor:pointer}
 .ni-d{width:6px;height:6px;border-radius:50%;margin-top:6px;flex:none}
-.ni-x{font-size:12px;line-height:1.5}
-.ni-x b{font-weight:700}
-.ni-t{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:2px}
+.ni-b{min-width:0;flex:1}
+/* 제목은 한 줄 말줄임 — 길어도 두 줄로 늘어나 카드가 커지지 않게 */
+.ni-x{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.4;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ni-t{font-size:10.5px;color:var(--faint);margin-top:2px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ni-no{font-family:var(--mono);color:var(--primary-ink);font-weight:700}
 /* 알림 인박스 — 프로필 드롭다운(.drop)보다 넓고, 목록이 길면 안에서 스크롤 */
 .belld{width:320px;max-height:min(70vh,420px);overflow-y:auto;box-sizing:border-box}
 .belld .ni-d{background:var(--signal)}
@@ -314,15 +321,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .tm .kv b{color:var(--ink-2);font-weight:700}
 .tb{background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 7px 7px}
 
-.flow{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:7px}
-.st{font-size:11px;font-weight:700;padding:4px 9px;border:1px solid var(--line-2);border-radius:20px;color:var(--muted);background:#fff;white-space:nowrap}
-.st.done{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
-.st.now{background:#fff;border-color:var(--primary-ink);border-width:2px;color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
-/* 지연 — 진행 단계에서 난 사고. 현재 단계를 붉게 세운다 */
-.st.now.danger{border-color:var(--signal);color:var(--signal);box-shadow:0 0 0 3px var(--signal-tint)}
-/* 반려·취소 — 정상 흐름을 벗어난 종료 */
-.st.bad{border-color:var(--signal);color:var(--signal);background:var(--signal-tint)}
-.aw{color:var(--line-2);padding:0 5px;font-size:10px;flex:none}
 
 .thr{padding:4px 15px 14px}
 /* 이벤트 — 예전엔 왼쪽 88px 칸에 시각을 넣고 '07-17'과 '14:45'를 <br>로 쪼갰다.
@@ -702,13 +700,19 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
    한 줄이 두 폰트(라틴=JBM, 한글=폴백)로 그려졌다 — 자간·높이가 미묘하게 어긋나 지저분했다.
    mono 가 필요한 요청번호는 이미 제목 줄(.prno)로 갔으므로 여기서 mono 는 할 일이 없다. */
 .prb{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-top:6px;flex-wrap:wrap}
-.prm{font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);min-width:0;flex:1;line-height:1.5}
+/* flex-wrap 으로 묶는다 — 각 쌍(pmg)이 순서대로 줄바꿈되고, 인라인블록의 baseline 어긋남이 없다 */
+.prm{font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);min-width:0;flex:1;
+     display:flex;flex-wrap:wrap;align-items:baseline;row-gap:3px}
 /* 라벨은 낮게, 값은 높게 — 대비로 위계를 만든다. 색을 --faint 아래로 더 낮추지는 않는다.
    --faint 가 이미 AA 하한(5.24:1)이라 그 밑은 안 보인다. 값을 올려서 벌린다(--ink-2 = 10:1). */
 .pmk{color:var(--faint);font-weight:400}
 .pmv{color:var(--ink-2);font-weight:600}
 .pmv.me{color:var(--good)}
 .pms{color:var(--faint);font-style:normal;margin:0 6px;font-weight:400}
+/* 라벨-값 한 쌍은 통째로 — '담당 조은혜'가 줄 사이에서 쪼개지지 않게. 넘치면 쌍 단위로 내려간다 */
+.pmg{white-space:nowrap}
+/* 묶음 사이 구분 — 분류 그룹 │ 사람 그룹. 가운뎃점보다 강해 한 줄 안에서도 세 덩이가 갈린다 */
+.pmb{width:1px;height:10px;background:var(--line-2);margin:0 9px;align-self:center;flex:none}
 .prd{flex:none;font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);white-space:nowrap}
 .prd .dd{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--primary-ink);
          background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:4px}
@@ -1011,8 +1015,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </form>
   <div class="topr" style="position:relative">
     <button class="btn pri newreq" data-j="intake" data-r="req">요청하기</button>
-    <!-- 알림 — 담당자에게만. 새로 배정됐거나 이관돼 온, 아직 안 연 업무가 여기 쌓인다 -->
-    <div class="bellw" data-r="own" style="position:relative">
+    <!-- 알림 — 요청자·담당자 양쪽. 담당자에겐 새 업무, 요청자에겐 '내 차례'인 요청이 쌓인다 -->
+    <div class="bellw" data-r="req own" style="position:relative">
       <button class="bell" id="bellBtn" aria-label="알림">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2.2a4 4 0 0 0-4 4v2.3c0 .5-.2 1-.5 1.4L3.4 13h11.2l-1.1-3.1a2.3 2.3 0 0 1-.5-1.4V6.2a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.2 15a1.9 1.9 0 0 0 3.6 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         <span class="cnt" id="bellCnt" style="display:none">0</span>
@@ -1447,11 +1451,6 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     reject:{l:'반려',      c:'b-slip',   i:1},   // 담당자 반려 — 사유·설명 필수
     cancel:{l:'취소',      c:'b-closed', i:1}    // 요청자 취소/회수
   };
-  // 스텝 뱃지의 4단계. 세 번째는 '완료'가 아니라 '종결 대기' — 담당자가 끝냈어도
-  // 요청자가 확인해야 종결이라, 상태 이름(stl)과 스텝 이름이 어긋나면 안 된다.
-  var FLOW=['접수','진행','종결 대기','종결'];
-  // 현재 단계에 실제 상태를 표시한다 — 진행 중 지연이 나면 그 자리에 '지연'이 뜬다.
-  var FLOWNOW={open:'접수',prog:'진행',slip:'지연',nego:'지연 알림',done:'종결 대기',closed:'종결'};
 
   // 상태 이름은 보는 쪽에 따라 달라지지 않는다. 같은 요청은 어디서든 같은 말로 불린다.
   // 예전엔 done 을 담당자에겐 '완료', 요청자에겐 '종결 대기'로 갈라 불렀는데,
@@ -1465,7 +1464,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // 예시 시드 버전 — 예시를 바꾸면 이 숫자를 올린다.
   // '요청이 0건일 때만' 깔면, 한 번이라도 열어본 브라우저(=이미 저장본이 있는)는
   // 예시를 영영 못 본다. 실제로 그래서 배포본에 예시가 안 떴다. 버전으로 판단한다.
-  var DEMOV=1;
+  var DEMOV=3;   // 예시를 바꾸면 올린다 — 옛 예시가 저장된 브라우저에도 새 예시가 깔린다
   // 기준정보 시드 버전 — 코드의 AXES/RULES/TEAM/GROUPS 기본값을 바꾸면 이 숫자를 올린다.
   // 저장본이 이보다 낮으면 기준정보만 코드값으로 갱신한다(입력한 요청 T·SEQ는 보존).
   // 이게 없으면 한 번이라도 열어본 브라우저는 옛 기준정보에 묶여 새 부서·축이 영영 안 열린다.
@@ -1990,12 +1989,20 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   var V=function(s2,c){ return '<b class="pmv'+(c||'')+'">'+s2+'</b>' };     // 값
   var SEP='<i class="pms">·</i>';
   function row(t, forRole, q, all){
-    var s=ST[t.state], m=[], own=forRole==='own'&&isMine(t,ME);
+    var s=ST[t.state], own=forRole==='own'&&isMine(t,ME);
     var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
-    if(attrVals(t).length) m.push(attrVals(t).map(function(v){return V(H(v))}).join(SEP));
-    if(forRole==='own') m.push(K('요청자')+' '+V(H(t.rq.nm)));
-    m.push(K('담당')+' '+V(H(t.as), own?' me':''));
-    if(t.parent) m.push(K('원 요청')+' '+V('dw://'+esc2(t.parent)));
+    // 한 줄 안에서 세 묶음(분류 · 요청자 · 담당)을 눈에 띄게 가른다.
+    // 각 라벨-값 쌍은 nowrap(.pmg)이라 '담당 조은혜'가 줄 사이에서 쪼개지지 않고,
+    // 폰에서 줄이 넘칠 땐 쌍 단위로 통째 내려간다. 묶음 사이는 가는 세로선(.pmb),
+    // 묶음 안(분류 값끼리, 사람끼리)은 가운뎃점(·)으로 구분한다.
+    var G=function(x){ return '<span class="pmg">'+x+'</span>' };
+    var seg=[];
+    if(attrVals(t).length) seg.push(attrVals(t).map(function(v){return G(V(H(v)))}).join(SEP));
+    var peo=[];
+    if(forRole==='own') peo.push(G(K('요청자')+' '+V(H(t.rq.nm))));
+    peo.push(G(K('담당')+' '+V(H(t.as), own?' me':'')));
+    seg.push(peo.join(SEP));
+    if(t.parent) seg.push(G(K('원 요청')+' '+V('dw://'+esc2(t.parent))));
     // 오른쪽은 날짜 열이다. 언제 들어온 건지가 먼저, 그 다음이 지금 중요한 날짜.
     // '접수'가 아니라 '요청' — 접수는 상태 이름이다. 같은 말이 상태와 날짜 둘을 가리키면
     // [접수] 배지가 붙은 카드에 '접수 07-15'가 같이 찍혀 무슨 말인지 알 수 없다.
@@ -2021,15 +2028,22 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     else if((t.state==='done'||t.state==='nego') && forRole==='req') cls+=' wait';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="prb"><div class="prm">'+m.join(' · ')+'</div>'+
+      '<div class="prb"><div class="prm">'+seg.join('<span class="pmb"></span>')+'</div>'+
         (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
     '</div>';
   }
   function byNo(list){return list.map(function(n){return T[n]})}
 
-  // 최신 요청이 위로 — 요청번호가 접수 순서다.
+  // 최신 요청이 위로 — 요청일(접수 시각) 기준. 같은 날이면 접수 순서(번호)로.
+  // 번호만으로 정렬하면 안 된다: 실제로는 번호=접수순서지만, 예시처럼 날짜가 번호와
+  // 어긋나게 들어오면 화면이 뒤죽박죽 보인다. 규칙은 '요청일'이지 번호가 아니다.
   function seqOf(n){ return parseInt(String(n).split('-')[1],10)||0 }
-  function newestFirst(a,b){ return seqOf(b.no)-seqOf(a.no) }
+  function tsKey(t){ return (t.openDate||'')+' '+((t.open||'').split(' ')[1]||'') }
+  function newestFirst(a,b){
+    var ka=tsKey(a), kb=tsKey(b);
+    if(ka!==kb) return ka<kb?1:-1;      // 요청일·시각 최신 우선
+    return seqOf(b.no)-seqOf(a.no);     // 같은 시각이면 접수 순서
+  }
   function allT(){return Object.keys(T).map(function(n){return T[n]}).sort(newestFirst)}
   function empty(msg){return '<div style="padding:28px 15px;text-align:center;color:var(--faint);font-size:12.5px">'+msg+'</div>'}
 
@@ -2575,7 +2589,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         if(!ids.length){ toast(f+' 님이 들고 있는 미종결 업무가 없습니다'); return; }
         if(!confirm(f+' → '+t2+'\n미종결 업무 '+ids.length+'건을 넘깁니다. 요청자와 새 담당자에게 메일이 갑니다.')) return;
         ids.forEach(function(n){
-          T[n].as=t2; T[n].unseen=true;
+          T[n].as=t2; T[n].unseen=true; T[n].firstSeen=false; T[n].newReq=true;   // 새 담당자 미열람 + 양쪽 알림
           T[n].ev.push({t:'sys',at:now(),x:'일괄 이관 · '+f+' → '+t2+' · 기한 '+(T[n].due||'—')+' 유지'});
         });
         save(); refresh(); show('rule');
@@ -2668,28 +2682,37 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     renderBell();
   }
 
-  // 알림 인박스 — 담당자에게 아직 안 연 업무(unseen)를 모은다.
-  // unseen 은 접수·이관으로 나에게 새로 배정될 때 켜지고, 티켓을 열면 꺼진다 = '새 업무'와 정확히 같다.
-  // 근무조 배정이면 조원 각자에게도 unseen 이므로 isMine 으로 잡는다.
-  function inbox(){
-    return allT().filter(function(t){ return t.unseen && isMine(t,ME) && !isFin(t); });
+  // 알림 인박스 — '내가 아직 안 본 새 소식'을 모은다. 열면 꺼진다.
+  //   담당자(unseen): 새로 배정된 업무 + 요청자가 움직인 것(수락·거절·재요청·취소·종결·자동지연).
+  //   요청자(newReq): 담당자가 움직인 것(확인·진행·완료·반려·지연 알림·기한 조정·자동지연).
+  //   플래그는 각 상태 전이에서 켜지고(actStart 등), 그 요청을 열면 openT 에서 꺼진다.
+  function bellList(){
+    if(cur==='req'){
+      var me=ROLE.req.nm;
+      return allT().filter(function(t){ return t.rq.nm===me && t.newReq; });
+    }
+    return allT().filter(function(t){ return t.unseen && isMine(t,ME); });
   }
   function renderBell(){
     var b=$('#bellCnt'), btn=$('#bellBtn'); if(!b||!btn) return;
-    var list=inbox(), n=list.length;
+    var list=bellList(), n=list.length, isReq=(cur==='req');
     b.textContent=n>9?'9+':n;
     b.style.display = n?'flex':'none';
     btn.classList.toggle('hasnew', n>0);
     var box=$('#bellDrop'); if(!box) return;
+    var lead=isReq?'확인이 필요한 요청':'새 업무';
     box.innerHTML =
-      '<div class="drop-h">알림 <span style="font-weight:600;color:var(--faint)">'+(n?'새 업무 '+n+'건':'')+'</span></div>'+
+      '<div class="drop-h">알림 <span style="font-weight:600;color:var(--faint)">'+(n?lead+' '+n+'건':'')+'</span></div>'+
       (n ? list.map(function(t){
+        // 요청자에겐 '왜 알림인지'(상태)를, 담당자에겐 '누가 낸 건지'(요청자)를 한 줄로.
+        // 제목은 길면 말줄임(한 줄 고정) — 두 줄로 늘어나 카드가 커지지 않게.
+        var sub = isReq ? stl(t.state) : (t.unseen&&!t.firstSeen ? t.rq.nm+' · 새 배정' : t.rq.nm);
         return '<div class="ni" data-o="'+esc2(t.no)+'">'+
           '<span class="ni-d"></span>'+
-          '<div><div class="ni-x"><b>'+esc2(t.title)+'</b></div>'+
-          '<div class="ni-t">dw://'+esc2(t.no)+' · '+esc2(t.rq.nm)+' · '+esc2(dOnly(t.openDate))+'</div></div></div>';
+          '<div class="ni-b"><div class="ni-x">'+esc2(t.title)+'</div>'+
+          '<div class="ni-t"><span class="ni-no">dw://'+esc2(t.no)+'</span> · '+esc2(sub)+'</div></div></div>';
       }).join('')
-        : '<div class="bempty">새로 들어온 업무가 없습니다</div>');
+        : '<div class="bempty">'+(isReq?'확인할 요청이 없습니다':'새로 들어온 업무가 없습니다')+'</div>');
     $$('.ni',box).forEach(function(el){ el.onclick=function(){
       $('#bellDrop').classList.remove('on'); openT(el.dataset.o);
     };});
@@ -2827,7 +2850,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     Object.keys(T).forEach(function(n){
       var t=T[n];
       if(t.due && td>t.due && (t.state==='open'||t.state==='prog'||t.state==='nego')){
-        t.state='slip'; t.slipAuto=true;
+        t.state='slip'; t.slipAuto=true; t.unseen=true; t.newReq=true;   // 양쪽에 '자동 지연' 알림
         // '사전 알림 없음'은 뺐다 — 미리 알렸으면 이 위에 [지연 알림] 이벤트가 있다.
         // 타임라인 자체가 증거인데 옆에서 '없었다'고 또 쓰면 중복이고 문책처럼 읽힌다.
         // 판정에 쓰는 t.notified 는 그대로 남아 종결 기록·관리대장 지연 열에 나온다.
@@ -2842,7 +2865,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(!nd||!why){ toast('조정 기한과 사유는 필수입니다'); return; }
     var fr=t.due;
     t.ev.push({t:'due',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,fr:fr,to:nd,why:why});
-    t.due=nd; t.dueOrig=nd;
+    t.due=nd; t.dueOrig=nd; t.newReq=true;   // 요청자에게 '기한 조정' 알림
     cl('m-due');
     toast(ga(ROLE[cur].nm)+' 기한을 '+fr+'에서 '+nd+'로 변경 · 요청자 메일 발송');
     openT(CUR); refresh();
@@ -2861,7 +2884,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(!nd){ toast('새 완료 예정일을 골라주세요'); return; }
     if(nd<=t.due){ toast('새 완료 예정일은 현재 기한('+t.due+') 이후여야 합니다'); return; }
     t.negoCount=(t.negoCount||0)+1;
-    t.state='nego'; t.nego={to:nd,why:why,ct:ct}; t.notified=true;   // 미리 알림 기록
+    t.state='nego'; t.nego={to:nd,why:why,ct:ct}; t.notified=true; t.newReq=true;   // 미리 알림 기록 + 요청자 알림
     t.ev.push({t:'nego',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,fr:t.due,to:nd,why:why,ct:ct});
     cl('m-due');
     toast('지연 알림 발송 · 요청자 확인 대기 · 확인 전까지 기존 기한 '+t.due+' 적용');
@@ -2871,7 +2894,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var t=T[CUR], n=t.nego||{};
     var fr=t.due;
     t.due=n.to; t.dueOrig=n.to;   // 확인된 기한으로 재확정
-    t.state='prog'; t.nego=null;
+    t.state='prog'; t.nego=null; t.unseen=true;   // 담당자에게 '수락됨' 알림
     t.ev.push({t:'sys',at:now(),x:ROLE[cur].nm+' 새 기한 수락 · 기한 '+fr+' → '+n.to+' 재확정'});
     toast('새 기한 수락 · '+n.to+' 재확정');
     openT(CUR); refresh();
@@ -2880,7 +2903,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   function actNegoN(){
     var t=T[CUR], n=t.nego||{}, v=$('#nrej1')?$('#nrej1').value.trim():'';
     if(!v){ toast('거절 사유를 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#nrej1'))$('#nrej1').focus(); return; }
-    t.state='prog'; t.nego=null;
+    t.state='prog'; t.nego=null; t.unseen=true;   // 담당자에게 '거절됨' 알림
     t.ev.push({t:'negoN',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,to:n.to,keep:t.due,why:v});
     t.ev.push({t:'sys',at:now(),x:'새 기한 거절 · 기한 '+t.due+' 유지'});
     cl('m-nrej');
@@ -2891,7 +2914,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // 상태만 바꾼다. 의견란은 읽지 않는다 — 할 말이 있으면 [의견 등록]으로 따로 남긴다.
   function actStart(){
     var t=T[CUR];
-    t.state='prog'; t.fixedAt=now();
+    t.state='prog'; t.fixedAt=now(); t.newReq=true;   // 요청자에게 '진행 시작' 알림
     t.ev.push({t:'sys',at:now(),x:ROLE[cur].nm+' 확인 · 기한 '+t.due+' 확정'});
     toast('진행 시작 · 기한 '+t.due+' 확정 · 요청자 메일 발송');
     openT(CUR); refresh();
@@ -2905,7 +2928,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       t.slipAuto=true;
       t.ev.push({t:'sys',at:now(),x:'기한 '+t.due+' 경과 후 완료 · 지연 기록'});
     }
-    t.state='done'; t.resolved=now();
+    t.state='done'; t.resolved=now(); t.newReq=true;   // 요청자에게 '완료 · 확인 필요' 알림
     t.ev.push({t:'res',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp});
     toast('완료 · 요청자에게 확인 요청 메일 발송 · 요청자가 확인해야 종결됩니다');
     openT(CUR); refresh();
@@ -2946,7 +2969,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   }
   function actClose(){
     var t=T[CUR];
-    t.ev2=grade(t); t.state='closed';
+    t.ev2=grade(t); t.state='closed'; t.unseen=true;   // 담당자에게 '종결됨' 알림
     t.closedDate=today();          // 월별 종결 추이 집계용
     if(!t.resolved) t.resolved=now();
     // 결과·소통 세부 등급은 바로 아래 [결과 평가]가 이미 보여준다 — 최종 등급만 적는다
@@ -2958,7 +2981,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   function actReopen(){
     var t=T[CUR], v=$('#reo1')?$('#reo1').value.trim():'';
     if(!v){ toast('무엇이 부족한지 적어주세요 — 담당자에게 그대로 전달됩니다'); if($('#reo1'))$('#reo1').focus(); return; }
-    t.state='prog'; t.resolved=null; t.reopened=(t.reopened||0)+1;
+    t.state='prog'; t.resolved=null; t.reopened=(t.reopened||0)+1; t.unseen=true;   // 담당자에게 '재요청' 알림
     t.ev.push({t:'reopen',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:v});
     t.ev.push({t:'sys',at:now(),x:'재요청 · 진행으로 복귀'});
     cl('m-reopen');
@@ -2981,7 +3004,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var t=T[CUR]; if(!t) return;
     var why=$('#can1')?$('#can1').value.trim():'';
     if(!why){ toast('취소 사유를 적어주세요 — 담당자에게 전달됩니다'); if($('#can1'))$('#can1').focus(); return; }
-    t.state='cancel'; t.cancelInfo={why:why};
+    t.state='cancel'; t.cancelInfo={why:why}; t.unseen=true;   // 담당자에게 '요청자 취소' 알림
     t.ev.push({t:'cancel',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:why});
     cl('m-cancel');
     toast('요청 취소·회수 · 담당자에게 통보 · 메일 발송');
@@ -2993,7 +3016,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var why=$('#rej1')?$('#rej1').value:'', ex=$('#rej2')?$('#rej2').value.trim():'';
     if(!why){ toast('반려 사유를 선택해주세요'); return; }
     if(!ex){ toast('설명을 적어주세요 — 요청자에게 그대로 전달됩니다'); if($('#rej2'))$('#rej2').focus(); return; }
-    t.state='reject'; t.rejectInfo={why:why,ex:ex};
+    t.state='reject'; t.rejectInfo={why:why,ex:ex}; t.newReq=true;   // 요청자에게 '반려' 알림
     t.ev.push({t:'reject',at:now(),who:ROLE[cur].nm,org:ROLE[cur].dp,why:why,ex:ex});
     cl('m-rej');
     toast('반려 · 요청자에게 사유·설명 전달 · 메일 발송');
@@ -3197,8 +3220,16 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       if(!(fid==='ticket'&&CUR===no)) BACK.push({s:fid,label:lbl,no:fid==='ticket'?CUR:null});
     }
     CUR=no;
-    if(t.unseen&&cur==='own'){t.unseen=false;t.ev.push({t:'sys',at:now(),x:'담당자 최초 열람'});save();}
-    var si=ST[t.state].i;
+    // 담당자가 처음 열면 '최초 열람'을 한 번 기록한다(요청자 응답까지 걸린 시간의 근거).
+    // firstSeen 으로 한 번만 — 이후 업데이트로 다시 미열람이 떠도 중복 기록하지 않는다.
+    // 열면 미열람·알림이 꺼진다(배지·벨에서 사라진다).
+    if(cur==='own' && isMine(t,ME)){
+      if(!t.firstSeen){ t.firstSeen=true; t.ev.push({t:'sys',at:now(),x:'담당자 최초 열람'}); }
+      if(t.unseen) t.unseen=false;
+      save();
+    }
+    // 요청자가 열면 그쪽 알림(새 소식)이 꺼진다.
+    if(cur==='req' && t.rq.nm===ROLE.req.nm && t.newReq){ t.newReq=false; save(); }
     // 분류·사람 — 낮은 강조로 한 줄
     var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b>'+(t.rq.org?' · '+esc2(t.rq.org):'')+'</span>'+
       '<span class="kv">담당자 <b>'+esc2(t.as)+'</b>'+
@@ -3227,15 +3258,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
     ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
-    // 지연은 진행 단계에서 벌어지는 사고라 그 자리(now)를 붉게 세운다.
-    var danger = t.state==='slip';
-    var flow = (t.state==='reject'||t.state==='cancel')
-      ? '<span class="st bad">'+(t.state==='reject'?'반려됨':'요청 취소·회수됨')+'</span>'
-      : FLOW.map(function(s,i){
-          var isNow=i===si;
-          var cls = i<si ? 'done' : isNow ? ('now'+(danger?' danger':'')) : '';
-          return '<span class="st '+cls+'">'+(isNow?(FLOWNOW[t.state]||s):s)+'</span>'+(i<FLOW.length-1?'<span class="aw">→</span>':'');
-        }).join('');
+    // 스텝 뱃지(접수→진행→…)는 뺐다 — 상태는 헤더 배지가 이미 말한다. 두 곳에서 같은 걸
+    // 그리느라 상태가 늘 때마다 흐름도까지 손봐야 했고, 지연·반려 같은 분기는 흐름에 안 맞았다.
 
     var bk = BACK.length ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
     var head=bk+'<div class="th"><div style="display:flex;justify-content:space-between;gap:11px;flex-wrap:wrap;align-items:flex-start">'+
@@ -3246,7 +3270,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       (t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
       '<div class="tm">'+meta+'</div><div class="dates">'+dates+'</div></div>';
 
-    var body='<div class="tb"><div class="flow">'+flow+'</div><div class="thr">'+
+    var body='<div class="tb"><div class="thr" style="border-top:none">'+
       '<div class="ev">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+'<div class="evb">'+
         '<div class="split" style="margin-top:2px">'+
           '<div><label class="fl2">현재 상황</label><div class="qt">'+esc2(t.asis)+'</div></div>'+
@@ -3302,6 +3326,8 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     '종결 대기':'Awaiting closure','미열람':'Unread',
     '지연 알림 · 요청자 확인 대기':'Delay notice · awaiting requester','지연 알림':'Delay notice',
     '알림':'Notifications','새로 들어온 업무가 없습니다':'No new work',
+    '새 업무':'New work','확인이 필요한 요청':'Needs your action','확인할 요청이 없습니다':'Nothing to review',
+    '새 배정':'Newly assigned','담당자 최초 열람':'Assignee first viewed',
     '반려됨':'Rejected','요청 취소·회수됨':'Cancelled',
     '전체 부서':'All departments','전체 기간':'All time',
     '끝난 요청 포함':'Include finished','취소':'Cancelled','반려':'Rejected','오늘':'Today',
@@ -3525,8 +3551,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   function demoSeed(){
     var d=function(n){ return addD(today(),n) };                       // 날짜
     var ts=function(n,hm){ return addD(today(),n).slice(5)+' '+hm };   // 'MM-DD HH:MM'
+    // 정의는 모아 뒀다가 요청일(in) 순으로 번호를 매긴다 — 실제로 번호=요청순서이므로,
+    // 예시도 그래야 번호와 날짜가 어긋나 보이지 않는다(1003이 1001보다 이른 날짜, 같은 착시 방지).
+    var DEFS=[];
+    function def(o){ DEFS.push(o); }
     function mk(o){
       var no=(DEPTCODE[o.dept]||o.dept)+'-'+(++SEQ);
+      var seen = o.state!=='open';   // open 이면 담당자가 아직 안 봄 = 미열람
       var t={ no:no, title:o.title, state:o.state,
         dept:o.dept, attrs:o.attrs,
         rq:{nm:o.rq, org:reqOf(o.rq).dp},
@@ -3534,8 +3565,14 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         open:ts(o.in,'09:12'), openDate:d(o.in),
         due:d(o.due), dueOrig:d(o.dueOrig===undefined?o.due:o.dueOrig),
         fixBy:d(o.in+1)+' 18:00', want:d(o.dueOrig===undefined?o.due:o.dueOrig),
-        unseen:!!o.unseen, asis:o.asis, tobe:o.tobe,
+        asis:o.asis, tobe:o.tobe, demo:true,   // demo 표식 — 버전 올릴 때 이것만 지운다
+        // 알림 플래그(현재 안 본 새 소식). 담당자: 새 배정 / 요청자: 담당자가 움직여 내 차례가 된 것
+        firstSeen:seen,
+        unseen: o.state==='open' ? !!o.unseen : false,
+        newReq: (o.state==='done'||o.state==='nego'||o.state==='reject'||o.state==='slip'),
         ev:[{t:'sys',at:ts(o.in,'09:12'),x:o.as+' 배정'+(isGroup(o.dept,o.as)?' · '+mailNote(o.dept,o.as):'')+' · 희망 완료일 '+d(o.dueOrig===undefined?o.due:o.dueOrig)}]};
+      // 최초 열람 — 진행 이후로 넘어간 건은 담당자가 이미 봤으므로 배정 직후에 한 줄 남긴다
+      if(seen) t.ev.push({t:'sys',at:ts(o.in,'09:20'),x:'담당자 최초 열람'});
       (o.ev||[]).forEach(function(e){ t.ev.push(e) });
       if(o.extra) Object.keys(o.extra).forEach(function(k){ t[k]=o.extra[k] });
       T[no]=t; return no;
@@ -3543,7 +3580,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var SP='공간기획', GA='총무';
 
     // 종결 — 끝까지 간 건. 평가까지 남아 관리대장·대시보드에 잡힌다.
-    mk({dept:SP, rq:'김서연', as:'박수지', av:'세미나/공연', state:'closed',
+    def({dept:SP, rq:'김서연', as:'박수지', av:'세미나/공연', state:'closed',
       title:'대회의실 프로젝터 스크린 교체',
       attrs:{'자산':'본관','공간 유형':'세미나/공연','업무 유형':'기타'},
       asis:'대회의실 스크린 하단이 찢어져 하단 자막이 안 보입니다. 외부 손님 대상 발표가 많은 방이라 곤란합니다.',
@@ -3557,7 +3594,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
              ev2:{late:false, lateFact:'기한 준수', notified:false, fl:'A', cm:'A', g:'A'}}});
 
     // 완료 — 담당자는 끝냈고 요청자 확인만 남았다. 요청자 화면에선 '종결 대기'로 읽힌다.
-    mk({dept:SP, rq:'정민호', as:'윤희선', av:'가구', state:'done',
+    def({dept:SP, rq:'정민호', as:'윤희선', av:'가구', state:'done',
       title:'임원 회의실 의자 12개 교체',
       attrs:{'자산':'본관','공간 유형':'가구','업무 유형':'기타'},
       asis:'의자 등받이 가죽이 벗겨지고 높이 조절 레버가 고장난 것이 절반 이상입니다.',
@@ -3569,7 +3606,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       extra:{resolved:ts(-1,'16:05')}});
 
     // 지연 — 기한이 그냥 지났다. 사전 알림이 없어 붉은 카드로 선다.
-    mk({dept:SP, rq:'김서연', as:'원종욱', av:'야외', state:'slip',
+    def({dept:SP, rq:'김서연', as:'원종욱', av:'야외', state:'slip',
       title:'옥상 정원 파고라 도장 벗겨짐 보수',
       attrs:{'자산':'신관','공간 유형':'야외','업무 유형':'기타'},
       asis:'파고라 목재 도장이 벗겨져 흰 자국이 심합니다. 휴게 공간이라 눈에 잘 띕니다.',
@@ -3581,7 +3618,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       extra:{slipAuto:true}});
 
     // 지연 알림 — 담당자가 기한 전에 미리 알렸고, 요청자 수락/거절을 기다린다.
-    mk({dept:SP, rq:'한지우', as:'원종욱', av:'사이니지', state:'nego',
+    def({dept:SP, rq:'한지우', as:'원종욱', av:'사이니지', state:'nego',
       title:'1층 로비 사이니지 하반기 콘텐츠 교체',
       attrs:{'자산':'본관','공간 유형':'사이니지','업무 유형':'VMD 연출'},
       asis:'로비 사이니지가 상반기 캠페인 화면 그대로입니다. 방문 고객 응대 때 지적을 받습니다.',
@@ -3596,7 +3633,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
              notified:true, negoCount:1}});
 
     // 진행 — 가장 흔한 상태.
-    mk({dept:SP, rq:'정민호', as:'이유진', av:'라운지', state:'prog',
+    def({dept:SP, rq:'정민호', as:'이유진', av:'라운지', state:'prog',
       title:'신입 온보딩용 3층 라운지 좌석 확충',
       attrs:{'자산':'본관','공간 유형':'라운지','업무 유형':'레이아웃 변경'},
       asis:'다음 달 신입 40명이 들어오는데 3층 라운지 좌석이 16석뿐이라 온보딩 세션을 나눠서 해야 합니다.',
@@ -3607,7 +3644,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
           {t:'cm',at:ts(-1,'09:05'),who:'정민호',org:'인사팀',r:'rq',x:'감사합니다. 온보딩 첫날이 '+d(12)+'이라 그 전까지만 되면 됩니다.'}]});
 
     // 접수 — 담당자가 아직 열어보지 않았다. [미열람] 배지가 붙는다.
-    mk({dept:SP, rq:'김서연', as:'조은혜', av:'사무-공용공간', state:'open',
+    def({dept:SP, rq:'김서연', as:'조은혜', av:'사무-공용공간', state:'open',
       title:'3층 회의실 벽면 화이트보드 시공',
       attrs:{'자산':'본관','공간 유형':'사무-공용공간','업무 유형':'인테리어 시공'},
       asis:'3층 중회의실은 벽이 일반 도장이라 이동식 보드를 세워 쓰는데, 자리를 많이 차지하고 필기 면적도 부족합니다.',
@@ -3615,7 +3652,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       in:0, due:14, unseen:true});
 
     // 반려 — 담당 영역이 아니라 되돌아간 건. 사유와 설명이 요청자에게 그대로 간다.
-    mk({dept:SP, rq:'한지우', as:'조은혜', av:'사무-업무공간', state:'reject',
+    def({dept:SP, rq:'한지우', as:'조은혜', av:'사무-업무공간', state:'reject',
       title:'영업1본부 좌석 파티션 높이 상향',
       attrs:{'자산':'본관','공간 유형':'사무-업무공간','업무 유형':'레이아웃 변경'},
       asis:'통화가 많은 팀이라 옆자리 소음이 심합니다. 파티션이 낮아 소리가 그대로 넘어옵니다.',
@@ -3628,7 +3665,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
              ex:'파티션 규격은 전사 사무환경 표준(총무팀 관리)이라 공간기획에서 임의 변경이 어렵습니다. 소음 문제는 총무팀에 흡음 부스 설치로 요청하시면 검토 가능합니다.'}}});
 
     // 취소 — 요청자가 스스로 회수한 건.
-    mk({dept:SP, rq:'정민호', as:'윤희선', av:'호스피탈리티-객실', state:'cancel',
+    def({dept:SP, rq:'정민호', as:'윤희선', av:'호스피탈리티-객실', state:'cancel',
       title:'유로프라자 게스트룸 침구 세트 교체',
       attrs:{'자산':'유로프라자','공간 유형':'호스피탈리티-객실','업무 유형':'기타'},
       asis:'해외 법인 방문객이 쓰는 게스트룸 침구가 오래됐습니다.',
@@ -3639,7 +3676,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       extra:{cancelInfo:{why:'방문 일정이 다음 분기로 밀려 지금 교체할 필요가 없어졌습니다. 일정 확정되면 다시 요청드리겠습니다.'}}});
 
     // 총무 — 부서 필터가 실제로 갈리는지 보이도록 다른 부서 건도 둔다.
-    mk({dept:GA, rq:'김서연', as:'권오민', av:'설비·위생', state:'prog',
+    def({dept:GA, rq:'김서연', as:'권오민', av:'설비·위생', state:'prog',
       title:'9층 탕비실 정수기 하부 누수',
       attrs:{'자산':'삼성동 본사','업무유형':'입주사 요청·민원','분류':'설비·위생'},
       asis:'정수기 아래 바닥에 물이 계속 고입니다. 지나다니다 미끄러질 뻔한 적이 있습니다.',
@@ -3649,13 +3686,15 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
           {t:'cm',at:ts(-1,'13:50'),who:'권오민',org:'총무팀',r:'ow',x:'배수 호스 연결부 이완으로 확인했습니다. 부품 교체 예정이며 그동안 물받이 대 두었습니다.'}]});
 
     // 근무조 배정 — 담당자가 사람이 아니라 조인 경우. 조원 전원에게 메일이 간다.
-    mk({dept:GA, rq:'한지우', as:'A조', av:'교대근무', state:'open',
+    def({dept:GA, rq:'한지우', as:'A조', av:'교대근무', state:'open',
       title:'주말 야간 출입 통제 일시 해제',
       attrs:{'자산':'삼성동 본사','업무유형':'입주사 요청·민원','분류':'교대근무'},
       asis:'분기 마감 작업으로 이번 주말 야간에 팀원 6명이 사무실에 나와야 합니다.',
       tobe:'토·일 22시 이후 출입 통제를 해제해 주세요. 명단은 메일로 보내드렸습니다.',
       in:0, due:3, unseen:true});
 
+    // 요청일(in) 오름차순으로 번호 부여 — 이른 요청이 낮은 번호를 받는다(번호=요청순서)
+    DEFS.sort(function(a,b){ return a.in-b.in; }).forEach(mk);
     save();
   }
 
@@ -3670,7 +3709,13 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   // ================= 초기화 =================
   // 위쪽 var 선언(empty 등)이 모두 평가된 뒤 실행되어야 한다.
   // demoSeed 도 여기서 부른다 — DEPTCODE·TEAMORG 같은 var 가 다 채워진 뒤여야 한다.
-  if(_DEMO) demoSeed();
+  // 버전을 올려 다시 심을 때는 옛 예시(demo:true)만 지운다 — 사용자가 직접 넣은 요청은 보존.
+  // 남은 게 예시뿐이면 SEQ 를 되돌려 번호가 다시 1001부터 깔끔하게 시작하도록 한다.
+  if(_DEMO){
+    Object.keys(T).forEach(function(n){ if(T[n].demo) delete T[n]; });
+    if(!Object.keys(T).length) SEQ=1000;
+    demoSeed();
+  }
   refresh();          // ownPick() 포함 — ME(담당자 본인) 확정 후 렌더
   setRole('req');
   try{ var _l=localStorage.getItem(LS+'-lang'); if(_l) setLang(_l); }catch(e){}
