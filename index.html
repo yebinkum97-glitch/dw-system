@@ -618,12 +618,14 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
    --faint 가 이미 AA 하한(5.24:1)이라 그 밑은 안 보인다. 값을 올려서 벌린다(--ink-2 = 10:1). */
 .pmk{color:var(--faint);font-weight:400}
 .pmv{color:var(--ink-2);font-weight:600}
-.pmv.me{color:var(--good)}
+/* 내 업무 담당값 — 초록. 클래스는 .mine (.me 는 헤더 프로필 버튼이라 충돌한다) */
+.pmv.mine{color:var(--good)}
 .pms{color:var(--faint);font-style:normal;margin:0 6px;font-weight:400}
 /* 라벨-값 한 쌍은 통째로 — '담당 조은혜'가 줄 사이에서 쪼개지지 않게. 넘치면 쌍 단위로 내려간다 */
 .pmg{white-space:nowrap}
-/* 묶음 사이 구분 — 분류 그룹 │ 사람 그룹. 가운뎃점보다 강해 한 줄 안에서도 세 덩이가 갈린다 */
-.pmb{width:1px;height:10px;background:var(--line-2);margin:0 9px;align-self:center;flex:none}
+/* 묶음 사이 구분(분류 · 사람) — 묶음 안 점(pms)보다 진하고 여백이 넓어 덩이가 갈린다.
+   세로선이 아니라 텍스트 점이라 flex-wrap 에서 다른 아이템과 같은 baseline 으로 흐른다. */
+.pmd{color:var(--muted);font-style:normal;font-weight:700;margin:0 8px}
 .prd{flex:none;font-family:var(--sans);font-size:11.5px;letter-spacing:-.012em;color:var(--faint);white-space:nowrap}
 .prd .dd{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--primary-ink);
          background:var(--primary-tint);border:1px solid #f0c99a;border-radius:3px;padding:0 4px;margin-left:4px}
@@ -1896,16 +1898,17 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   function row(t, forRole, q, all){
     var s=ST[t.state], own=forRole==='own'&&isMine(t,ME);
     var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
-    // 한 줄 안에서 세 묶음(분류 · 요청자 · 담당)을 눈에 띄게 가른다.
+    // 한 줄 안에서 세 묶음(분류 · 요청자 · 담당)을 가른다.
     // 각 라벨-값 쌍은 nowrap(.pmg)이라 '담당 조은혜'가 줄 사이에서 쪼개지지 않고,
-    // 폰에서 줄이 넘칠 땐 쌍 단위로 통째 내려간다. 묶음 사이는 가는 세로선(.pmb),
-    // 묶음 안(분류 값끼리, 사람끼리)은 가운뎃점(·)으로 구분한다.
+    // 폰에서 줄이 넘칠 땐 쌍 단위로 통째 내려간다.
+    // 묶음 사이(pmd)는 살짝 진한 가운뎃점, 묶음 안은 옅은 가운뎃점(pms).
+    // 세로선 구분자는 뺐다 — flex 아이템으로 두니 baseline 정렬과 충돌해 혼자 다음 줄로 빠졌다.
     var G=function(x){ return '<span class="pmg">'+x+'</span>' };
     var seg=[];
     if(attrVals(t).length) seg.push(attrVals(t).map(function(v){return G(V(H(v)))}).join(SEP));
     var peo=[];
     if(forRole==='own') peo.push(G(K('요청자')+' '+V(H(t.rq.nm))));
-    peo.push(G(K('담당')+' '+V(H(t.as), own?' me':'')));
+    peo.push(G(K('담당')+' '+V(H(t.as), own?' mine':'')));
     seg.push(peo.join(SEP));
     if(t.parent) seg.push(G(K('원 요청')+' '+V('dw://'+esc2(t.parent))));
     // 오른쪽은 날짜 열이다. 언제 들어온 건지가 먼저, 그 다음이 지금 중요한 날짜.
@@ -1929,7 +1932,7 @@ button,a,.nb,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="prb"><div class="prm">'+seg.join('<span class="pmb"></span>')+'</div>'+
+      '<div class="prb"><div class="prm">'+seg.join('<i class="pmd">·</i>')+'</div>'+
         (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
     '</div>';
   }
