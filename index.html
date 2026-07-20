@@ -126,8 +126,9 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
             background:#fff!important;color:var(--primary-ink)!important;border-color:#fff!important;
             box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .btn.newreq:hover{background:var(--primary-tint)!important;border-color:var(--primary-tint)!important;filter:none}
-/* 폰 하단 바 + 요청하기 FAB — PC 에서는 숨긴다(헤더 CTA 가 같은 일을 한다). */
+/* 폰 하단 바 — PC 에서는 둘 다 숨긴다(헤더 CTA·가로 탭이 같은 일을 한다). */
 .tabs{display:none}
+.mtabs{display:none}
 .newreq-m{display:none}          /* 본문 전체폭 CTA 는 FAB 로 대체됐다 */
 @media(max-width:640px){
   /* 받침이 되는 바 — 이게 없으면 FAB 가 허공에 뜬 것처럼 보인다 */
@@ -149,6 +150,21 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
     position:absolute;top:36px;left:50%;transform:translateX(-50%);
     font-size:10px;font-weight:700;color:var(--primary-ink);white-space:nowrap;
   }
+  /* 관리자 하단 탭바 (Admin Nav 시안 M1) — 4개 섹션을 엄지 닿는 곳에.
+     PC 가로 탭(.topnav)을 숨기는 규칙은 아래 폰 블록에 있다(.topnav 기본 규칙보다 뒤여야 이긴다). */
+  .mtabs{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:46;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:8px 4px calc(14px + env(safe-area-inset-bottom,0px));
+  }
+  .mtabs .tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;
+    font-size:9px;font-weight:700;color:var(--muted);background:none;border:none;padding:0;min-height:44px;
+  }
+  .mtabs .tab.on{color:var(--primary-ink)}
+  .mtabs .tab .ic{width:20px;height:20px}
+  .mtabs .tab .c{position:absolute;top:-3px;margin-left:16px;background:var(--signal);color:#fff;
+                 font-size:7.5px;font-weight:800;border-radius:6px;padding:0 4px;font-family:var(--mono)}
   /* 바에 가리지 않도록 본문 아래 여백 */
   .main{padding-bottom:96px}
 }
@@ -216,15 +232,14 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .shell{display:flex;align-items:flex-start}
 /* 화면 이동 줄 — v2 시안. 사이드바를 걷어내고 헤더 아래 셀렉트 하나로 옮겼다.
    목적지가 하나뿐인 역할에서는 .nonav 로 통째로 감춘다(빈 줄을 남기지 않는다). */
-.navbar{background:var(--surface);border-bottom:1px solid var(--line);padding:11px 22px;display:flex;gap:10px;align-items:center}
-.navbar.nonav{display:none}
-.navsel{
-  height:38px;min-width:150px;width:auto;border:1px solid var(--line-2);border-radius:var(--r-field);
-  padding:0 34px 0 13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;
-  -webkit-appearance:none;appearance:none;
-  background:var(--paper) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238f8578' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 11px center;
-}
-.navsel:hover{border-color:var(--line-3)}
+/* PC 가로 탭 (Admin Nav 시안 P3) — 켜진 탭은 글자색과 아래 선으로 표시한다 */
+.topnav{display:flex;gap:2px;padding:0 15px;background:var(--surface);border-bottom:1px solid var(--line)}
+.topnav.nonav{display:none}
+.tn{padding:12px 14px;font-size:12.5px;font-weight:700;color:var(--muted);
+    border:none;border-bottom:2.5px solid transparent;background:none;white-space:nowrap}
+.tn:hover{color:var(--ink-2)}
+.tn.on{color:var(--primary-ink);border-bottom-color:var(--primary)}
+.tn .c{font-family:var(--mono);font-size:9px;background:var(--signal);color:#fff;border-radius:7px;padding:0 5px;margin-left:5px}
 
 .main{flex:1;min-width:0;padding:26px 34px 48px;max-width:1100px;margin:0 auto}
 
@@ -363,7 +378,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .mgrp{padding:13px 15px}
 .mgrp + .mgrp{border-top:1px solid var(--line)}
 .mgcap{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.05em;margin-bottom:9px;text-transform:uppercase}
-.mbadges{display:flex;gap:5px;flex-wrap:wrap}
 .mrow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px}
 .mrow .k{color:var(--muted);font-weight:600;flex:none}
 .mrow .v{font-weight:700;color:var(--ink-2);text-align:right;min-width:0;word-break:keep-all}
@@ -371,10 +385,22 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 /* 사람 칸은 폰과 같은 조각(.a-per)을 쓰되, 패널 안에서는 바탕 없이 */
 .mcard .a-people{display:block}
 .mcard .a-per{background:none;padding:6px 0;border-radius:0}
-/* 액션은 패널 맨 아래 세로로 쌓는다 — 가로로 늘어놓기엔 296px 이 좁다 */
-.macts .acts{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:0;border:none;background:none;border-radius:0}
-.macts .acts .btn{width:100%;justify-content:center;text-align:center}
-.macts .nyx,.macts .note{font-size:11.5px;margin-bottom:8px}
+/* 액션 — 시안의 리듬: 주 행동과 위험(반려)은 전체폭, 보조는 둘씩 나란히.
+   버튼 구성이 상태마다 달라 개수를 고정할 수 없으므로 종류로 폭을 정한다. */
+.macts .acts{display:flex;flex-wrap:wrap;align-items:stretch;gap:7px;padding:0;border:none;background:none;border-radius:0}
+/* 가로 바 시절 버튼을 오른쪽으로 밀던 스페이서 — 세로 패널에서는 flex 아이템으로 남아
+   줄바꿈을 망가뜨린다(보조 버튼 둘이 한 줄에 못 선다). 여기서는 숨긴다. */
+.macts .acts .sp{display:none}
+.macts .acts .btn{flex:1 1 calc(50% - 4px);justify-content:center;text-align:center;min-width:0}
+.macts .acts .btn.pri,.macts .acts .btn.dn{flex:1 1 100%}
+/* 시안 순서 — 주 행동이 맨 위, 되돌려보내는 반려가 맨 아래 */
+.macts .acts .btn.pri{order:-1}
+.macts .acts .btn.dn{order:1}
+.macts .nyx,.macts .note{font-size:11.5px;margin-bottom:8px;flex:1 1 100%}
+/* 상태 — 라벨과 배지를 한 줄 양끝으로 */
+.mstat{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mstat .mgcap{margin:0}
+.mbadges{display:flex;gap:5px;flex-wrap:wrap}
 
 /* 요청 내용 카드 · 소통 타임라인 — 폰·PC 공용 */
 .rc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -840,12 +866,14 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
      좁은 헤더에서 로고·검색·컨트롤이 서로를 밀어내던 걸 없앤다.
      data-r 이 인라인 style 로 display 를 잡으므로 !important 로 덮는다. */
   .topr .newreq{display:none!important}
-  /* 사이드바·서랍은 없어졌다 — 폰 이동은 하단 탭바가, PC 는 헤더 아래 셀렉트가 맡는다.
+  /* 폰에서는 PC 가로 탭을 숨기고 하단 탭바가 대신한다.
+     (.topnav 기본 규칙보다 뒤에 와야 이긴다 — 앞쪽 FAB 블록에 두면 안 먹는다) */
+  .topnav{display:none}
+  /* 사이드바·서랍은 없어졌다 — 폰 이동은 하단 탭바가, PC 는 헤더 아래 가로 탭이 맡는다.
      아래 여백은 하단 바(62px)와 그 위로 솟은 FAB(24px)을 합친 높이보다 커야 한다.
      앞쪽 FAB 블록에도 padding-bottom 을 뒀지만 이 규칙이 뒤에 와서 덮어썼고,
      그 바람에 60px 만 남아 마지막 버튼이 FAB 에 가렸다. 여기서 한 번에 잡는다. */
   .main{padding:14px 12px 112px}
-  .navbar{padding:9px 12px}
   .drop{width:calc(100vw - 20px);right:-4px}
 
   /* 라벨 좌측 고정폭 그리드 → 세로 스택 */
@@ -1041,9 +1069,11 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </div>
 </div></header>
 
-<!-- 화면 이동 — v2 시안: 사이드바 대신 헤더 아래 셀렉트 한 줄.
-     목적지가 하나뿐인 역할(요청자·담당자)에서는 줄 자체를 감춘다. 옵션은 NAVORDER 로 채운다. -->
-<div class="navbar" id="navbar"><select class="navsel" id="navsel" aria-label="화면 이동"></select></div>
+<!-- 화면 이동 — Admin Nav 시안 P3: 헤더 바로 아래 가로 탭.
+     섹션이 4개뿐이라 한눈에 다 보이고 세로 공간도 사이드바보다 아낀다.
+     목적지가 하나뿐인 역할(요청자·담당자)에서는 줄 자체를 감춘다. 탭은 NAVORDER 로 채운다.
+     폰에서는 이 줄을 숨기고 아래 하단 탭바(M1)가 대신한다. -->
+<nav class="topnav" id="topnav" aria-label="화면 이동"></nav>
 
 <div class="shell">
   <main class="main">
@@ -1312,15 +1342,18 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </main>
 </div>
 
-<!-- 폰 하단 바 + 요청하기 FAB — Mobile 시안 구조 그대로(바 위로 원형 버튼이 솟고 라벨은 바 안).
-     목록·알림·내 정보 칸은 뺐다(헤더의 로고·벨·프로필이 이미 한다). 바는 FAB 의 받침이다.
-     폰에서만(≤640), 요청을 내는 요청자에게만 보인다. -->
+<!-- 폰 하단 바 — 역할에 따라 둘 중 하나다.
+     · 요청자: 요청하기 FAB (Mobile 시안). 바 위로 원형 버튼이 솟고 라벨은 바 안.
+       목록·알림·내 정보 칸은 뺐다 — 헤더의 로고·벨·프로필이 이미 한다.
+     · 관리자: 4개 섹션 탭 (Admin Nav 시안 M1). 엄지로 바로 닿고 현재 위치가 늘 보인다.
+     폰에서만 보인다(≤640). -->
 <nav class="tabs" id="tabs" data-r="req">
   <button class="fab" id="tabFab" aria-label="요청하기">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
   </button>
   <span class="fablbl">요청하기</span>
 </nav>
+<nav class="mtabs" id="mtabs" data-r="adm" aria-label="화면 이동"></nav>
 
 <!-- modals -->
 <div class="mk" id="m-due"><div class="md">
@@ -1414,9 +1447,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(id==='intake') resetIntake();   // 새로 들어올 땐 항상 빈 요청서
     $$('.screen').forEach(function(x){x.classList.remove('on')});
     $('#s-'+id).classList.add('on');
-    // 이동 셀렉트를 현재 화면에 맞춰 둔다(상세·검색처럼 셀렉트에 없는 화면이면 그대로 둔다)
-    var ns=$('#navsel');
-    if(ns && [].some.call(ns.options,function(o){return o.value===id})) ns.value=id;
+    markNav();   // 이동 탭 활성 표시를 현재 화면에 맞춘다
     window.scrollTo({top:0,behavior:'smooth'});
   }
   // 접수 폼 초기화 — 직전 접수 내용이 남아 있으면 안 된다.
@@ -1465,7 +1496,51 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     show(h); navGo({v:'screen',id:h,r:cur});
   }
 
-  if($('#navsel')) $('#navsel').onchange=function(){ show(this.value); navGo({v:'screen',id:this.value,r:cur}); };
+  // ── 화면 이동 탭 (PC 가로 탭 P3 / 폰 하단 탭 M1) ──
+  // 둘 다 NAVORDER 로 만든다. 아이콘은 폰 탭에만 — PC 는 글자만으로 충분하다.
+  var NAVICON={
+    dash:'<rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/>',
+    ledger:'<path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h5"/>',
+    rule:'<circle cx="9" cy="8" r="3"/><path d="M4 20c0-3 2.2-5 5-5s5 2 5 5"/><circle cx="17" cy="10" r="2.2"/>',
+    master:'<path d="M4 7h6M14 7h6M4 12h3M12 12h8M4 17h11"/>',
+    mine:'<path d="M5 4h11l3 3v13H5z"/>', work:'<path d="M4 7h16v12H4z"/><path d="M9 7V5h6v2"/>'
+  };
+  // 담당자가 한 명도 없는 배정축 값의 수 — 접수는 열려 있는데 받을 사람이 없는 상태다.
+  // 관리자가 [담당자 관리]에서 알아채야 하는 것이라 그 탭에 배지로 띄운다.
+  function noRuleCount(){
+    var n=0;
+    DEPT.forEach(function(d){
+      var ax=assignAxis(d); if(!ax) return;
+      var r=RULES[d]||{};
+      ax.o.forEach(function(v){ if(!(r[v]||[]).length) n++; });
+    });
+    return n;
+  }
+  function buildNav(r){
+    var list=NAVORDER[r]||[], warn=noRuleCount();
+    var badge=function(s){ return (s==='rule'&&warn)?'<span class="c">'+warn+'</span>':'' };
+    var tnav=$('#topnav');
+    if(tnav) tnav.innerHTML=list.map(function(s){
+      return '<button class="tn" data-s="'+s+'">'+esc2(SCR[s]||s)+badge(s)+'</button>';
+    }).join('');
+    // 폰 탭은 칸이 좁아 라벨을 줄인다(시안도 '담당자 관리'가 아니라 '담당자')
+    var SHORT={rule:'담당자', master:'기준정보', ledger:'관리대장', dash:'대시보드'};
+    var mt=$('#mtabs');
+    if(mt) mt.innerHTML=list.map(function(s){
+      return '<button class="tab" data-s="'+s+'">'+badge(s)+
+        '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(NAVICON[s]||'')+'</svg>'+
+        esc2(SHORT[s]||SCR[s]||s)+'</button>';
+    }).join('');
+    $$('#topnav .tn,#mtabs .tab').forEach(function(b){
+      b.onclick=function(){ show(b.dataset.s); navGo({v:'screen',id:b.dataset.s,r:cur}); };
+    });
+    markNav();
+  }
+  // 현재 화면에 맞춰 탭 활성 표시. 상세·검색처럼 탭에 없는 화면이면 아무것도 켜지 않는다.
+  function markNav(){
+    var cs=$('.screen.on'), id=cs?cs.id.replace('s-',''):'';
+    $$('#topnav .tn,#mtabs .tab').forEach(function(b){ b.classList.toggle('on', b.dataset.s===id) });
+  }
 
   // 폰 요청하기 FAB — 유일한 주 행동. 목록·알림·내 정보 탭은 두지 않는다(헤더가 한다).
   if($('#tabFab')) $('#tabFab').onclick=function(){ show('intake'); navGo({v:'screen',id:'intake',r:cur}); };
@@ -1600,16 +1675,13 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
     if($('#ownAs'))$('#ownAs').style.display = r==='own' ? '' : 'none';
     if($('#reqAs'))$('#reqAs').style.display = r==='req' ? '' : 'none';
-    // 이동 셀렉트를 역할에 맞춰 다시 채운다(첫 항목이 그 역할의 홈).
-    // 목적지가 하나뿐인 역할(요청자·담당자)에서는 줄 자체를 감춘다 — 선택지 1개짜리
-    // 셀렉트는 아무것도 알려주지 않으면서 자리만 먹는다. 관리자(4개)만 쓴다.
+    // 이동 탭을 역할에 맞춰 다시 채운다(첫 항목이 그 역할의 홈).
+    // 목적지가 하나뿐인 역할(요청자·담당자)에서는 줄 자체를 감춘다 — 항목 1개짜리 탭줄은
+    // 아무것도 알려주지 않으면서 자리만 먹는다. 관리자(4개)만 쓴다.
     var multi = NAVORDER[r].length>1;
-    if($('#navbar')) $('#navbar').classList.toggle('nonav', !multi);
+    if($('#topnav')) $('#topnav').classList.toggle('nonav', !multi);
     if($('#ham')) $('#ham').style.display='none';   // 사이드바가 없으니 햄버거도 없다
-    var ns=$('#navsel');
-    if(ns) ns.innerHTML = NAVORDER[r].map(function(s){
-      return '<option value="'+s+'">'+esc2(SCR[s]||s)+'</option>';
-    }).join('');
+    buildNav(r);
     $$('.rsw button').forEach(function(b){b.classList.toggle('on',b.dataset.r===r)});
     // 카드가 역할별로 다르므로(요청자 표기·내 차례 강조) 목록을 다시 그린다
     renderWork(); renderMine(); counts();
@@ -3247,7 +3319,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var per=function(lab,nm,org,gray){
       return '<div class="a-per"><span class="a-av'+(gray?' g':'')+'">'+esc2(nm.slice(0,1))+'</span>'+
              '<div class="a-pt"><div class="a-pl">'+lab+'</div><div class="a-pn">'+esc2(nm)+
-             (org?'<span class="a-po">'+esc2(org)+'</span>':'')+'</div></div></div>';
+             (org?'<span class="a-po">· '+esc2(org)+'</span>':'')+'</div></div></div>';
     };
     var people='<div class="a-people">'+per('요청자',t.rq.nm,t.rq.org)+per('담당자',t.as,t.asOrg,true)+'</div>'+
       (isGroup(t.dept,t.as)?'<div class="grpnote">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</div>':'');
@@ -3279,7 +3351,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 스텝 뱃지(접수→진행→…)는 뺐다 — 상태는 헤더 배지가 이미 말한다. 두 곳에서 같은 걸
     // 그리느라 상태가 늘 때마다 흐름도까지 손봐야 했고, 지연·반려 같은 분기는 흐름에 안 맞았다.
 
-    var bk = NAVDEPTH>0 ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
+    var bk = NAVDEPTH>0 ? '<button class="bk" id="bkBtn"><span class="a">‹</span>목록으로</button>' : '';
     // [공개] 배지는 뺐다 — vis 를 'locked'로 바꾸는 코드가 어디에도 없어서 모든 요청이
     // 예외 없이 '공개'였다. 전부 같은 말이면 아무것도 알려주지 않는다.
     var badges=(t.unseen?'<span class="badge b-open">미열람</span>':'')+
@@ -3321,7 +3393,8 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
           '<div class="ttl">'+esc2(t.title)+'</div>'+ mainCol +
         '</div>'+
         '<aside class="mcard">'+
-          '<div class="mgrp"><div class="mgcap">상태</div><div class="mbadges">'+badges+'</div></div>'+
+          // 상태는 라벨과 배지를 한 줄 양끝으로(시안)
+          '<div class="mgrp"><div class="mstat"><span class="mgcap">상태</span><span class="mbadges">'+badges+'</span></div></div>'+
           '<div class="mgrp"><div class="mgcap">사람</div>'+people+'</div>'+
           '<div class="mgrp"><div class="mgcap">분류</div>'+cateList.map(mrow).join('')+'</div>'+
           '<div class="mgrp"><div class="mgcap">일정</div>'+dateList.map(mrow).join('')+'</div>'+
