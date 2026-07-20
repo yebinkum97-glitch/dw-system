@@ -636,19 +636,18 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
    한 줄이 두 폰트(라틴=JBM, 한글=폴백)로 그려졌다 — 자간·높이가 미묘하게 어긋나 지저분했다.
    mono 가 필요한 요청번호는 이미 제목 줄(.prno)로 갔으므로 여기서 mono 는 할 일이 없다. */
 .prb{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap}
-/* 메타는 두 묶음(분류 줄 · 사람 줄). 데스크톱은 한 줄에 넓은 간격으로 나란히,
-   폰에서는 사람 줄이 통째로 아랫줄로 내려간다(아래 640px 규칙). */
+/* 메타는 한 줄 — 분류 값과 사람이 가운뎃점(.pms)으로 이어진다. 간격은 .pms 여백이
+   만들므로 column-gap 은 0. 좁으면 쌍(.pmg) 단위로만 접힌다. */
 .prm{font-family:var(--sans);font-size:12px;letter-spacing:-.012em;color:var(--muted);min-width:0;flex:1;
-     display:flex;flex-wrap:wrap;align-items:baseline;column-gap:16px;row-gap:3px}
-/* 묶음(줄) — 안의 라벨-값 쌍은 pmg 로 보호되고, 좁으면 줄 안에서 pms 지점에서만 접힌다 */
-.pmline{min-width:0}
-.pmline .pms:first-child{display:none}
+     display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0;row-gap:3px}
 /* 라벨은 낮게, 값은 높게 — 대비로 위계를 만든다. 색을 --faint 아래로 더 낮추지는 않는다.
    --faint 가 이미 AA 하한(5.24:1)이라 그 밑은 안 보인다. 값을 올려서 벌린다(--ink-2 = 10:1). */
 .pmk{color:var(--faint);font-weight:400}
-.pmv{color:var(--ink-2);font-weight:600}
-/* 내 업무 담당값 — 초록. 클래스는 .mine (.me 는 헤더 프로필 버튼이라 충돌한다) */
-.pmv.mine{color:var(--good)}
+.pmv{color:var(--ink-2);font-weight:700}
+/* 메타 줄에서 굵게는 사람 이름에만(v2 시안 .own b). 분류 값은 본문 무게 그대로 둔다 —
+   한 줄이 전부 굵으면 강조가 강조로 안 읽힌다. 담당자 뷰도 같은 규칙이다. */
+.prm .pmown{color:var(--ink-2)}
+.prm .pmown b{font-weight:700;color:var(--ink-2)}
 .pms{color:var(--faint);font-style:normal;margin:0 6px;font-weight:400}
 /* 라벨-값 한 쌍은 통째로 — '담당 조은혜'가 줄 사이에서 쪼개지지 않게. 넘치면 쌍 단위로 내려간다 */
 .pmg{white-space:nowrap}
@@ -897,9 +896,6 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   /* 카드 아래 줄 — 폰 폭에서는 분류와 기한이 한 줄에 안 들어간다.
      억지로 붙이면 기한이 분류 텍스트 중간을 끊고 들어가 둘 다 안 읽힌다. 세로로 쌓는다. */
   .prb{flex-direction:column;align-items:stretch;gap:0}
-  /* 메타도 폰에서는 분류 줄 / 사람 줄을 각각 전폭으로 — 사람(요청자·담당)이 통째로 아랫줄로 */
-  .prm{column-gap:0}
-  .pmline{flex-basis:100%}
   /* 날짜 줄은 실선으로 떼어낸다(Mobile 시안 .prf) — 위는 '무엇인가',
      아래는 '언제까지인가'. 폰에서는 세로로 쌓이므로 선 하나로 둘을 가른다. */
   /* 날짜 텍스트는 왼쪽에서 자연스럽게 흐르고, D-day 칩만 오른쪽 끝으로 띄운다.
@@ -1968,18 +1964,17 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   function row(t, forRole, q, all){
     var s=ST[t.state], own=forRole==='own'&&isMine(t,ME);
     var H=function(v){ return q?hl(String(v),q):esc2(String(v)) };
-    // 메타는 두 묶음으로 나눈다 — 분류 값들 / 사람(요청자·담당).
-    // 데스크톱: 두 묶음이 한 줄에 넓은 간격으로 나란히. 폰: 사람 묶음이 통째로 아랫줄로.
-    // 각 라벨-값 쌍은 nowrap(.pmg)이라 '담당 조은혜'가 쪼개지지 않는다.
-    // 그룹 구분 가운뎃점은 뺐다 — 간격만으로 가른다.
+    // 메타는 한 줄로 흐른다 — 분류 값들과 사람(요청자·담당)이 가운뎃점으로 이어진다(v2 시안).
+    // 굵게는 사람 이름에만 준다. 분류 값까지 굵으면 한 줄이 전부 강조라 위계가 사라진다.
+    // 각 쌍은 nowrap(.pmg)이라 '담당 조은혜'가 줄 사이에서 쪼개지지 않는다.
     var G=function(x){ return '<span class="pmg">'+x+'</span>' };
     var seg=[];
-    if(attrVals(t).length) seg.push('<span class="pmline">'+attrVals(t).map(function(v){return G(V(H(v)))}).join(SEP)+'</span>');
-    var peo=[];
-    if(forRole==='own') peo.push(G(K('요청자')+' '+V(H(t.rq.nm))));
-    peo.push(G(K('담당')+' '+V(H(t.as), own?' mine':'')));
-    if(t.parent) peo.push(G(K('원 요청')+' '+V('dw://'+esc2(t.parent))));
-    seg.push('<span class="pmline pmppl">'+peo.join(SEP)+'</span>');
+    attrVals(t).forEach(function(v){ seg.push(G(H(v))) });
+    // 클래스는 .pmown — 시안의 .own 을 그대로 쓰면 이 앱에 이미 있는 .own(윗줄 구분선이
+    // 달린 담당자 표기)과 충돌해 메타 줄에 실선이 그어진다.
+    if(forRole==='own') seg.push(G('<span class="pmown">'+K('요청자')+' <b>'+H(t.rq.nm)+'</b></span>'));
+    seg.push(G('<span class="pmown">'+K('담당')+' <b>'+H(t.as)+'</b></span>'));
+    if(t.parent) seg.push(G('<span class="pmown">'+K('원 요청')+' <b>dw://'+esc2(t.parent)+'</b></span>'));
     // 오른쪽은 날짜 열이다. 언제 들어온 건지가 먼저, 그 다음이 지금 중요한 날짜.
     // '접수'가 아니라 '요청' — 접수는 상태 이름이다. 같은 말이 상태와 날짜 둘을 가리키면
     // [접수] 배지가 붙은 카드에 '접수 07-15'가 같이 찍혀 무슨 말인지 알 수 없다.
@@ -2001,7 +1996,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
       '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="prb"><div class="prm">'+seg.join('')+'</div>'+
+      '<div class="prb"><div class="prm">'+seg.join(SEP)+'</div>'+
         (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
     '</div>';
   }
