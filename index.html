@@ -126,41 +126,26 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
             background:#fff!important;color:var(--primary-ink)!important;border-color:#fff!important;
             box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .btn.newreq:hover{background:var(--primary-tint)!important;border-color:var(--primary-tint)!important;filter:none}
-/* 폰 하단 탭바 + 요청하기 FAB — Mobile 시안.
-   PC 에서는 통째로 숨긴다(헤더 CTA·벨·프로필이 같은 일을 한다). */
-.tabs{display:none}
+/* 폰 요청하기 FAB — PC 에서는 숨긴다(헤더 CTA 가 같은 일을 한다). */
+.fabw{display:none}
 .newreq-m{display:none}          /* 본문 전체폭 CTA 는 FAB 로 대체됐다 */
 @media(max-width:640px){
-  .tabs{
-    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:46;
-    background:var(--surface);border-top:1px solid var(--line);
-    padding:9px 8px calc(14px + env(safe-area-inset-bottom,0px));
+  .fabw{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    position:fixed;left:50%;transform:translateX(-50%);z-index:46;
+    bottom:calc(16px + env(safe-area-inset-bottom,0px));pointer-events:none;
   }
-  .tab{
-    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;
-    font-size:10px;font-weight:700;color:var(--muted);background:none;border:none;
-    position:relative;min-height:44px;padding:0;
-  }
-  .tab.on{color:var(--primary-ink)}
-  .tab .ic{width:22px;height:22px}
-  .tabgap{pointer-events:none}   /* FAB 자리 — 빈 칸 */
-  /* 알림 탭의 안 읽은 건수 */
-  .tcnt{position:absolute;top:-2px;right:50%;margin-right:-20px;background:var(--signal);color:#fff;
-        font-family:var(--mono);font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:8px;
-        display:flex;align-items:center;justify-content:center;padding:0 3px}
-  /* 원형 요청하기 — 탭바 위로 솟는다. 흰 테두리로 바에서 떼어 놓는다. */
   .fab{
-    position:absolute;top:-24px;left:50%;transform:translateX(-50%);
     width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;
-    display:flex;align-items:center;justify-content:center;
+    display:flex;align-items:center;justify-content:center;pointer-events:auto;
     border:4px solid var(--surface);box-shadow:0 10px 24px -8px rgba(233,131,0,.7);
   }
   .fab svg{width:24px;height:24px}
-  .fab:active{transform:translateX(-50%) translateY(1px)}
-  .fablbl{position:absolute;top:36px;left:50%;transform:translateX(-50%);
-          font-size:10px;font-weight:700;color:var(--primary-ink);white-space:nowrap}
-  /* 탭바에 가리지 않도록 본문 아래 여백 */
-  .main{padding-bottom:96px}
+  .fab:active{transform:translateY(1px)}
+  .fablbl{font-size:10px;font-weight:700;color:var(--primary-ink);white-space:nowrap;
+          background:var(--surface);border-radius:999px;padding:1px 8px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  /* FAB 에 가리지 않도록 본문 아래 여백 */
+  .main{padding-bottom:104px}
 }
 .lang{
   border:1px solid var(--line-2);border-radius:var(--r-pill);padding:5px 12px;
@@ -174,13 +159,12 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
   font-size:9px;font-weight:800;min-width:14px;height:14px;border-radius:7px;
   display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:var(--mono);
 }
+/* 헤더 프로필 — 표시 전용(누를 게 없다. 언어는 옆 지구본 버튼으로 뺐다) */
 .me{display:flex;align-items:center;gap:7px;padding:4px 8px 4px 4px;border-radius:999px;color:#fff}
-.me .caret{color:rgba(255,255,255,.85);flex:none}
 .me .nm{font-size:13px;font-weight:600;line-height:1.2}
 .dropi{display:block;width:100%;text-align:left;padding:9px 14px;font-size:13px;color:var(--ink-2);border:none;background:none}
 .dropi:hover{background:var(--surface-2)}
 .dropi.on{color:var(--primary-ink);font-weight:700;background:var(--primary-tint)}
-.me:hover{background:var(--hhover)}
 /* 헤더 프로필 아바타 — v2 시안: 흰 원 + 주황 글씨. 본문 아바타(.av2 등)와 별개. */
 .me .av{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--primary-ink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
 .me .nm{font-size:12.5px;font-weight:700;line-height:1.2}
@@ -941,6 +925,17 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </form>
   <div class="topr" style="position:relative">
     <button class="btn newreq" data-j="intake" data-r="req">요청하기</button>
+    <!-- 언어 — 프로필 안에 숨겨 두지 않고 헤더에 따로 뺐다(v2 시안의 지구본 자리) -->
+    <div class="langw" style="position:relative">
+      <button class="bell" id="langBtn" aria-label="언어" aria-haspopup="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.6 12h16.8M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"/></svg>
+      </button>
+      <div class="drop" id="langDrop">
+        <div class="drop-h">언어</div>
+        <button class="dropi" data-lang="ko">한국어</button>
+        <button class="dropi" data-lang="en">English</button>
+      </div>
+    </div>
     <!-- 알림 — 요청자·담당자 양쪽. 담당자에겐 새 업무, 요청자에겐 '내 차례'인 요청이 쌓인다 -->
     <div class="bellw" data-r="req own" style="position:relative">
       <button class="bell" id="bellBtn" aria-label="알림">
@@ -949,17 +944,10 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       </button>
       <div class="drop belld" id="bellDrop"></div>
     </div>
-    <button class="me" id="meBtn" aria-haspopup="true">
+    <span class="me">
       <span class="av" id="uav">유</span>
       <span class="nm" id="unm">요청자</span>
-      <svg class="caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-        <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <div class="drop" id="meDrop">
-      <div class="drop-h">언어</div>
-      <button class="dropi" data-lang="ko">한국어</button>
-      <button class="dropi" data-lang="en">English</button>
-    </div>
+    </span>
   </div>
 </div></header>
 
@@ -1234,28 +1222,14 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   </main>
 </div>
 
-<!-- 폰 하단 탭바 — Mobile 시안. 목록 · [요청하기 FAB] · 알림 · 내 정보.
-     두 번째 칸은 비워 두고 그 자리에 원형 FAB 를 띄운다(4칸 중앙 = 50%).
-     폰에서만 보인다(≤640). PC 는 헤더 CTA·벨·프로필이 그 역할을 한다. -->
-<nav class="tabs" id="tabs">
-  <button class="tab" id="tabList">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-    목록
-  </button>
-  <span class="tab tabgap" data-r="req" aria-hidden="true"></span>
-  <button class="tab" id="tabNotif" data-r="req own">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
-    알림<span class="tcnt" id="tabCnt" style="display:none">0</span>
-  </button>
-  <button class="tab" id="tabMe">
-    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>
-    내 정보
-  </button>
-  <button class="fab" id="tabFab" data-r="req" aria-label="요청하기">
+<!-- 폰 요청하기 FAB — 목록·알림·내 정보 탭은 뺐다(헤더의 로고·벨·프로필이 이미 한다).
+     남은 건 주 행동 하나뿐이라 바 없이 원형 버튼만 띄운다. 폰에서만 보인다(≤640). -->
+<div class="fabw" id="fabw" data-r="req">
+  <button class="fab" id="tabFab" aria-label="요청하기">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
   </button>
-  <span class="fablbl" data-r="req">요청하기</span>
-</nav>
+  <span class="fablbl">요청하기</span>
+</div>
 
 <!-- modals -->
 <div class="mk" id="m-due"><div class="md">
@@ -1352,7 +1326,6 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 이동 셀렉트를 현재 화면에 맞춰 둔다(상세·검색처럼 셀렉트에 없는 화면이면 그대로 둔다)
     var ns=$('#navsel');
     if(ns && [].some.call(ns.options,function(o){return o.value===id})) ns.value=id;
-    if(window.__markTab) window.__markTab();   // 폰 탭바 활성 표시
     window.scrollTo({top:0,behavior:'smooth'});
   }
   // 접수 폼 초기화 — 직전 접수 내용이 남아 있으면 안 된다.
@@ -1403,43 +1376,8 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   if($('#navsel')) $('#navsel').onchange=function(){ show(this.value); navGo({v:'screen',id:this.value,r:cur}); };
 
-  // ── 폰 하단 탭바 ──
-  // 목록=역할 홈 · FAB=요청하기 · 알림=벨 패널 · 내 정보=프로필 패널.
-  // 알림·내 정보는 이미 있는 드롭다운을 그대로 연다(폰에서는 화면 폭 전체로 뜬다).
-  if($('#tabList')) $('#tabList').onclick=function(){ closeDrops(); goHome(); };
-  if($('#tabFab'))  $('#tabFab').onclick=function(){ closeDrops(); show('intake'); navGo({v:'screen',id:'intake',r:cur}); };
-  if($('#tabNotif')) $('#tabNotif').onclick=function(e){
-    e.stopPropagation(); if($('#meDrop')) $('#meDrop').classList.remove('on');
-    renderBell();
-    var box=$('#bellDrop'); if(!box) return;
-    var open=box.classList.toggle('on');
-    if(open) box.style.top=(Math.round($('.top').getBoundingClientRect().bottom)+6)+'px';
-    markTab();
-  };
-  if($('#tabMe')) $('#tabMe').onclick=function(e){
-    e.stopPropagation(); if($('#bellDrop')) $('#bellDrop').classList.remove('on');
-    if($('#meDrop')) $('#meDrop').classList.toggle('on');
-    markLang(); markTab();
-  };
-  function closeDrops(){
-    if($('#bellDrop')) $('#bellDrop').classList.remove('on');
-    if($('#meDrop')) $('#meDrop').classList.remove('on');
-    markTab();
-  }
-  // 어떤 탭이 켜져 있나 — 열린 패널이 우선, 없으면 현재 화면 기준
-  function markTab(){
-    var bell=$('#bellDrop')&&$('#bellDrop').classList.contains('on');
-    var me=$('#meDrop')&&$('#meDrop').classList.contains('on');
-    var cs=$('.screen.on'), id=cs?cs.id.replace('s-',''):'';
-    var on=bell?'notif':me?'me':(id===ROLE[cur].home?'list':'');
-    [['tabList','list'],['tabNotif','notif'],['tabMe','me']].forEach(function(p){
-      var el=$('#'+p[0]); if(el) el.classList.toggle('on', on===p[1]);
-    });
-  }
-  // 바깥을 눌러 패널이 닫히는 경우에도 탭 표시를 맞춘다.
-  // 드롭다운을 닫는 리스너들보다 뒤에 돌아야 해서 한 틱 미룬다.
-  document.addEventListener('click',function(){ setTimeout(markTab,0); });
-  window.__markTab=markTab;
+  // 폰 요청하기 FAB — 유일한 주 행동. 목록·알림·내 정보 탭은 두지 않는다(헤더가 한다).
+  if($('#tabFab')) $('#tabFab').onclick=function(){ show('intake'); navGo({v:'screen',id:'intake',r:cur}); };
   if($('#bkIntake')) $('#bkIntake').onclick=function(){ history.back(); };
 
 
@@ -2679,9 +2617,6 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var list=bellList(), n=list.length, isReq=(cur==='req');
     b.textContent=n>9?'9+':n;
     b.style.display = n?'flex':'none';
-    // 폰 하단 탭바의 알림 배지도 같은 수를 쓴다
-    var tc=$('#tabCnt');
-    if(tc){ tc.textContent=n>9?'9+':n; tc.style.display=n?'flex':'none'; }
     btn.classList.toggle('hasnew', n>0);
     var box=$('#bellDrop'); if(!box) return;
     var lead=isReq?'확인이 필요한 요청':'새 업무';
@@ -3484,17 +3419,17 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   });});
   // 뒷배경을 누르면 닫힘
   if($('#navbd')) $('#navbd').onclick=function(){ $('.shell').classList.add('fold'); };
-  // 프로필 드롭다운 — 한/영을 여기로 넣어 상단바 버튼 수를 줄였다
-  if($('#meBtn')) $('#meBtn').onclick=function(e){
-    e.stopPropagation(); $('#meDrop').classList.toggle('on'); if($('#bellDrop'))$('#bellDrop').classList.remove('on'); markLang();
+  // 언어 — 헤더의 독립 버튼(지구본). 프로필 안에 숨겨 두지 않는다.
+  if($('#langBtn')) $('#langBtn').onclick=function(e){
+    e.stopPropagation(); $('#langDrop').classList.toggle('on'); if($('#bellDrop'))$('#bellDrop').classList.remove('on'); markLang();
   };
-  document.addEventListener('click',function(){ if($('#meDrop')) $('#meDrop').classList.remove('on'); });
-  if($('#meDrop')) $('#meDrop').onclick=function(e){ e.stopPropagation(); };
+  document.addEventListener('click',function(){ if($('#langDrop')) $('#langDrop').classList.remove('on'); });
+  if($('#langDrop')) $('#langDrop').onclick=function(e){ e.stopPropagation(); };
   // 알림 벨 — 열 때 새로 그린다(그 사이 들어온 업무 반영). 다른 드롭다운은 닫는다.
   if($('#bellBtn')) $('#bellBtn').onclick=function(e){
     e.stopPropagation(); renderBell();
     var box=$('#bellDrop'), open=box.classList.toggle('on');
-    if($('#meDrop')) $('#meDrop').classList.remove('on');
+    if($('#langDrop')) $('#langDrop').classList.remove('on');
     // 폰(≤640, CSS의 fixed 구간과 일치): 세로 위치를 벨 아래로 직접 잡는다(헤더가 스크롤에 따라 움직임)
     if(open && matchMedia('(max-width:640px)').matches) box.style.top=(Math.round($('#bellBtn').getBoundingClientRect().bottom)+6)+'px';
     else box.style.top='';
@@ -3503,7 +3438,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   if($('#bellDrop')) $('#bellDrop').onclick=function(e){ e.stopPropagation(); };
   function markLang(){ $$('.dropi[data-lang]').forEach(function(b){ b.classList.toggle('on', b.dataset.lang===LANG) }); }
   $$('.dropi[data-lang]').forEach(function(b){ b.onclick=function(){
-    setLang(b.dataset.lang); markLang(); $('#meDrop').classList.remove('on');
+    setLang(b.dataset.lang); markLang(); $('#langDrop').classList.remove('on');
   };});
 
   // ================= 예시 요청 =================
