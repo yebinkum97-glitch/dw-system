@@ -325,11 +325,16 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 /* 상세 메타 — '사람 / 분류 / 일정' 세 덩어리, 각 항목은 라벨-값 두 열.
    데스크톱은 셋이 나란히, 폰에서는 위아래로 쌓인다(아래 640 규칙).
    예전엔 칩 예닐곱 개가 줄바꿈되며 뭉쳐 있어 라벨과 값을 눈이 매번 다시 찾아야 했다. */
-.tm{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:12px}
+.tm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 22px;margin-top:10px}
 .mgrp{min-width:0}
-.mgl{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.06em;margin-bottom:5px}
+.mgl{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.06em;margin-bottom:3px}
+/* 접히는 덩어리(분류) — 삼각형 마커를 직접 그린다(브라우저 기본 마커는 제각각) */
+.mfold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:5px}
+.mfold>summary::-webkit-details-marker{display:none}
+.mfold>summary:after{content:'▾';font-size:9px;color:var(--faint);transition:transform .15s}
+.mfold[open]>summary:after{transform:rotate(180deg)}
 .tm .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
-        padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
+        padding:4px 0;border-bottom:1px solid var(--line);font-size:11.5px}
 .tm .kv:last-child{border-bottom:none}
 .tm .kv i{font-style:normal;color:var(--muted);flex:none;font-weight:500}
 .tm .kv b{color:var(--ink-2);font-weight:700;text-align:right;min-width:0;word-break:keep-all}
@@ -480,9 +485,11 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .cmb .fld{flex:1}
 .cmb textarea{width:100%;min-height:62px;border:1px solid var(--line-2);border-radius:6px;background:#fff;padding:9px 11px;font-family:inherit;font-size:13px;line-height:1.6;color:var(--ink);resize:vertical}
 .cmb textarea:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px var(--primary-tint)}
+/* 첨부는 왼쪽, 의견 등록은 오른쪽 끝으로 민다(시안) */
 .cmb .bar2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+.cmb .bar2 #csend{margin-left:auto}
 .cmb .nt2{font-size:11px;color:var(--faint);margin-left:auto;font-family:var(--mono)}
-.cmb .atc{font-size:11.5px;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px;padding:4px 9px;background:#fff}
+.cmb .atc{font-size:12px;font-weight:700;color:var(--muted);border:1.6px solid var(--line-2);border-radius:999px;padding:6px 14px;background:#fff}
 .cmb .atc:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 
 .nyx{border:1px dashed var(--line-2);border-radius:6px;background:var(--surface-2);padding:10px 13px;font-size:12.5px;color:var(--muted)}
@@ -750,7 +757,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 
 /* ── 폰 (~640px) ── */
 @media(max-width:640px){
-  .main{padding:14px 12px 60px}
+  .main{padding:14px 12px 112px}   /* 아래 여백은 하단 바+FAB 높이보다 크게 (아래 블록에서 재확인) */
   h1{font-size:22px;letter-spacing:-.015em}
   .sub{font-size:12.5px}
   .tt{font-size:18px}
@@ -802,8 +809,11 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
      좁은 헤더에서 로고·검색·컨트롤이 서로를 밀어내던 걸 없앤다.
      data-r 이 인라인 style 로 display 를 잡으므로 !important 로 덮는다. */
   .topr .newreq{display:none!important}
-  /* 사이드바·서랍은 없어졌다 — 폰 이동은 하단 탭바가, PC 는 헤더 아래 셀렉트가 맡는다 */
-  .main{padding:14px 12px 60px}
+  /* 사이드바·서랍은 없어졌다 — 폰 이동은 하단 탭바가, PC 는 헤더 아래 셀렉트가 맡는다.
+     아래 여백은 하단 바(62px)와 그 위로 솟은 FAB(24px)을 합친 높이보다 커야 한다.
+     앞쪽 FAB 블록에도 padding-bottom 을 뒀지만 이 규칙이 뒤에 와서 덮어썼고,
+     그 바람에 60px 만 남아 마지막 버튼이 FAB 에 가렸다. 여기서 한 번에 잡는다. */
+  .main{padding:14px 12px 112px}
   .navbar{padding:9px 12px}
   .drop{width:calc(100vw - 20px);right:-4px}
 
@@ -929,8 +939,10 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 /* 노치·홈바 대응 */
 @supports(padding:max(0px)){
   @media(max-width:640px){
+    /* 아래 여백은 하단 바(62px)+FAB 돌출(24px)+여유를 합친 값이어야 한다.
+       예전 60px 이 여기서 마지막으로 덮이는 바람에 마지막 액션 버튼이 FAB 에 가렸다. */
     .main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));
-          padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+          padding-bottom:calc(112px + env(safe-area-inset-bottom))}
     .md{padding-bottom:env(safe-area-inset-bottom)}
   }
 }
@@ -3136,9 +3148,11 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     } else {
       var on='', ob='';
       if(t.state==='open'){
+        // 버튼 위계는 시안과 같다 — 주 행동은 주황 채움(.pri), 보조는 흰 아웃라인(.btn),
+        // 되돌려보내는 행동(반려)은 빨강 채움(.dn). 반려가 보조와 같은 모양이면 무게가 안 읽힌다.
         ob='<button class="btn aHd">이관</button>'+
-           '<button class="btn" id="aRej">반려</button>'+
            '<button class="btn" id="aDue">기한 조정</button>'+
+           '<button class="btn dn" id="aRej">반려</button>'+
            '<button class="btn pri" id="aStart">확인 · 진행</button>';
       } else if(t.state==='nego'){
         on='요청자 확인 대기 · 확인 전까지 기존 기한('+esc2(t.due)+') 적용';
@@ -3186,7 +3200,15 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 어디가 값인지 눈이 매번 다시 찾아야 했다. 두 열이면 세로로 훑어 내려가면 된다.
     // 데스크톱은 세 덩어리가 나란히(3열), 폰에서는 위아래로 쌓인다.
     var kv=function(k,v,cls){ return '<div class="kv'+(cls?' '+cls:'')+'"><i>'+k+'</i><b>'+v+'</b></div>' };
-    var grp=function(label,rows){ return rows?'<div class="mgrp"><div class="mgl">'+label+'</div>'+rows+'</div>':'' };
+    // 분류는 접어 둔다 — 상세에서 늘 봐야 하는 건 사람과 일정이고 분류는 확인용이다.
+    // 폰에서 화면이 길어지는 주범이라 접고, 3열로 여유가 있는 데스크톱에서는 펼쳐 둔다.
+    var wide=!matchMedia('(max-width:640px)').matches;
+    var grp=function(label,rows,fold){
+      if(!rows) return '';
+      return fold
+        ? '<details class="mgrp mfold"'+(wide?' open':'')+'><summary class="mgl">'+label+'</summary>'+rows+'</details>'
+        : '<div class="mgrp"><div class="mgl">'+label+'</div>'+rows+'</div>';
+    };
 
     var people=kv('요청자', esc2(t.rq.nm)+(t.rq.org?' · '+esc2(t.rq.org):''))+
       kv('담당자', esc2(t.as)+' · '+esc2(t.asOrg)+
@@ -3224,7 +3246,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       // 예외 없이 '공개'였다. 전부 같은 말이면 아무것도 알려주지 않는다.
       '<span style="display:flex;gap:5px;align-items:center">'+
       (t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="tm">'+grp('사람',people)+grp('분류',cate)+grp('일정',dates)+'</div></div>';
+      '<div class="tm">'+grp('사람',people)+grp('분류',cate,true)+grp('일정',dates)+'</div></div>';
 
     var body='<div class="tb"><div class="thr" style="border-top:none">'+
       '<div class="ev">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+'<div class="evb">'+
@@ -3239,8 +3261,9 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         '<div class="seclab">의견</div>'+
         '<div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
         '<textarea id="ctx" placeholder="진행하면서 남길 의견을 적어주세요"></textarea>'+
-        '<div class="bar2"><button class="btn pri sm" id="csend">의견 등록</button>'+
-        '<button class="atc" data-t2="파일 선택">+ 첨부</button>'+
+        // 시안 순서 — 첨부(보조)는 왼쪽, 의견 등록(주 행동)은 오른쪽 끝
+        '<div class="bar2"><button class="atc" data-t2="파일 선택">첨부</button>'+
+        '<button class="btn pri sm" id="csend">의견 등록</button>'+
         '</div></div></div></div>';
     }
     // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
