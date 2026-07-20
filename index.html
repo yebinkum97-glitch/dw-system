@@ -343,8 +343,8 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .tt2{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.012em;line-height:1.3;min-width:0}
 /* 사람 — 아바타 + 역할라벨/이름 두 칸 */
 .a-people{display:flex;gap:9px}
-.a-per{flex:1;display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:11px;padding:8px 10px;min-width:0}
-.a-av{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:800;
+.a-per{flex:1;display:flex;align-items:center;gap:9px;background:var(--paper);border-radius:11px;padding:8px 10px;min-width:0}
+.a-av{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:800;
       display:flex;align-items:center;justify-content:center;flex:none}
 .a-av.g{background:var(--dw-gray)}
 .a-pt{min-width:0}
@@ -545,7 +545,10 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .btn:disabled .cnt2{opacity:.6}
 
 /* comment box */
-.cmb{border-top:2px solid var(--line-2);padding:14px 15px;background:var(--surface)}
+/* 의견 입력 — 예전엔 본문 카드 안에 붙어 있어 윗선만 그었다(border-top).
+   지금은 요청내용·진행기록과 나란히 놓이는 독립 블록이라 같은 카드 모양이어야 한다.
+   혼자 각진 채로 두면 그 줄만 카드가 아닌 것처럼 떠 보인다. */
+.cmb{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--surface);margin-top:11px}
 .cmb .row{display:flex;gap:9px;align-items:flex-start}
 .cmb .av2{width:26px;height:26px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:2px}
 .cmb .fld{flex:1}
