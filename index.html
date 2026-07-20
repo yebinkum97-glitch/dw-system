@@ -421,7 +421,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .tb{background:var(--surface);border:1px solid var(--line);border-radius:12px}
 
 
-.thr{padding:4px 15px 14px}
 /* 이벤트 — 예전엔 왼쪽 88px 칸에 시각을 넣고 '07-17'과 '14:45'를 <br>로 쪼갰다.
    시각이 두 줄로 접혀 읽기 나쁘고 칸도 낭비였다. 머리줄(누가·역할·언제) 한 줄 + 몸으로 바꾼다. */
 .ev{padding:13px 0;border-bottom:1px solid var(--line)}
@@ -442,9 +441,6 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .f{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:12.5px;padding:2px 0}
 .f dt{font-weight:800;color:var(--muted);font-size:11px;padding-top:1px}
 .ft{font-size:11px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(0,0,0,.07);font-weight:700}
-.ei .lb{font-size:10.5px;font-weight:800;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
-.ei .by{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);color:var(--faint)}
-.ei .by.au{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
 .pk{display:flex;gap:4px;margin-top:7px}
 .pk button{flex:1;border:1px solid var(--line-2);border-radius:4px;padding:5px 0;font-size:11px;font-weight:700;color:var(--muted);background:#fff}
 .pk button:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
@@ -490,20 +486,13 @@ textarea:focus{outline:none;border-color:var(--primary-ink);box-shadow:0 0 0 3px
 .ex button:hover{border-style:solid;border-color:var(--primary-ink);color:var(--primary-ink)}
 .pipe{margin-top:15px;display:none}
 .pipe.on{display:block}
-.ps.in{opacity:1;transform:none}
-.ps.in .pi{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .pd{font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-top:2px;word-break:break-all}
-.ml .to{font-size:9.5px;font-weight:800;color:var(--primary-ink);letter-spacing:.05em;margin-bottom:5px}
 
 /* radar-style intake */
-.two{display:grid;grid-template-columns:1fr 292px;gap:13px;align-items:start}
-.fl2{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:13px 0 4px;letter-spacing:.02em}
-.fl2:first-child{margin-top:0}
 .rq{color:var(--signal)}
 .opt{color:var(--faint);font-weight:600}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
 .split textarea{min-height:78px;font-size:13px}
-.split .fl2{margin-top:0}
 input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .chip{
   display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
@@ -511,7 +500,6 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 }
 .chip .x{font-family:var(--mono);font-size:9.5px;opacity:.7;font-weight:400}
 .chip.own{background:var(--good-tint);color:var(--good);border-color:#b9dcc9}
-.fl2 .auto{margin-left:2px}
 .att{border:1px dashed var(--line-2);border-radius:5px;padding:11px;text-align:center;font-size:11.5px;color:var(--faint);margin-top:4px}
 .att:hover{border-color:var(--primary-ink);color:var(--primary-ink);cursor:pointer}
 .auto{font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--good-tint);color:var(--good);border:1px solid #b9dcc9;white-space:nowrap}
@@ -524,16 +512,6 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 .tl{color:var(--link);font-weight:500;text-decoration:none;cursor:pointer}
 .tl:hover{text-decoration:underline}
 
-/* ── 요청 상세 — '의견'과 '상태를 바꾸는 버튼'을 눈으로도 갈라놓는다 ──
-   둘이 같은 회색 띠로 붙어 있으면 한 덩어리로 보인다. 그래서 의견을 적어놓고
-   아무 버튼이나 누르게 되고, 그 글이 어디로 갈지 예측이 안 된다.
-   의견 = 흰 바탕(말하는 곳) · 액션 = 회색 바탕(상태를 바꾸는 곳)으로 분리한다. */
-.seclab{
-  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
-  font-size:11px;font-weight:800;color:var(--ink-2);letter-spacing:.02em;margin-bottom:9px;
-}
-.seclab .n{font-size:10.5px;font-weight:500;color:var(--faint);letter-spacing:0}
-.acts .seclab{width:100%;margin-bottom:2px}
 /* 상태 설명 — 예전엔 disabled 버튼으로 상태를 보여줬다. 눌리지도 않는 걸 버튼처럼 둘 이유가 없다. */
 .ronote{font-size:12px;color:var(--muted);letter-spacing:-.01em;align-self:center;line-height:1.5}
 .acts .sp{flex:1}
@@ -557,7 +535,6 @@ input.ti{font-size:14.5px;font-weight:600;padding:9px 11px}
 /* 첨부는 왼쪽, 의견 등록은 오른쪽 끝으로 민다(시안) */
 .cmb .bar2{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
 .cmb .bar2 #csend{margin-left:auto}
-.cmb .nt2{font-size:11px;color:var(--faint);margin-left:auto;font-family:var(--mono)}
 .cmb .atc{font-size:12px;font-weight:700;color:var(--muted);border:1.6px solid var(--line-2);border-radius:999px;padding:6px 14px;background:#fff}
 .cmb .atc:hover{border-color:var(--primary-ink);color:var(--primary-ink)}
 
@@ -787,7 +764,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:900px){
   .main{padding:16px 14px 50px}
-  .pool,.eg,.kp,.mp,.cat{grid-template-columns:1fr}
+  .kp,.cat{grid-template-columns:1fr}
   .ev{grid-template-columns:1fr;gap:3px}
   .evt{padding-top:0}
 }
@@ -800,15 +777,14 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 /* ── 탭 (~1024px) ── */
 @media(max-width:1024px){
   .two{grid-template-columns:1fr}          /* 요청하기 2단 → 1단 (기존 미대응 구간) */
-  .side{position:static;top:auto}
   .kp{grid-template-columns:repeat(2,1fr)} /* KPI 4 → 2 (900px에서 1단은 낭비) */
-  .pool,.cat{grid-template-columns:repeat(2,1fr)}
+  .cat{grid-template-columns:repeat(2,1fr)}
   .main{padding:20px 20px 56px}
 }
 
 /* ── 900px 구간 보정 — 기존 규칙이 1단으로 떨구는 걸 되돌린다 ── */
 @media(max-width:900px) and (min-width:641px){
-  .kp,.pool,.cat,.eg{grid-template-columns:repeat(2,1fr)}
+  .kp,.cat{grid-template-columns:repeat(2,1fr)}
 }
 
 /* ── 헤더 2줄 전환 (~760px) ──
@@ -828,7 +804,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   h1{font-size:22px;letter-spacing:-.015em}
   .sub{font-size:12.5px}
 
-  .pool,.cat,.eg,.mp,.split,.gr3{grid-template-columns:1fr}
+  .cat,.split,.gr3{grid-template-columns:1fr}
   /* KPI 는 폰에서도 2단으로 둔다. 1단으로 떨구면 카드 4장이 1268px — 대시보드는
      한눈에 보라고 있는 화면인데 스크롤을 세 번 해야 지연율이 나온다. 2×2면 한 화면. */
   .kp{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -885,8 +861,6 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   .drop{width:calc(100vw - 20px);right:-4px}
 
   /* 라벨 좌측 고정폭 그리드 → 세로 스택 */
-  .rg2{grid-template-columns:1fr}
-  .rk{border-right:none;border-bottom:1px solid var(--line);padding:7px 12px}
   .rv{padding:9px 12px}
   .rv select,.rv input[type=text]{max-width:none;width:100%}
 
@@ -919,7 +893,6 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   /* 액션 버튼 — 가로 넘침 방지 */
   .acts{gap:6px}
   .acts .btn{flex:1 1 calc(50% - 3px);text-align:center;justify-content:center}
-  .acts .btn.lg{flex:1 1 100%}
   /* 폰에서는 좌우 배치가 의미 없다 — 상태는 한 줄 통으로, 버튼은 아래에 */
   .acts .sp{display:none}
   .ronote{flex-basis:100%;font-size:12.5px;margin-bottom:2px}
@@ -931,7 +904,6 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 /* ── 좁은 폰 (~380px) ── */
 @media(max-width:380px){
   .acts .btn{flex:1 1 100%}
-  .brand .lk1{font-size:13px}
   /* 아주 좁은 폰 — 검색 안내문구가 잘리지 않게 글자만 한 단계 줄인다(줄바꿈은 이미 됐다) */
   .gs input[type=text]{font-size:12.5px}
   .gsp{font-size:11px}
@@ -941,7 +913,7 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
 @media(hover:none) and (pointer:coarse){
   .btn{min-height:42px;padding:9px 15px}
   .btn.sm{min-height:36px;padding:7px 12px}
-  .mini,.filt button,.chan button,.ex button,.bk{min-height:36px;padding:7px 12px}
+  .filt button,.chan button,.ex button,.bk{min-height:36px;padding:7px 12px}
   .pk button{min-height:42px}
   .gg .pk button{width:auto;flex:1;min-height:42px;font-size:13px}
   /* 헤더 아이콘은 시안 규격 34px 유지 — 40px 로 키우면 20px 아이콘 좌우로 빈 공간이
@@ -959,11 +931,11 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
    모든 기기 공통. 모바일에서 "탭해도 반응이 없다"의 흔한 원인이
    더블탭 줌 대기(약 300ms)와 탭 하이라이트 부재라, 이를 제거·보완한다. */
 button,a,select,label.fl,[onclick],
-.tl,.mini,.tag,.chip,.st,.badge,.filt button,.chan button,
+.tl,.tag,.chip,.st,.badge,.filt button,.chan button,
 .pk button,.rsw button,.ex button,.bk,.lang,.bell,.me,.att,.cmb .atc{
   touch-action:manipulation;
 }
-button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
+button,a,.tl,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   -webkit-tap-highlight-color:rgba(0,113,227,.16);
 }
 
@@ -974,7 +946,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 }
 @media(max-width:640px){
   .btn{min-height:42px}
-  .btn.sm,.mini,.filt button,.chan button,.ex button,.bk,.rsw button{min-height:34px}
+  .btn.sm,.filt button,.chan button,.ex button,.bk,.rsw button{min-height:34px}
   .pk button,.gg .pk button{min-height:40px}
   /* .bell 은 시안 규격 34px 유지 — 위 터치 블록과 같은 이유 */
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
@@ -2063,11 +2035,6 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
 
   // 남은 날 — '기한 2026-07-31'만 적어두면 급한지 아닌지가 안 읽힌다.
-  function dday(d2){
-    if(!d2) return '';
-    var n=Math.round((new Date(d2)-new Date(today()))/864e5);
-    return n===0?'오늘':n>0?'D-'+n:'D+'+(-n);
-  }
   // 목록에서는 올해면 연도를 뗀다 — 카드 열에 '2026-'이 열다섯 번 반복돼봐야 읽는 사람은 없다.
   // 해가 넘어가는 건에만 연도를 남겨 그때 눈에 띄게 한다.
   function shortD(d2){
