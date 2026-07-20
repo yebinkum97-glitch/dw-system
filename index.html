@@ -199,10 +199,16 @@ input::placeholder,textarea::placeholder{font-family:var(--sans);color:var(--fai
 .belld .ni-d{background:var(--signal)}
 .belld .drop-h{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1}
 .belld .bempty{padding:22px 14px;text-align:center;font-size:12px;color:var(--faint)}
-.bellw .bell.hasnew{color:var(--primary-ink)}
+/* 안 읽은 알림이 있어도 종은 흰색 그대로 둔다. 예전 흰 헤더에서는 주황으로 물들여
+   눈에 띄게 했지만, 지금은 헤더가 주황이라 주황 종은 오히려 배경에 묻힌다.
+   '새 소식이 있다'는 신호는 흰 배지 숫자가 이미 하고 있다(시안도 종은 흰색). */
 /* 폰 — 벨이 화면 오른쪽 가까이라 320px 드롭다운이 왼쪽으로 넘친다.
    화면 양옆 8px 여백으로 고정하고, 세로 위치는 헤더가 스크롤에 따라 움직이므로 JS 가 잡는다. */
 @media(max-width:640px){ .belld{position:fixed;left:8px;right:8px;width:auto} }
+/* 언어 드롭다운 — 항목이 둘뿐이라 좁게. 폰에서 .drop 을 화면 전체폭으로 늘리는
+   규칙이 있어(아래 640 블록) 그대로 두면 왼쪽으로 화면 밖까지 밀려 안 보였다. */
+#langDrop{width:150px}
+@media(max-width:640px){ #langDrop{width:150px;right:0;left:auto} }
 
 /* shell — 좌측 사이드바. 햄버거로 접는다.
    가로 탭은 역할이 바뀔 때마다 순서가 재배치돼 어디에 뭐가 있는지 매번 다시 찾아야 했다.
