@@ -409,6 +409,18 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .mstat .mgcap{margin:0}
 .mbadges{display:flex;gap:5px;flex-wrap:wrap}
 
+/* 결과 평가 — 내 차례일 때(.evask)는 주황으로 세워 '지금 할 일'임을 알린다.
+   종결 뒤(.evdone)는 기록이라 조용한 카드. */
+.evask{background:var(--primary-tint);border:1.6px solid var(--primary);border-radius:12px;
+       padding:15px 16px;margin-bottom:11px;box-shadow:4px 4px 12px 0 rgba(233,131,0,.16)}
+.evah{margin-bottom:12px}
+.evat{display:block;font-size:15px;font-weight:800;color:var(--primary-ink);letter-spacing:-.01em}
+.evan{display:block;font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.5}
+.evask .gg{background:var(--surface);border-color:#f0c99a}
+.evdone{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.evdh{font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:10px}
+.evdh .nt{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:3px}
+
 /* 요청 내용 카드 · 소통 타임라인 — 폰·PC 공용 */
 .rc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
 .rct{font-size:11.5px;font-weight:800;color:var(--primary-ink);margin-bottom:6px}
@@ -3175,6 +3187,10 @@ button,a,.tl,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     return W(evH(e.who,e.org,(e.r||''),(e.r==='ow'?'담당자':'요청자'),'',e.at), lnk(e.x));
   }
 
+  // 결과 평가.
+  //   내 차례(종결 대기 + 내가 낸 요청)일 때는 '해야 할 일'이라 눈에 띄어야 한다 —
+  //   주황 카드로 세우고 본문 맨 위에 올린다(openT 에서 위치를 바꾼다).
+  //   종결된 뒤에는 '기록'이라 조용히 아래에 둔다.
   function evalBlk(t){
     var done = t.state==='closed';
     var e=t.ev2||{};
@@ -3184,13 +3200,21 @@ button,a,.tl,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
         opts.map(function(o){return '<button data-v="'+o[0]+'"'+(done&&sel===o[0]?' class="on"':'')+(done?' disabled':'')+'>'+o[0]+'</button>'}).join('')+
         '</div><div class="gk">'+opts.map(function(o){return '<b>'+o[0]+'</b> — '+o[1]}).join('<br>')+'</div></div>';
     };
-    return '<div class="ch2" style="border-top:1px solid var(--line)"><h3>결과 평가</h3>'+
-      (done?'<span class="nt">종결 '+esc2(t.resolved)+' · 결과 '+esc2(e.fl||'—')+' · 소통 '+esc2(e.cm||'—')+' · 최종 '+esc2(e.g||'—')+(e.lateFact?' · '+esc2(e.lateFact):'')+'</span>'
-           :'<span class="nt">요청자가 결과를 평가하면 종결됩니다 · 최종 등급은 두 항목의 평균</span>')+'</div>'+
-      '<div class="cb"><div class="gr3">'+
-        g('1','결과','요청한 것이 실제로 해결되었는지',RES_OPT,e.fl)+
-        g('2','소통','진행 상황을 알 수 있었는지',COM_OPT,e.cm)+
-      '</div></div>';
+    var grid='<div class="gr3">'+
+      g('1','결과','요청한 것이 실제로 해결되었는지',RES_OPT,e.fl)+
+      g('2','소통','진행 상황을 알 수 있었는지',COM_OPT,e.cm)+'</div>';
+
+    if(done){
+      return '<div class="evdone">'+
+        '<div class="evdh">결과 평가 <span class="nt">종결 '+esc2(t.resolved)+' · 결과 '+esc2(e.fl||'—')+
+          ' · 소통 '+esc2(e.cm||'—')+' · 최종 '+esc2(e.g||'—')+(e.lateFact?' · '+esc2(e.lateFact):'')+'</span></div>'+
+        grid+'</div>';
+    }
+    // 아직 평가 전 — 요청자가 지금 해야 하는 일
+    return '<div class="evask">'+
+      '<div class="evah"><span class="evat">결과를 평가해 주세요</span>'+
+        '<span class="evan">담당자가 처리를 끝냈습니다. 두 항목을 고르면 아래 [완료 확인 · 종결]이 열립니다.</span></div>'+
+      grid+'</div>';
   }
 
   // ── 요청 처리 버튼 ──
@@ -3371,9 +3395,13 @@ button,a,.tl,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     }
     // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
     // 남의 요청에는 평가 폼을 띄우지 않는다 — 종결된 건의 '결과'는 읽기 전용이라 그대로 보여준다.
-    var evalHtml=(t.state==='closed' || (t.state==='done'&&cur==='req'&&t.rq.nm===ROLE.req.nm)) ? evalBlk(t) : '';
+    // 내 차례 = 종결 대기 + 내가 낸 요청. 이때 평가는 '해야 할 일'이라 맨 위로 올린다.
+    // 예전엔 의견 입력보다도 아래에 있어서, 오른쪽 [완료 확인 · 종결]이 왜 비활성인지
+    // 알 수가 없었다(평가를 해야 열리는데 그 폼이 화면 밖에 있었다).
+    var myTurn=(t.state==='done'&&cur==='req'&&t.rq.nm===ROLE.req.nm);
+    var evalHtml=(t.state==='closed'||myTurn) ? evalBlk(t) : '';
     var actHtml=acts(t);
-    var mainCol=rcs+tl+cmbHtml+evalHtml;
+    var mainCol=(myTurn?evalHtml:'')+rcs+tl+cmbHtml+(myTurn?'':evalHtml);
 
     // ── PC: 2단 · 사이드 메타 (Detail PC Options 2A) ──
     // 본문은 왼쪽 넓게, 사람·분류·일정·액션은 오른쪽 고정 패널로. 스크롤해도 메타가 붙어 있어
