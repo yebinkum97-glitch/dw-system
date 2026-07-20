@@ -853,7 +853,8 @@ input:focus,select:focus{outline:none;border-color:var(--primary-ink);box-shadow
   .mini,.filt button,.chan button,.ex button,.bk{min-height:36px;padding:7px 12px}
   .pk button{min-height:42px}
   .gg .pk button{width:auto;flex:1;min-height:42px;font-size:13px}
-  .bell{width:40px;height:40px}
+  /* 헤더 아이콘은 시안 규격 34px 유지 — 40px 로 키우면 20px 아이콘 좌우로 빈 공간이
+     10px 씩 붙어 언어·알림이 서로 멀어 보인다(시안 간격 24px → 30px). */
   .lang{padding:8px 14px}
   .rsw button{min-height:30px;padding:4px 11px}
   .chip{padding:6px 10px}
@@ -884,7 +885,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   .btn{min-height:42px}
   .btn.sm,.mini,.filt button,.chan button,.ex button,.bk,.rsw button{min-height:34px}
   .pk button,.gg .pk button{min-height:40px}
-  .bell{width:40px;height:40px}
+  /* .bell 은 시안 규격 34px 유지 — 위 터치 블록과 같은 이유 */
   .att,.cmb .atc{min-height:42px;display:flex;align-items:center;justify-content:center}
   .tl{display:inline-block;padding:3px 0}
   .gsgo,.gsx{min-width:40px;min-height:40px;border-radius:50%}
