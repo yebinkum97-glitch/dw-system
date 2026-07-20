@@ -322,9 +322,20 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .tid{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:-.03em;color:var(--primary-ink)}
 .tid .s{color:var(--faint)}
 .tt{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.012em;margin-top:5px;line-height:1.19}
-.tm{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}
-.tm .kv{background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:2px 7px}
-.tm .kv b{color:var(--ink-2);font-weight:700}
+/* 상세 메타 — '사람 / 분류 / 일정' 세 덩어리, 각 항목은 라벨-값 두 열.
+   데스크톱은 셋이 나란히, 폰에서는 위아래로 쌓인다(아래 640 규칙).
+   예전엔 칩 예닐곱 개가 줄바꿈되며 뭉쳐 있어 라벨과 값을 눈이 매번 다시 찾아야 했다. */
+.tm{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 22px;margin-top:12px}
+.mgrp{min-width:0}
+.mgl{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.06em;margin-bottom:5px}
+.tm .kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+        padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
+.tm .kv:last-child{border-bottom:none}
+.tm .kv i{font-style:normal;color:var(--muted);flex:none;font-weight:500}
+.tm .kv b{color:var(--ink-2);font-weight:700;text-align:right;min-width:0;word-break:keep-all}
+.tm .kv.key b{color:var(--ink);font-size:12.5px}
+.tm .kv.warn i,.tm .kv.warn b{color:var(--primary-ink)}
+.grpnote{display:block;font-size:10.5px;font-weight:600;color:var(--primary-ink);margin-top:2px}
 .tb{background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 7px 7px}
 
 
@@ -896,6 +907,8 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   /* 카드 아래 줄 — 폰 폭에서는 분류와 기한이 한 줄에 안 들어간다.
      억지로 붙이면 기한이 분류 텍스트 중간을 끊고 들어가 둘 다 안 읽힌다. 세로로 쌓는다. */
   .prb{flex-direction:column;align-items:stretch;gap:0}
+  /* 상세 메타 세 덩어리를 위아래로 쌓는다 — 폰에서 3열은 값이 잘린다 */
+  .tm{grid-template-columns:1fr;gap:14px}
   /* 날짜 줄은 실선으로 떼어낸다(Mobile 시안 .prf) — 위는 '무엇인가',
      아래는 '언제까지인가'. 폰에서는 세로로 쌓이므로 선 하나로 둘을 가른다. */
   /* 날짜 텍스트는 왼쪽에서 자연스럽게 흐르고, D-day 칩만 오른쪽 끝으로 띄운다.
@@ -1968,13 +1981,21 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 굵게는 사람 이름에만 준다. 분류 값까지 굵으면 한 줄이 전부 강조라 위계가 사라진다.
     // 각 쌍은 nowrap(.pmg)이라 '담당 조은혜'가 줄 사이에서 쪼개지지 않는다.
     var G=function(x){ return '<span class="pmg">'+x+'</span>' };
+    var P=function(k,v){ return G('<span class="pmown">'+K(k)+' <b>'+v+'</b></span>') };
+    // 카드에는 사람만 남긴다. 분류(자산·공간유형·업무유형)는 뺐다 —
+    // 제목이 이미 그걸 말하고("3층 회의실 벽면 화이트보드 시공"), 부서는 요청번호에
+    // 들어 있으며(dw://공간-1009), 분류로 찾는 일은 필터·검색이 한다.
+    // 목록에서 훑을 때 필요한 건 '누가 잡고 있나 · 언제까지인가' 둘뿐이다.
     var seg=[];
-    attrVals(t).forEach(function(v){ seg.push(G(H(v))) });
-    // 클래스는 .pmown — 시안의 .own 을 그대로 쓰면 이 앱에 이미 있는 .own(윗줄 구분선이
-    // 달린 담당자 표기)과 충돌해 메타 줄에 실선이 그어진다.
-    if(forRole==='own') seg.push(G('<span class="pmown">'+K('요청자')+' <b>'+H(t.rq.nm)+'</b></span>'));
-    seg.push(G('<span class="pmown">'+K('담당')+' <b>'+H(t.as)+'</b></span>'));
-    if(t.parent) seg.push(G('<span class="pmown">'+K('원 요청')+' <b>dw://'+esc2(t.parent)+'</b></span>'));
+    if(forRole==='own'){
+      seg.push(P('요청자', H(t.rq.nm)));
+      // 내 업무에서는 담당자가 늘 나라서 중복이다. 부서 전체를 볼 때만 담당을 보여준다
+      // (그 화면의 목적이 미배정·남의 업무를 찾아내는 것이므로 담당이 곧 핵심 정보다).
+      if(WSC==='dept') seg.push(P('담당', H(t.as)));
+    } else {
+      seg.push(P('담당', H(t.as)));
+    }
+    if(t.parent) seg.push(P('원 요청', 'dw://'+esc2(t.parent)));
     // 오른쪽은 날짜 열이다. 언제 들어온 건지가 먼저, 그 다음이 지금 중요한 날짜.
     // '접수'가 아니라 '요청' — 접수는 상태 이름이다. 같은 말이 상태와 날짜 둘을 가리키면
     // [접수] 배지가 붙은 카드에 '접수 07-15'가 같이 찍혀 무슨 말인지 알 수 없다.
@@ -3160,15 +3181,20 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     }
     // 요청자가 열면 그쪽 알림(새 소식)이 꺼진다.
     if(cur==='req' && t.rq.nm===ROLE.req.nm && t.newReq){ t.newReq=false; save(); }
-    // 분류·사람 — 낮은 강조로 한 줄
-    var meta='<span class="kv">요청자 <b>'+esc2(t.rq.nm)+'</b>'+(t.rq.org?' · '+esc2(t.rq.org):'')+'</span>'+
-      '<span class="kv">담당자 <b>'+esc2(t.as)+'</b>'+
-        (isGroup(t.dept,t.as)?' <span style="color:var(--primary-ink);font-weight:600">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':'')+
-        ' · '+esc2(t.asOrg)+'</span>'+
-      '<span class="kv">부서 <b>'+esc2(t.dept)+'</b></span>'+
-      Object.keys(t.attrs||{}).map(function(k){return '<span class="kv">'+esc2(k)+' <b>'+esc2(t.attrs[k])+'</b></span>'}).join('')+
-      (t.att?'<span class="kv">첨부 <b>'+esc2(t.att)+'</b></span>':'');
-    if(t.parent) meta+='<span class="kv" style="border-color:#f0bcc1;background:var(--signal-tint)">원 요청 <a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a></span>';
+    // 메타는 '사람 / 분류 / 일정' 세 덩어리로 나누고, 각 항목은 라벨-값 두 열로 놓는다.
+    // 예전에는 라벨+값 칩 예닐곱 개가 줄바꿈되며 뭉쳐 있었는데, 폰 폭에서는 어디가 라벨이고
+    // 어디가 값인지 눈이 매번 다시 찾아야 했다. 두 열이면 세로로 훑어 내려가면 된다.
+    // 데스크톱은 세 덩어리가 나란히(3열), 폰에서는 위아래로 쌓인다.
+    var kv=function(k,v,cls){ return '<div class="kv'+(cls?' '+cls:'')+'"><i>'+k+'</i><b>'+v+'</b></div>' };
+    var grp=function(label,rows){ return rows?'<div class="mgrp"><div class="mgl">'+label+'</div>'+rows+'</div>':'' };
+
+    var people=kv('요청자', esc2(t.rq.nm)+(t.rq.org?' · '+esc2(t.rq.org):''))+
+      kv('담당자', esc2(t.as)+' · '+esc2(t.asOrg)+
+        (isGroup(t.dept,t.as)?'<span class="grpnote">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</span>':''));
+    var cate=kv('부서', esc2(t.dept))+
+      Object.keys(t.attrs||{}).map(function(k){ return kv(esc2(k), esc2(t.attrs[k])) }).join('')+
+      (t.att?kv('첨부', esc2(t.att)):'')+
+      (t.parent?kv('원 요청','<a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a>','warn'):'');
 
     // 날짜 — 기한/희망 완료일/확인 마감이 전부 같은 회색 칩이라 뭐가 뭔지 몰랐다.
     // 따로 묶고 각자 뜻을 한 줄로 달되, '지금 의미 있는 것'만 남긴다.
@@ -3177,14 +3203,14 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     //   · 당초 기한은 기한이 바뀐 적 있을 때만
     //   · 접수 상태에선 '기한'이 아니라 '희망 완료일' — 담당자가 [확인 · 진행]을 눌러야 확정된다.
     //     아무도 약속한 적 없는 날에 '약속한 완료일'이라 써 두면 [확인 · 진행]이 뭘 하는 건지 흐려진다.
-    var dates='<span class="dt"><i>요청일</i><b>'+esc2(t.open)+'</b></span>';
+    var dates=kv('요청일', esc2(t.open));
     if(t.due) dates+= t.state==='open'
-      ? '<span class="dt key"><i>희망 완료일</i><b>'+esc2(t.due)+'</b><em>요청자가 원한 날</em></span>'
-      : '<span class="dt key"><i>기한</i><b>'+esc2(t.due)+'</b><em>약속한 완료일 · 넘기면 지연</em></span>';
-    if(t.want && t.want!==t.due) dates+='<span class="dt"><i>희망 완료일</i><b>'+esc2(t.want)+'</b><em>요청자가 원한 날</em></span>';
-    if(t.dueOrig && t.due!==t.dueOrig) dates+='<span class="dt"><i>당초 기한</i><b>'+esc2(t.dueOrig)+'</b><em>지연 판정의 기준선</em></span>';
-    if(t.fixBy && t.state==='open') dates+='<span class="dt warn"><i>담당자 확인 마감</i><b>'+esc2(t.fixBy)+'</b><em>이때 기한이 확정됩니다</em></span>';
-    if(t.resolved) dates+='<span class="dt"><i>완료</i><b>'+esc2(t.resolved)+'</b></span>';
+      ? kv('희망 완료일', esc2(t.due), 'key')
+      : kv('기한', esc2(t.due), 'key');
+    if(t.want && t.want!==t.due) dates+=kv('희망 완료일', esc2(t.want));
+    if(t.dueOrig && t.due!==t.dueOrig) dates+=kv('당초 기한', esc2(t.dueOrig));
+    if(t.fixBy && t.state==='open') dates+=kv('담당자 확인 마감', esc2(t.fixBy), 'warn');
+    if(t.resolved) dates+=kv('완료', esc2(t.resolved));
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
     ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
@@ -3198,7 +3224,7 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
       // 예외 없이 '공개'였다. 전부 같은 말이면 아무것도 알려주지 않는다.
       '<span style="display:flex;gap:5px;align-items:center">'+
       (t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
-      '<div class="tm">'+meta+'</div><div class="dates">'+dates+'</div></div>';
+      '<div class="tm">'+grp('사람',people)+grp('분류',cate)+grp('일정',dates)+'</div></div>';
 
     var body='<div class="tb"><div class="thr" style="border-top:none">'+
       '<div class="ev">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+'<div class="evb">'+
