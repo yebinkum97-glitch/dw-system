@@ -350,6 +350,39 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 .a-dtk{font-size:9.5px;color:var(--faint);font-weight:700}
 .a-dtv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2);margin-top:4px}
 .a-dt.warn .a-dtk,.a-dt.warn .a-dtv{color:var(--primary-ink)}
+
+/* ── PC 상세: 2단 · 사이드 메타 (Detail PC Options 2A) ──
+   본문(내용·소통·의견)은 왼쪽 넓게, 메타(상태·사람·분류·일정)와 액션은 오른쪽 패널로.
+   패널이 스크롤을 따라오므로 '지금 뭘 눌러야 하나'가 늘 눈에 있다. */
+.two{display:grid;grid-template-columns:1fr 296px;gap:16px;align-items:start}
+.tcol{min-width:0}
+.no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink)}
+.no .s{color:var(--faint);font-weight:400}
+.ttl{font-family:var(--display);font-size:22px;font-weight:600;line-height:1.25;margin:5px 0 14px;color:var(--ink)}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:sticky;top:80px}
+.mgrp{padding:13px 15px}
+.mgrp + .mgrp{border-top:1px solid var(--line)}
+.mgcap{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.05em;margin-bottom:9px;text-transform:uppercase}
+.mbadges{display:flex;gap:5px;flex-wrap:wrap}
+.mrow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px}
+.mrow .k{color:var(--muted);font-weight:600;flex:none}
+.mrow .v{font-weight:700;color:var(--ink-2);text-align:right;min-width:0;word-break:keep-all}
+.mrow.warn .k,.mrow.warn .v{color:var(--primary-ink)}
+/* 사람 칸은 폰과 같은 조각(.a-per)을 쓰되, 패널 안에서는 바탕 없이 */
+.mcard .a-people{display:block}
+.mcard .a-per{background:none;padding:6px 0;border-radius:0}
+/* 액션은 패널 맨 아래 세로로 쌓는다 — 가로로 늘어놓기엔 296px 이 좁다 */
+.macts .acts{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:0;border:none;background:none;border-radius:0}
+.macts .acts .btn{width:100%;justify-content:center;text-align:center}
+.macts .nyx,.macts .note{font-size:11.5px;margin-bottom:8px}
+
+/* 요청 내용 카드 · 소통 타임라인 — 폰·PC 공용 */
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.rct{font-size:11.5px;font-weight:800;color:var(--primary-ink);margin-bottom:6px}
+.rcb{font-size:13.5px;color:var(--ink-2);line-height:1.6;white-space:pre-line}
+.seclbl{font-size:12px;font-weight:800;color:var(--ink-2);margin:16px 0 11px;display:flex;gap:8px;align-items:center}
+.seclbl .n{font-weight:500;color:var(--faint);font-size:11px}
+.tlcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 16px}
 /* 본문 — 예전엔 머리(.th) 아래에 붙어 위쪽 테두리가 없었다. 이제 머리가 별도 카드
    (히어로·격자·날짜 띠)로 떨어져 나갔으므로 본문도 온전한 카드가 된다. */
 .tb{background:var(--surface);border:1px solid var(--line);border-radius:12px}
@@ -918,6 +951,10 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
   /* 분류 격자는 폰에서 2열(시안). 4열이면 값이 잘린다 */
   .a-grid{grid-template-columns:1fr 1fr}
   .tt2{font-size:17px}
+  .rc{padding:12px 13px;margin-bottom:9px}
+  .rcb{font-size:12.5px;line-height:1.55}
+  .tlcard{padding:4px 13px}
+  .seclbl{margin:14px 0 9px}
   /* 날짜 줄은 실선으로 떼어낸다(Mobile 시안 .prf) — 위는 '무엇인가',
      아래는 '언제까지인가'. 폰에서는 세로로 쌓이므로 선 하나로 둘을 가른다. */
   /* 날짜 텍스트는 왼쪽에서 자연스럽게 흐르고, D-day 칩만 오른쪽 끝으로 띄운다.
@@ -2778,6 +2815,16 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
 
   // ================= 상태 전이 =================
   var CUR=null;                       // 현재 열린 요청번호
+  // 상세는 폭에 따라 아예 다른 배치를 그린다(PC=2단 사이드 메타 / 폰=히어로·격자·띠).
+  // 마크업이 달라서 CSS 만으로는 못 바꾸므로, 경계를 넘을 때만 다시 그린다.
+  var WIDE=!matchMedia('(max-width:640px)').matches;
+  window.addEventListener('resize',function(){
+    var w=!matchMedia('(max-width:640px)').matches;
+    if(w===WIDE) return;
+    WIDE=w;
+    var cs=$('.screen.on');
+    if(cs && cs.id==='s-ticket' && CUR) openT(CUR,true);   // 열려 있는 상세만 다시 그린다
+  });
   var DUEMODE='fix';                  // m-due 모달 용도: fix=접수단계 조정 / nego=지연 미리 알리기
   var ACTIVE_NEGO=null;               // 현재 요청의 활성 지연 제안 이벤트(수락/거절 버튼 노출 대상)
   // item 2 — 이관 수신자 선택. 인사 API 연동 시 전 부서 담당자 명부가 자동 조회된다는 전제.
@@ -3205,26 +3252,27 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var people='<div class="a-people">'+per('요청자',t.rq.nm,t.rq.org)+per('담당자',t.as,t.asOrg,true)+'</div>'+
       (isGroup(t.dept,t.as)?'<div class="grpnote">근무조 · 조원 '+esc2(membersOf(t.dept,t.as).join('·'))+' 전원 메일</div>':'');
 
-    // 분류 — 라벨 위/값 아래 격자. 폰 2열, 데스크톱 4열(CSS)
-    var cell=function(k,v){ return '<div class="a-cell"><div class="a-ck">'+k+'</div><div class="a-cv">'+v+'</div></div>' };
-    var cate=cell('부서', esc2(t.dept))+
-      Object.keys(t.attrs||{}).map(function(k){ return cell(esc2(k), esc2(t.attrs[k])) }).join('')+
-      (t.att?cell('첨부', esc2(t.att)):'')+
-      (t.parent?cell('원 요청','<a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a>'):'');
+    // 분류·일정은 값만 한 번 만들고, PC(오른쪽 패널 행)와 폰(격자·띠) 두 모양으로 그린다.
+    var cateList=[['부서', esc2(t.dept)]]
+      .concat(Object.keys(t.attrs||{}).map(function(k){ return [esc2(k), esc2(t.attrs[k])] }));
+    if(t.att) cateList.push(['첨부', esc2(t.att)]);
+    if(t.parent) cateList.push(['원 요청','<a class="tl" data-o="'+t.parent+'">dw://'+t.parent+'</a>']);
+    var cell=function(p){ return '<div class="a-cell"><div class="a-ck">'+p[0]+'</div><div class="a-cv">'+p[1]+'</div></div>' };
+    var cate=cateList.map(cell).join('');
 
     // 날짜 — 가로 띠 한 줄. '지금 의미 있는 것'만 남긴다.
     //   · 희망 완료일은 기한과 다를 때만 (같으면 같은 말을 두 번 하는 셈)
     //   · 담당자 확인 마감은 아직 확인 전(접수)일 때만 — 확인 뒤엔 지난 얘기
     //   · 당초 기한은 기한이 바뀐 적 있을 때만
     //   · 접수 상태에선 '기한'이 아니라 '희망 완료일' — 담당자가 [확인 · 진행]을 눌러야 확정된다.
-    var dt=function(k,v,warn){ return '<div class="a-dt'+(warn?' warn':'')+'"><div class="a-dtk">'+k+'</div><div class="a-dtv">'+v+'</div></div>' };
-    var dates=dt('요청일', esc2(dOnly(t.openDate)));
-    if(t.due) dates+= t.state==='open' ? dt('희망 완료', esc2(shortD(t.due)), true)
-                                       : dt('기한', esc2(shortD(t.due)), true);
-    if(t.want && t.want!==t.due) dates+=dt('희망 완료', esc2(shortD(t.want)));
-    if(t.dueOrig && t.due!==t.dueOrig) dates+=dt('당초 기한', esc2(shortD(t.dueOrig)));
-    if(t.fixBy && t.state==='open') dates+=dt('확인 마감', esc2(shortD(t.fixBy)), true);
-    if(t.resolved) dates+=dt('완료', esc2(shortD(t.resolved)));
+    var dateList=[['요청일', esc2(dOnly(t.openDate)), false]];
+    if(t.due) dateList.push([t.state==='open'?'희망 완료':'기한', esc2(shortD(t.due)), true]);
+    if(t.want && t.want!==t.due) dateList.push(['희망 완료', esc2(shortD(t.want)), false]);
+    if(t.dueOrig && t.due!==t.dueOrig) dateList.push(['당초 기한', esc2(shortD(t.dueOrig)), false]);
+    if(t.fixBy && t.state==='open') dateList.push(['확인 마감', esc2(shortD(t.fixBy)), true]);
+    if(t.resolved) dateList.push(['완료', esc2(shortD(t.resolved)), false]);
+    var dt=function(p){ return '<div class="a-dt'+(p[2]?' warn':'')+'"><div class="a-dtk">'+p[0]+'</div><div class="a-dtv">'+p[1]+'</div></div>' };
+    var dates=dateList.map(dt).join('');
 
     // 활성 지연 제안(마지막 nego 이벤트) — 요청자 수락/거절 버튼을 그 카드에 붙이기 위한 표식
     ACTIVE_NEGO = t.state==='nego' ? (t.ev.filter(function(e){return e.t==='nego'}).slice(-1)[0]||null) : null;
@@ -3232,30 +3280,22 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 그리느라 상태가 늘 때마다 흐름도까지 손봐야 했고, 지연·반려 같은 분기는 흐름에 안 맞았다.
 
     var bk = NAVDEPTH>0 ? '<button class="bk" id="bkBtn"><span class="a">←</span>뒤로</button>' : '';
-    // 히어로 → 분류 격자 → 날짜 띠 (Mobile 시안)
     // [공개] 배지는 뺐다 — vis 를 'locked'로 바꾸는 코드가 어디에도 없어서 모든 요청이
     // 예외 없이 '공개'였다. 전부 같은 말이면 아무것도 알려주지 않는다.
-    var head=bk+
-      '<div class="a-hero">'+
-        '<div class="a-top"><span class="th2"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+
-          '<span class="a-bgs">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+
-          '<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span></span></div>'+
-        '<div class="tt2">'+esc2(t.title)+'</div>'+ people +
-      '</div>'+
-      '<div class="a-grid">'+cate+'</div>'+
-      '<div class="a-dates">'+dates+'</div>';
+    var badges=(t.unseen?'<span class="badge b-open">미열람</span>':'')+
+               '<span class="badge '+ST[t.state].c+'">'+stl(t.state)+'</span>';
 
-    var body='<div class="tb"><div class="thr" style="border-top:none">'+
-      '<div class="ev">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+'<div class="evb">'+
-        '<div class="split" style="margin-top:2px">'+
-          '<div><label class="fl2">현재 상황</label><div class="qt">'+esc2(t.asis)+'</div></div>'+
-          '<div><label class="fl2">요청 사항</label><div class="qt">'+esc2(t.tobe)+'</div></div>'+
-        '</div></div></div>'+
-      t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
-
+    // ── 양쪽이 함께 쓰는 조각 ──
+    // 현재 상황·요청 사항은 타임라인 안의 첫 이벤트가 아니라 별도 카드로 뺐다(시안).
+    // 요청의 '내용'이지 '일어난 일'이 아니라서, 시간 순 기록과 섞이면 계속 위로 밀린다.
+    var rcs='<div class="rc"><div class="rct">현재 상황</div><div class="rcb">'+esc2(t.asis)+'</div></div>'+
+            '<div class="rc"><div class="rct">요청 사항</div><div class="rcb">'+esc2(t.tobe)+'</div></div>';
+    var tl='<div class="seclbl">소통<span class="n">— 요청자·담당자·시스템 기록</span></div>'+
+           '<div class="tlcard">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+
+             t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
+    var cmbHtml='';
     if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
-      body+='<div class="cmb">'+
-        '<div class="seclab">의견</div>'+
+      cmbHtml='<div class="cmb">'+
         '<div class="row"><span class="av2" id="cav">'+ROLE[cur].av+'</span><div class="fld">'+
         '<textarea id="ctx" placeholder="진행하면서 남길 의견을 적어주세요"></textarea>'+
         // 시안 순서 — 첨부(보조)는 왼쪽, 의견 등록(주 행동)은 오른쪽 끝
@@ -3265,8 +3305,40 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     }
     // 평가는 요청자만 한다. 담당자 화면엔 종결된 뒤에만 결과로 보인다.
     // 남의 요청에는 평가 폼을 띄우지 않는다 — 종결된 건의 '결과'는 읽기 전용이라 그대로 보여준다.
-    if(t.state==='closed' || (t.state==='done'&&cur==='req'&&t.rq.nm===ROLE.req.nm)) body+=evalBlk(t);
-    body+=acts(t)+'</div>';
+    var evalHtml=(t.state==='closed' || (t.state==='done'&&cur==='req'&&t.rq.nm===ROLE.req.nm)) ? evalBlk(t) : '';
+    var actHtml=acts(t);
+    var mainCol=rcs+tl+cmbHtml+evalHtml;
+
+    // ── PC: 2단 · 사이드 메타 (Detail PC Options 2A) ──
+    // 본문은 왼쪽 넓게, 사람·분류·일정·액션은 오른쪽 고정 패널로. 스크롤해도 메타가 붙어 있어
+    // '지금 뭘 눌러야 하나'가 늘 눈에 있다.
+    // ── 폰: 히어로 → 분류 격자 → 날짜 띠 (Mobile 시안) ──
+    var head, body;
+    if(WIDE){
+      var mrow=function(p){ return '<div class="mrow'+(p[2]?' warn':'')+'"><span class="k">'+p[0]+'</span><span class="v">'+p[1]+'</span></div>' };
+      head=bk+'<div class="two"><div class="tcol">'+
+          '<div class="no"><span class="s">dw://</span>'+esc2(t.no)+'</div>'+
+          '<div class="ttl">'+esc2(t.title)+'</div>'+ mainCol +
+        '</div>'+
+        '<aside class="mcard">'+
+          '<div class="mgrp"><div class="mgcap">상태</div><div class="mbadges">'+badges+'</div></div>'+
+          '<div class="mgrp"><div class="mgcap">사람</div>'+people+'</div>'+
+          '<div class="mgrp"><div class="mgcap">분류</div>'+cateList.map(mrow).join('')+'</div>'+
+          '<div class="mgrp"><div class="mgcap">일정</div>'+dateList.map(mrow).join('')+'</div>'+
+          '<div class="mgrp macts">'+actHtml+'</div>'+
+        '</aside></div>';
+      body='';
+    } else {
+      head=bk+
+        '<div class="a-hero">'+
+          '<div class="a-top"><span class="th2"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+
+            '<span class="a-bgs">'+badges+'</span></div>'+
+          '<div class="tt2">'+esc2(t.title)+'</div>'+ people +
+        '</div>'+
+        '<div class="a-grid">'+cate+'</div>'+
+        '<div class="a-dates">'+dates+'</div>';
+      body=mainCol+actHtml;
+    }
 
     $('#s-ticket').innerHTML=head+body;
     wire(); setRole(cur, true); show('ticket'); tr();
