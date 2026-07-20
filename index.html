@@ -3382,11 +3382,12 @@ button,a,.tl,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var head, body;
     if(isWide()){
       var mrow=function(p){ return '<div class="msrow'+(p[2]?' warn':'')+'"><span class="msk">'+p[0]+'</span><span class="msv">'+p[1]+'</span></div>' };
-      // 번호와 제목은 한 줄로 — 번호만 있는 줄이 따로 떠 있으면 시선이 두 번 끊긴다
-      head=bk+'<div class="dtwo"><div class="tcol">'+
-          '<div class="ttl"><span class="no"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+esc2(t.title)+'</div>'+
-          mainCol +
-        '</div>'+
+      // 번호와 제목은 한 줄로 — 번호만 있는 줄이 따로 떠 있으면 시선이 두 번 끊긴다.
+      // 제목은 2단 그리드 '위'에 전체폭으로 둔다 — 왼쪽 열 안에 넣으면 그만큼(약 43px)
+      // 오른쪽 패널이 먼저 시작해 두 열의 첫 카드가 어긋난다.
+      head=bk+
+        '<div class="ttl"><span class="no"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+esc2(t.title)+'</div>'+
+        '<div class="dtwo"><div class="tcol">'+ mainCol +'</div>'+
         '<aside class="mcard">'+
           // 상태는 라벨과 배지를 한 줄 양끝으로(시안)
           '<div class="mgrp"><div class="mstat"><span class="mgcap">상태</span><span class="mbadges">'+badges+'</span></div></div>'+
