@@ -336,11 +336,11 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 /* 상세 머리 — Mobile 시안. 히어로(번호·상태 / 제목 / 사람) → 분류 격자 → 날짜 띠.
    라벨을 값 위에 얹는 격자라 좁은 폭에서도 세로로 길어지지 않는다. */
 .a-hero{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:11px}
-.a-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.a-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px}
 .a-bgs{display:flex;gap:5px;align-items:center;flex:none}
-.th2{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink)}
+.th2{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink);margin-right:7px}
 .th2 .s{color:var(--faint);font-weight:400}
-.tt2{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.012em;margin:5px 0 10px;line-height:1.25}
+.tt2{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.012em;line-height:1.3;min-width:0}
 /* 사람 — 아바타 + 역할라벨/이름 두 칸 */
 .a-people{display:flex;gap:9px}
 .a-per{flex:1;display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:11px;padding:8px 10px;min-width:0}
@@ -369,19 +369,24 @@ h1{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.01
 /* ── PC 상세: 2단 · 사이드 메타 (Detail PC Options 2A) ──
    본문(내용·소통·의견)은 왼쪽 넓게, 메타(상태·사람·분류·일정)와 액션은 오른쪽 패널로.
    패널이 스크롤을 따라오므로 '지금 뭘 눌러야 하나'가 늘 눈에 있다. */
-.two{display:grid;grid-template-columns:1fr 296px;gap:16px;align-items:start}
+/* 클래스는 .dtwo — 요청서 화면이 이미 .two 를 쓰고 있어(아래쪽에 정의) 그대로 두면
+   뒤에 오는 그 규칙이 이겨서 시안 폭(296px)이 안 먹는다. */
+.dtwo{display:grid;grid-template-columns:1fr 296px;gap:16px;align-items:start}
 .tcol{min-width:0}
-.no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink)}
+.no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--primary-ink);margin-right:8px}
 .no .s{color:var(--faint);font-weight:400}
-.ttl{font-family:var(--display);font-size:22px;font-weight:600;line-height:1.25;margin:5px 0 14px;color:var(--ink)}
+.ttl{font-family:var(--display);font-size:22px;font-weight:600;line-height:1.3;margin:0 0 14px;color:var(--ink)}
 .mcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:sticky;top:80px}
 .mgrp{padding:13px 15px}
 .mgrp + .mgrp{border-top:1px solid var(--line)}
 .mgcap{font-size:10px;font-weight:800;color:var(--faint);letter-spacing:.05em;margin-bottom:9px;text-transform:uppercase}
-.mrow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px}
-.mrow .k{color:var(--muted);font-weight:600;flex:none}
-.mrow .v{font-weight:700;color:var(--ink-2);text-align:right;min-width:0;word-break:keep-all}
-.mrow.warn .k,.mrow.warn .v{color:var(--primary-ink)}
+/* 클래스는 .msrow — 기존 .mrow(기준정보 화면의 테두리 있는 행)와 부딪히면
+   메타 행마다 상자가 그려진다. 이 파일은 짧은 클래스명이 많아 접두사를 붙인다. */
+.msrow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px;
+       border:none;background:none;margin:0;align-items:baseline}
+.msrow .k{color:var(--muted);font-weight:600;flex:none}
+.msrow .v{font-weight:700;color:var(--ink-2);text-align:right;min-width:0;word-break:keep-all}
+.msrow.warn .k,.msrow.warn .v{color:var(--primary-ink)}
 /* 사람 칸은 폰과 같은 조각(.a-per)을 쓰되, 패널 안에서는 바탕 없이 */
 .mcard .a-people{display:block}
 .mcard .a-per{background:none;padding:6px 0;border-radius:0}
@@ -729,10 +734,8 @@ button.vn:hover{color:var(--primary-ink);text-decoration:underline;text-underlin
 /* 라벨-값 한 쌍은 통째로 — '담당 조은혜'가 줄 사이에서 쪼개지지 않게. 넘치면 쌍 단위로 내려간다 */
 .pmg{white-space:nowrap}
 .prd{flex:none;font-family:var(--sans);font-size:12px;letter-spacing:-.012em;color:var(--muted);white-space:nowrap}
-/* D-day 칩 — v2 시안 .dchip */
-.prd .dd{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--primary-ink);
-         background:var(--primary-tint);border:1px solid #f0c99a;border-radius:6px;padding:2px 8px;margin-left:6px}
-.prd .dd.w{color:var(--signal);background:var(--signal-tint);border-color:#f0bcc1}
+/* 카드 제목 옆 상태 배지 (PC) */
+.prbg{display:flex;gap:4px;flex:none}
 /* 끝난 요청은 값도 가라앉힌다 — 회색 카드 안에서 이름만 진하면 따로 논다 */
 .pr.fin .pmv{color:var(--muted);font-weight:500}
 
@@ -987,10 +990,11 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
      아래는 '언제까지인가'. 폰에서는 세로로 쌓이므로 선 하나로 둘을 가른다. */
   /* 날짜 텍스트는 왼쪽에서 자연스럽게 흐르고, D-day 칩만 오른쪽 끝으로 띄운다.
      여기서 flex 를 쓰면 라벨과 값 사이 공백(텍스트 노드)이 사라져 '요청일07-18'로 붙는다.
-     그래서 블록 흐름을 유지하고 칩만 float 로 보낸다. */
-  .prd{width:100%;display:block;white-space:normal;
+     그래서 블록 흐름을 유지하고 배지만 float 로 보낸다. */
+  .prd{width:100%;display:block;white-space:normal;min-height:22px;
        margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-  .prd .dd{float:right;margin-left:8px}
+  /* 상태 배지는 예전 D-day 자리(날짜 줄 오른쪽 끝)로 — 제목 줄이 배지와 자리를 안 다툰다 */
+  .prd .prbg{float:right;margin-left:8px}
   /* 폰에서는 카드마다 테두리를 준다(시안). 목록을 감싸던 컨테이너 대신 카드가 단위가 된다.
      목록이 있는 화면에만 적용한다 — .card 를 전부 지우면 대시보드·관리대장까지 날아간다. */
   .pr{border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-bottom:10px;background:#fff}
@@ -2129,16 +2133,24 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 이 둘은 기한이 의미를 잃은 상태라 날짜 열에 넣을 것도 없다.
     // 접수 상태에선 '기한'이 아니라 '희망' — 담당자가 [확인·진행]을 눌러야 기한이 확정된다.
     // 아직 아무도 약속하지 않은 날을 기한이라 부르면 [확인·진행]이 무슨 일을 하는지 흐려진다.
+    // D-day 칩(D-14 / D+1)은 뺐다 — 날짜가 이미 적혀 있는데 남은 일수까지 칩으로 붙이면
+    // 한 줄에 숫자가 셋(요청일·기한·D±n)이 되어 정작 상태가 안 읽힌다.
+    // 급한 건은 '지연' 상태 배지가 말한다.
     else if(t.state!=='cancel' && t.state!=='reject' && t.due)
-      r2+=SEP+K(t.state==='open'?'희망':'기한')+' '+V(shortD(t.due))+' <b class="dd'+(t.state==='slip'?' w':'')+'">'+dday(t.due)+'</b>';
+      r2+=SEP+K(t.state==='open'?'희망':'기한')+' '+V(shortD(t.due));
     // 상태를 카드 자체로 구분한다 — 배지만으로는 목록을 훑을 때 눈에 안 들어온다.
     //   끝난 것(종결·취소·반려)만 회색으로 가라앉힌다. 급함·내 차례는 배지·알림이 잡는다.
     var cls='pr';
     if(t.state==='closed'||t.state==='cancel'||t.state==='reject') cls+=' fin';
+    var badges='<span class="prbg">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+
+               '<span class="badge '+s.c+'">'+stl(t.state)+'</span></span>';
+    // 폰에서는 배지를 제목 옆이 아니라 아래 날짜 줄 오른쪽(예전 D-day 자리)에 둔다.
+    // 좁은 폭에서 제목과 배지가 자리를 다투면 제목이 두세 줄로 접힌다.
     return '<div class="'+cls+'" data-o="'+t.no+'">'+
-      '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div><span style="display:flex;gap:4px">'+(t.unseen?'<span class="badge b-open">미열람</span>':'')+'<span class="badge '+s.c+'">'+stl(t.state)+'</span></span></div>'+
+      '<div class="prh"><div class="prt"><span class="prno"><span class="s">dw://</span>'+H(t.no)+'</span>'+H(t.title)+'</div>'+
+        (WIDE?badges:'')+'</div>'+
       '<div class="prb"><div class="prm">'+seg.join(SEP)+'</div>'+
-        (r2?'<div class="prd">'+r2+'</div>':'')+'</div>'+
+        (r2||!WIDE?'<div class="prd">'+r2+(WIDE?'':badges)+'</div>':'')+'</div>'+
     '</div>';
   }
 
@@ -2894,8 +2906,10 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     var w=!matchMedia('(max-width:640px)').matches;
     if(w===WIDE) return;
     WIDE=w;
-    var cs=$('.screen.on');
-    if(cs && cs.id==='s-ticket' && CUR) openT(CUR,true);   // 열려 있는 상세만 다시 그린다
+    var cs=$('.screen.on'); if(!cs) return;
+    // 상세뿐 아니라 목록 카드도 폭에 따라 배지 자리가 달라져 다시 그려야 한다
+    if(cs.id==='s-ticket' && CUR) openT(CUR,true);
+    else { renderMine(); renderWork(); if(cs.id==='s-search') renderSearch(); }
   });
   var DUEMODE='fix';                  // m-due 모달 용도: fix=접수단계 조정 / nego=지연 미리 알리기
   var ACTIVE_NEGO=null;               // 현재 요청의 활성 지연 제안 이벤트(수락/거절 버튼 노출 대상)
@@ -3362,9 +3376,13 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // 요청의 '내용'이지 '일어난 일'이 아니라서, 시간 순 기록과 섞이면 계속 위로 밀린다.
     var rcs='<div class="rc"><div class="rct">현재 상황</div><div class="rcb">'+esc2(t.asis)+'</div></div>'+
             '<div class="rc"><div class="rct">요청 사항</div><div class="rcb">'+esc2(t.tobe)+'</div></div>';
-    var tl='<div class="seclbl">소통<span class="n">— 요청자·담당자·시스템 기록</span></div>'+
-           '<div class="tlcard">'+evH(t.rq.nm,t.rq.org,'rq','요청자','',t.open)+
-             t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
+    // 첫 줄에 있던 요청자 머리글(이름·소속·시각만 있고 본문이 빈 줄)은 뺐다 —
+    // 현재 상황·요청 사항을 위 카드로 옮기면서 알맹이가 사라진 껍데기만 남아 있었다.
+    // 기록은 시스템의 배정부터 시작하는 게 맞다(요청 내용은 이미 위에 있다).
+    // 제목도 '소통'에서 '진행 기록'으로 — 이 목록의 대부분은 대화가 아니라
+    // 배정·열람·상태 변경 같은 자동 기록이고, 의견은 그 사이에 끼어드는 것이다.
+    var tl='<div class="seclbl">진행 기록<span class="n">— 상태 변경과 주고받은 의견이 시간순으로</span></div>'+
+           '<div class="tlcard">'+t.ev.map(function(e){return evHtml(e,t)}).join('')+'</div>';
     var cmbHtml='';
     if(t.state!=='closed'&&t.state!=='cancel'&&t.state!=='reject'){
       cmbHtml='<div class="cmb">'+
@@ -3387,10 +3405,11 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     // ── 폰: 히어로 → 분류 격자 → 날짜 띠 (Mobile 시안) ──
     var head, body;
     if(WIDE){
-      var mrow=function(p){ return '<div class="mrow'+(p[2]?' warn':'')+'"><span class="k">'+p[0]+'</span><span class="v">'+p[1]+'</span></div>' };
-      head=bk+'<div class="two"><div class="tcol">'+
-          '<div class="no"><span class="s">dw://</span>'+esc2(t.no)+'</div>'+
-          '<div class="ttl">'+esc2(t.title)+'</div>'+ mainCol +
+      var mrow=function(p){ return '<div class="msrow'+(p[2]?' warn':'')+'"><span class="k">'+p[0]+'</span><span class="v">'+p[1]+'</span></div>' };
+      // 번호와 제목은 한 줄로 — 번호만 있는 줄이 따로 떠 있으면 시선이 두 번 끊긴다
+      head=bk+'<div class="dtwo"><div class="tcol">'+
+          '<div class="ttl"><span class="no"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+esc2(t.title)+'</div>'+
+          mainCol +
         '</div>'+
         '<aside class="mcard">'+
           // 상태는 라벨과 배지를 한 줄 양끝으로(시안)
@@ -3404,9 +3423,9 @@ button,a,.tl,.mini,[onclick],.filt button,.chan button,.pk button,.pr,.dp{
     } else {
       head=bk+
         '<div class="a-hero">'+
-          '<div class="a-top"><span class="th2"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+
-            '<span class="a-bgs">'+badges+'</span></div>'+
-          '<div class="tt2">'+esc2(t.title)+'</div>'+ people +
+          // 번호와 제목을 한 줄로 흐르게 하고, 배지는 오른쪽 위에 붙인다
+          '<div class="a-top"><div class="tt2"><span class="th2"><span class="s">dw://</span>'+esc2(t.no)+'</span>'+
+            esc2(t.title)+'</div><span class="a-bgs">'+badges+'</span></div>'+ people +
         '</div>'+
         '<div class="a-grid">'+cate+'</div>'+
         '<div class="a-dates">'+dates+'</div>';
